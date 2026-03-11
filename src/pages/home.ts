@@ -193,7 +193,48 @@ export function render(): string {
             </div>
           </div>
         </div>
+    </section>
 
+    <!-- Testimonials -->
+    <section class="testimonials-section">
+      <h2 class="section-title">What Learners Say</h2>
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal-on-scroll">
+          <div class="testimonial-quote-mark">"</div>
+          <p class="testimonial-text">This platform completely changed how I think about AI development. The workflow module alone saved me hours of repetitive tasks. Highly recommended.</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">A</div>
+            <div class="testimonial-author-info">
+              <span class="testimonial-name">Alex Chen</span>
+              <span class="testimonial-role">Full-Stack Developer</span>
+            </div>
+            <span class="testimonial-stars">★★★★★</span>
+          </div>
+        </div>
+        <div class="testimonial-card reveal-on-scroll">
+          <div class="testimonial-quote-mark">"</div>
+          <p class="testimonial-text">The interactive quizzes and progress tracking make learning about agents feel like a game. I finished all 3 modules in one sitting — couldn't stop!</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">S</div>
+            <div class="testimonial-author-info">
+              <span class="testimonial-name">Sarah Kim</span>
+              <span class="testimonial-role">ML Engineer</span>
+            </div>
+            <span class="testimonial-stars">★★★★★</span>
+          </div>
+        </div>
+        <div class="testimonial-card reveal-on-scroll">
+          <div class="testimonial-quote-mark">"</div>
+          <p class="testimonial-text">Finally, a resource that explains skills and workflows in plain language. The code examples are practical and the best practices section is gold.</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">M</div>
+            <div class="testimonial-author-info">
+              <span class="testimonial-name">Marcus Rivera</span>
+              <span class="testimonial-role">DevOps Engineer</span>
+            </div>
+            <span class="testimonial-stars">★★★★★</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -299,7 +340,7 @@ async function restoreProgress(): Promise<void> {
   const completionPct = Math.round((completedModules / totalModules) * 100);
 
   container.innerHTML = `
-    <div class="dashboard reveal-on-scroll">
+    <div class="dashboard">
       <!-- Overview Card -->
       <div class="dashboard-overview">
         <div class="progress-ring-wrap">

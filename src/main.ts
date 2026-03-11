@@ -8,6 +8,10 @@ import * as homePage from './pages/home'
 import * as workflowsPage from './pages/workflows'
 import * as skillsPage from './pages/skills'
 import * as agentsPage from './pages/agents'
+import * as leaderboardPage from './pages/leaderboard'
+import * as adminPage from './pages/admin'
+import * as resourcesPage from './pages/resources'
+import { downloadCertificate } from './components/certificate'
 
 // ── Render App Shell ────────────────────────────────────────────────────
 // The navbar and footer persist; only #page-content is swapped by router.
@@ -18,6 +22,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="nav-links">
       <a href="#/">Home</a>
       <a href="#modules">Modules</a>
+      <a href="#/leaderboard">🏆 Leaderboard</a>
+      <a href="#/resources">📚 Resources</a>
+      <button id="cert-download-btn" class="btn btn-ghost" style="padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: 100px;">🎓 Certificate</button>
       <button id="google-login-btn" class="btn auth-btn auth-btn--logged-out" aria-label="Sign in with Google">Sign in with Google</button>
       <button id="theme-toggle" class="btn theme-btn" aria-label="Toggle theme">☀️ Light</button>
     </div>
@@ -40,12 +47,14 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <a href="#/learn/workflows">Workflows</a>
           <a href="#/learn/skills">Skills</a>
           <a href="#/learn/agents">Autonomous Agents</a>
+          <a href="#/resources">Resources</a>
         </div>
         <div class="footer-col">
           <h4>Resources</h4>
           <a href="#/">Home</a>
           <a href="#modules">All Modules</a>
-          <a href="#progress">Your Progress</a>
+          <a href="#/leaderboard">Leaderboard</a>
+          <a href="#/admin">Analytics</a>
         </div>
       </div>
     </div>
@@ -64,6 +73,14 @@ registerRoutes({
   '/learn/workflows': { render: workflowsPage.render, init: workflowsPage.init },
   '/learn/skills': { render: skillsPage.render, init: skillsPage.init },
   '/learn/agents': { render: agentsPage.render, init: agentsPage.init },
+  '/leaderboard': { render: leaderboardPage.render, init: leaderboardPage.init },
+  '/resources': { render: resourcesPage.render, init: resourcesPage.init },
+  '/admin': { render: adminPage.render, init: adminPage.init },
+})
+
+// ── Certificate Download ────────────────────────────────────────────────
+document.getElementById('cert-download-btn')?.addEventListener('click', () => {
+  downloadCertificate()
 })
 
 // Start the router (renders the initial page)

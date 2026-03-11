@@ -10,6 +10,8 @@ import {
   setDoc,
   updateDoc,
   serverTimestamp,
+  collection,
+  getDocs,
   type Firestore,
 } from 'firebase/firestore';
 
@@ -138,4 +140,67 @@ export async function saveThemePreference(
   } catch (error) {
     console.error('[db] saveThemePreference failed:', error);
   }
+}
+
+// ── Leaderboard ─────────────────────────────────────────────────────────
+
+export interface LeaderboardEntry {
+  uid: string;
+  displayName: string;
+  photoURL: string | null;
+  score: number;      // number of correct quizzes
+  total: number;      // total quizzes attempted
+  completedAll: boolean;
+}
+
+/**
+ * Fetch all users and rank them by quiz score.
+ * Returns top N entries sorted by score descending.
+ */
+export async function getLeaderboard(topN = 20): Promise<LeaderboardEntry[]> {
+  try {
+    const usersRef = collection(db, 'users');
+    const snapshot = await getDocs(usersRef);
+    
+    const entries: LeaderboardEntry[] = [];
+    
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data() as UserProfile;
+      const progress = data.quizProgress ?? {};
+      const results = Object.values(progress);
+      const correct = results.filter(r => r.correct).length;
+      
+      if (results.length > 0) {
+        entries.push({
+          uid: docSnap.id,
+          displayName: data.displayName ?? 'Anonymous',
+          photoURL: data.photoURL ?? null,
+          score: correct,
+          total: results.length,
+          completedAll: correct >= 3, // all 3 modules passed
+        });
+      }
+    });
+    
+    // Sort by score desc, then by total attempts asc (fewer attempts = better)
+    entries.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.total - b.total;
+    });
+    
+    return entries.slice(0, topN);
+  } catch (error) {
+    console.error('[db] getLeaderboard failed:', error);
+    return [];
+  }
+}
+
+/**
+ * Check if user has completed all modules (eligible for certificate).
+ */
+export async function isCertificateEligible(uid: string): Promise<boolean> {
+  const profile = await getUserProfile(uid);
+  if (!profile?.quizProgress) return false;
+  const correct = Object.values(profile.quizProgress).filter(r => r.correct).length;
+  return correct >= 3;
 }
