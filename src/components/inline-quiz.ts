@@ -2,9 +2,10 @@
 // Renders a multi-question quiz inline on lesson pages.
 // Each question shows instant feedback and the full quiz tracks a score.
 
-import { getCurrentUser } from '../auth';
-import { saveQuizResult } from '../db';
+import { getCurrentUser } from '../services/authService';
+import { saveQuizResult, isCertificateEligible } from '../services/userService';
 import { showToast } from './toast';
+import { fireConfetti } from './confetti';
 
 export interface QuizQuestion {
   question: string;
@@ -142,6 +143,19 @@ export function initInlineQuiz(
         const user = getCurrentUser();
         if (user) {
           await saveQuizResult(user.uid, topic, passed);
+
+          // Check if user just completed ALL modules → celebrate!
+          if (passed) {
+            const eligible = await isCertificateEligible(user.uid);
+            if (eligible) {
+              fireConfetti();
+              showToast({
+                message: '🎓 You earned your certificate! Download it from the navbar.',
+                type: 'success',
+                duration: 6000,
+              });
+            }
+          }
         }
       }
     });

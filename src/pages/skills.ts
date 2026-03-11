@@ -45,7 +45,7 @@ const quizQuestions: QuizQuestion[] = [
 
 export function render(): string {
   return `
-    <section class="lesson-hero" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 40%, #2c5364 100%);">
+    <section class="lesson-hero" style="background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 40%, #DDD6FE 100%);">
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="/">Home</a>
         <span class="breadcrumb-sep">›</span>
@@ -57,6 +57,7 @@ export function render(): string {
         <span class="lesson-badge">Module 2</span>
         <h1>Skills</h1>
         <p>Extend the agent's knowledge with permanent, reusable instruction sets that stay across conversations.</p>
+        <span class="lesson-reading-time">⏱️ ~10 min read</span>
       </div>
     </section>
 

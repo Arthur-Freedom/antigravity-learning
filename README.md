@@ -23,7 +23,7 @@ src/
 ├── main.ts           # App shell (navbar, footer, router init, theme, auth)
 ├── auth.ts           # Firebase Auth (Google login/logout, state management)
 ├── db.ts             # Firestore abstraction (profiles, quizzes, leaderboard)
-├── router.ts         # Hash-based SPA router with transitions
+├── router.ts         # History API SPA router with clean URLs and transitions
 ├── style.css         # Full design system (2400+ lines)
 ├── animations.css    # Page animations & micro-interactions
 ├── appcheck.ts       # Firebase App Check integration

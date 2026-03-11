@@ -7,8 +7,8 @@
 // onAuthStateChanged to populate the real content. This avoids the
 // race condition where auth.currentUser is null on first render.
 
-import { getCurrentUser, onAuthChange } from '../auth'
-import { getUserProfile, saveThemePreference, updateDisplayName, type UserProfile } from '../db'
+import { getCurrentUser, onAuthChange, updateAuthProfile } from '../services/authService'
+import { getUserProfile, updateDisplayName, type UserProfile } from '../services/userService'
 import { openProfilePictureModal } from '../components/profile-picture'
 import { showToast } from '../components/toast'
 
@@ -19,8 +19,8 @@ export function render(): string {
   // Always render a shell — init() will fill in the real content
   // once Firebase Auth has resolved the user state.
   return `
-    <section class="lesson-hero profile-hero" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #3178C6 100%);">
-      <div class="lesson-hero-content">
+    <section class="lesson-hero profile-hero" style="background: linear-gradient(135deg, #E8F9EF 0%, #D1FAE5 40%, #BAE6FD 100%);">
+      <div class="lesson-hero-content" style="color: var(--text-primary);">
         <span class="lesson-badge">Account</span>
         <h1>Profile & Settings</h1>
         <p>Manage your account, customize your experience, and track your progress.</p>
@@ -159,29 +159,6 @@ function renderProfileContent(user: { uid: string; displayName: string | null; e
         </div>
       </div>
 
-      <!-- Preferences Section -->
-      <div class="profile-section reveal-on-scroll">
-        <div class="profile-section-header">
-          <span class="profile-section-icon">⚙️</span>
-          <h3>Preferences</h3>
-        </div>
-        <div class="profile-section-body">
-          <div class="profile-field">
-            <label class="profile-field-label">Theme</label>
-            <div class="profile-theme-toggle">
-              <button id="profile-theme-light" class="profile-theme-option" data-theme="light">
-                <span class="profile-theme-icon">☀️</span>
-                <span>Light</span>
-              </button>
-              <button id="profile-theme-dark" class="profile-theme-option" data-theme="dark">
-                <span class="profile-theme-icon">🌙</span>
-                <span>Dark</span>
-              </button>
-            </div>
-            <p class="profile-field-hint">Your theme preference is synced across devices.</p>
-          </div>
-        </div>
-      </div>
 
       <!-- Quiz Progress Section -->
       <div class="profile-section profile-section-wide reveal-on-scroll">
@@ -269,6 +246,7 @@ function bindProfileInteractions(user: { uid: string; displayName: string | null
 
       try {
         await updateDisplayName(user.uid, newName)
+        await updateAuthProfile({ displayName: newName })
         showToast({ message: '✅ Display name updated!', type: 'success' })
 
         // Update name in the header
@@ -294,51 +272,38 @@ function bindProfileInteractions(user: { uid: string; displayName: string | null
   document.getElementById('profile-change-photo-btn')?.addEventListener('click', () => {
     openProfilePictureModal()
   })
-
-  // ── Theme Toggle ────────────────────────────────────────────────────
-  const lightBtn = document.getElementById('profile-theme-light')
-  const darkBtn = document.getElementById('profile-theme-dark')
-
-  updateThemeButtons()
-
-  lightBtn?.addEventListener('click', () => switchTheme('light', user.uid))
-  darkBtn?.addEventListener('click', () => switchTheme('dark', user.uid))
 }
 
-async function switchTheme(theme: 'light' | 'dark', uid: string): Promise<void> {
-  // Apply theme to body
-  if (theme === 'dark') {
-    document.body.classList.add('dark-theme')
-  } else {
-    document.body.classList.remove('dark-theme')
-  }
-
-  // Update the global theme toggle button text
-  const themeBtn = document.getElementById('theme-toggle')
-  if (themeBtn) {
-    themeBtn.textContent = theme === 'dark' ? '🌙 Dark' : '☀️ Light'
-  }
-
-  // Update profile page theme buttons
-  updateThemeButtons()
-
-  // Persist to Firestore
-  await saveThemePreference(uid, theme)
-  showToast({ message: `Theme switched to ${theme} mode`, type: 'info' })
-}
-
-function updateThemeButtons(): void {
-  const isDark = document.body.classList.contains('dark-theme')
-  const lightBtn = document.getElementById('profile-theme-light')
-  const darkBtn = document.getElementById('profile-theme-dark')
-
-  lightBtn?.classList.toggle('profile-theme-active', !isDark)
-  darkBtn?.classList.toggle('profile-theme-active', isDark)
-}
 
 async function loadProfileData(uid: string): Promise<void> {
   const profile = await getUserProfile(uid)
   if (!profile) return
+
+  // ── Custom Photo (overrides Google avatar) ────────────────────────
+  const customPhoto = profile.customPhotoURL
+  if (customPhoto) {
+    // Update profile page avatar
+    const avatarImg = document.querySelector('.profile-avatar-img') as HTMLImageElement | null
+    if (avatarImg) {
+      avatarImg.src = customPhoto
+    } else {
+      // Replace placeholder with actual image
+      const ring = document.querySelector('.profile-avatar-ring')
+      const placeholder = ring?.querySelector('.profile-avatar-placeholder')
+      if (ring && placeholder) {
+        const img = document.createElement('img')
+        img.src = customPhoto
+        img.alt = profile.displayName || 'Avatar'
+        img.className = 'profile-avatar-img'
+        img.referrerPolicy = 'no-referrer'
+        placeholder.replaceWith(img)
+      }
+    }
+
+    // Update navbar avatar
+    const authAvatar = document.querySelector('.auth-avatar') as HTMLImageElement | null
+    if (authAvatar) authAvatar.src = customPhoto
+  }
 
   // ── Display Name (use Firestore value, which may be custom) ───────
   if (profile.displayName) {

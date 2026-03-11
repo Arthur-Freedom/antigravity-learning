@@ -2,28 +2,13 @@
 // Handles uploading, compressing, and retrieving custom profile pictures.
 // Files are stored at: profilePictures/{uid}/avatar.{ext}
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
-  getStorage,
   ref,
   uploadBytes,
   getDownloadURL,
   deleteObject,
-  type FirebaseStorage,
 } from 'firebase/storage';
-
-// ── Firebase app (reuse existing instance) ──────────────────────────────
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
-
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const storage: FirebaseStorage = getStorage(app);
+import { storage } from '../lib/firebase';
 
 // ── Constants ───────────────────────────────────────────────────────────
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -72,8 +57,6 @@ export async function uploadProfilePicture(
     },
   };
 
-  // Wrap with timeout — Firebase Storage can hang indefinitely when
-  // App Check token exchange fails (403), so we fail fast after 30s.
   await withTimeout(
     uploadBytes(storageRef, resizedBlob, metadata),
     30_000,
@@ -85,7 +68,7 @@ export async function uploadProfilePicture(
     'Failed to get download URL. Please try again.'
   );
 
-  console.info('[storage] Profile picture uploaded:', downloadURL);
+  console.info('[storageService] Profile picture uploaded:', downloadURL);
   return downloadURL;
 }
 
@@ -101,7 +84,6 @@ export async function getProfilePictureURL(uid: string): Promise<string | null> 
       const storageRef = ref(storage, `profilePictures/${uid}/avatar.${ext}`);
       return await getDownloadURL(storageRef);
     } catch {
-      // File doesn't exist with this extension, try next
       continue;
     }
   }
@@ -119,7 +101,7 @@ export async function deleteProfilePicture(uid: string): Promise<void> {
     try {
       const storageRef = ref(storage, `profilePictures/${uid}/avatar.${ext}`);
       await deleteObject(storageRef);
-      console.info('[storage] Deleted profile picture:', ext);
+      console.info('[storageService] Deleted profile picture:', ext);
       return;
     } catch {
       continue;
@@ -129,10 +111,6 @@ export async function deleteProfilePicture(uid: string): Promise<void> {
 
 // ── Client-side Image Resize ────────────────────────────────────────────
 
-/**
- * Resizes an image file to fit within maxDim × maxDim while preserving
- * aspect ratio. Returns a Blob of the resized image.
- */
 function resizeImage(file: File, maxDim: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -143,7 +121,6 @@ function resizeImage(file: File, maxDim: number): Promise<Blob> {
 
       let { width, height } = img;
 
-      // Only resize if larger than max
       if (width > maxDim || height > maxDim) {
         if (width > height) {
           height = Math.round((height / width) * maxDim);
@@ -159,7 +136,6 @@ function resizeImage(file: File, maxDim: number): Promise<Blob> {
       canvas.height = height;
       const ctx = canvas.getContext('2d')!;
 
-      // High quality resize
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, width, height);
@@ -173,7 +149,7 @@ function resizeImage(file: File, maxDim: number): Promise<Blob> {
           }
         },
         file.type,
-        0.85 // Quality for JPEG/WebP
+        0.85
       );
     };
 
@@ -188,10 +164,6 @@ function resizeImage(file: File, maxDim: number): Promise<Blob> {
 
 // ── Timeout utility ─────────────────────────────────────────────────────
 
-/**
- * Wraps a promise with a timeout. Rejects with the given message
- * if the promise doesn't resolve within `ms` milliseconds.
- */
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
   return Promise.race([
     promise,

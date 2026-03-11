@@ -30,7 +30,7 @@ const TERMS: GlossaryTerm[] = [
   { term: 'App Check', definition: 'Firebase service that protects backend resources from abuse by verifying that incoming traffic comes from your legitimate app, not from scripts or bots.', category: 'Infrastructure' },
   { term: 'Security Rules', definition: 'Firestore rules that control who can read and write data. Written in a custom language that validates authentication, schema, and data integrity.', category: 'Infrastructure' },
   { term: 'Vite', definition: 'A next-generation frontend build tool that provides instant dev server startup and lightning-fast hot module replacement (HMR). Used to build this platform.', category: 'Infrastructure' },
-  { term: 'SPA', definition: 'Single Page Application — a web app that loads a single HTML page and dynamically updates content using JavaScript, without full page reloads. This platform uses hash-based SPA routing.', category: 'Infrastructure' },
+  { term: 'SPA', definition: 'Single Page Application — a web app that loads a single HTML page and dynamically updates content using JavaScript, without full page reloads. This platform uses History API-based SPA routing with clean URLs.', category: 'Infrastructure' },
   { term: 'Chain of Thought', definition: 'A prompting technique where the AI explicitly reasons step-by-step before arriving at an answer. Agents use this internally when planning their actions.', category: 'Core' },
   { term: 'Grounding', definition: 'Connecting an AI model to external data sources (search, databases) so it can provide factual, up-to-date information rather than relying solely on training data.', category: 'Core' },
   { term: 'Tree of Thoughts', definition: 'An extension of chain-of-thought where the agent explores multiple reasoning paths simultaneously, using tree-search algorithms to find the best solution.', category: 'Core' },
@@ -41,8 +41,8 @@ export function render(): string {
   const categories = [...new Set(TERMS.map(t => t.category))];
 
   return `
-    <section class="lesson-hero" style="background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #059669 100%);">
-      <div class="lesson-hero-content">
+    <section class="lesson-hero" style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 40%, #A7F3D0 100%);">
+      <div class="lesson-hero-content" style="color: var(--text-primary);">
         <span class="lesson-badge">Reference</span>
         <h1>Glossary</h1>
         <p>${TERMS.length} essential terms for AI agent development — searchable and organized by category.</p>

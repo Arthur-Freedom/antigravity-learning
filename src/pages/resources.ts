@@ -4,8 +4,8 @@
 
 export function render(): string {
   return `
-    <section class="lesson-hero" style="background: linear-gradient(135deg, #0c1e3a 0%, #1a3a5c 40%, #2d6a9f 100%);">
-      <div class="lesson-hero-content">
+    <section class="lesson-hero" style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 40%, #BFDBFE 100%);">
+      <div class="lesson-hero-content" style="color: var(--text-primary);">
         <span class="lesson-badge">Library</span>
         <h1>Resources</h1>
         <p>Curated links, documentation, and community picks to deepen your understanding of AI agent development.</p>

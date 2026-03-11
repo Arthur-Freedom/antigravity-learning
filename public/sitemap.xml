@@ -6,37 +6,37 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://antigravity-learning.web.app/#/learn/workflows</loc>
+    <loc>https://antigravity-learning.web.app/learn/workflows</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://antigravity-learning.web.app/#/learn/skills</loc>
+    <loc>https://antigravity-learning.web.app/learn/skills</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://antigravity-learning.web.app/#/learn/agents</loc>
+    <loc>https://antigravity-learning.web.app/learn/agents</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://antigravity-learning.web.app/#/resources</loc>
+    <loc>https://antigravity-learning.web.app/resources</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://antigravity-learning.web.app/#/faq</loc>
+    <loc>https://antigravity-learning.web.app/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://antigravity-learning.web.app/#/glossary</loc>
+    <loc>https://antigravity-learning.web.app/glossary</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://antigravity-learning.web.app/#/leaderboard</loc>
+    <loc>https://antigravity-learning.web.app/leaderboard</loc>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>

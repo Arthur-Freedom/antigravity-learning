@@ -5,10 +5,19 @@ service cloud.firestore {
 
     // ── User profiles ───────────────────────────────────────────────────
     // READ: Anyone can view profiles (leaderboard is public).
+    //        Admins with custom claim can also read (for analytics).
     // WRITE: Only the profile owner can write their own document.
+    //        Cloud Functions (Admin SDK) bypass these rules entirely.
     match /users/{userId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── Admin-only collections ──────────────────────────────────────────
+    // Admins can read audit collections for debugging.
+    match /audit/{docId} {
+      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow write: if false;
     }
 
     // ── Mail collection (Cloud Functions only) ──────────────────────────

@@ -1,8 +1,8 @@
 // ── Home Page ───────────────────────────────────────────────────────────
 // The landing page with hero, stats, how-it-works, module cards, and progress.
 
-import { getCurrentUser, onAuthChange } from '../auth';
-import { getUserProfile } from '../db';
+import { getCurrentUser, onAuthChange } from '../services/authService';
+import { getUserProfile, getUserCount } from '../services/userService';
 import { renderActivityFeed, initActivityFeed, destroyActivityFeed } from '../components/activity-feed';
 
 // ── Quiz Data (kept for backward compat with modal fallback) ────────────
@@ -59,11 +59,11 @@ export function render(): string {
         <div class="hero-shape shape-3"></div>
       </div>
       <div class="hero-content" style="position: relative; z-index: 1;">
-        <span class="hero-badge">✨ Learn AI Agent Development</span>
-        <h1 class="gradient-text">Master<br>Autonomy</h1>
-        <p>A premium learning experience for AI agents, workflows, and skills. Designed to perfection.</p>
+        <span class="hero-badge">🚀 Free interactive course</span>
+        <h1>Learn by<br><span class="gradient-text">Building</span></h1>
+        <p>Master AI agents, workflows, and skills through hands-on lessons, interactive quizzes, and real-world examples. Fun, free, and made for students.</p>
         <div class="hero-cta-group">
-          <a href="#modules" class="btn btn-primary" id="scroll-btn">Discover the Curriculum</a>
+          <a href="#modules" class="btn btn-primary" id="scroll-btn">Start Learning — it's free</a>
           <a href="#how-it-works" class="btn btn-ghost" id="scroll-how">How It Works</a>
         </div>
       </div>
@@ -76,8 +76,8 @@ export function render(): string {
     <section class="stats-bar reveal-on-scroll">
       <div class="stats-inner">
         <div class="stat-item">
-          <span class="stat-number" data-target="3">0</span>
-          <span class="stat-label">Learning Modules</span>
+          <span class="stat-number" id="stat-user-count" data-target="0">0</span>
+          <span class="stat-label">Learners Enrolled</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
@@ -137,7 +137,8 @@ export function render(): string {
 
     <!-- Core Modules -->
     <section id="modules" class="section">
-      <h2 class="section-title">Core Modules</h2>
+      <h2 class="section-title">Your Learning Path</h2>
+      <p class="section-subtitle">Three bite-sized modules to go from zero to AI agent expert</p>
       <div class="grid">
 
         <div class="card reveal-on-scroll" id="card-workflows">
@@ -152,6 +153,7 @@ export function render(): string {
               <span class="tag">Automation</span>
               <span class="tag">Shell</span>
               <span class="tag">Turbo Mode</span>
+              <span class="tag tag-time">⏱️ ~8 min</span>
             </div>
             <div class="card-footer">
               <span class="card-status" id="status-workflows">Not started</span>
@@ -172,6 +174,7 @@ export function render(): string {
               <span class="tag">Knowledge</span>
               <span class="tag">SKILL.md</span>
               <span class="tag">Reusable</span>
+              <span class="tag tag-time">⏱️ ~10 min</span>
             </div>
             <div class="card-footer">
               <span class="card-status" id="status-skills">Not started</span>
@@ -192,6 +195,7 @@ export function render(): string {
               <span class="tag">Tools</span>
               <span class="tag">Parallel</span>
               <span class="tag">Execution</span>
+              <span class="tag tag-time">⏱️ ~12 min</span>
             </div>
             <div class="card-footer">
               <span class="card-status" id="status-agents">Not started</span>
@@ -204,6 +208,7 @@ export function render(): string {
     <!-- Testimonials -->
     <section class="testimonials-section">
       <h2 class="section-title">What Learners Say</h2>
+      <p class="section-subtitle">Join students worldwide who are mastering AI agent development</p>
       <div class="testimonials-grid">
         <div class="testimonial-card reveal-on-scroll">
           <div class="testimonial-quote-mark">"</div>
@@ -275,6 +280,9 @@ export function init(): void {
 
   // Live activity feed
   initActivityFeed();
+
+  // Fetch and display live user count
+  loadUserCount();
 
   // Restore progress reactively when auth state resolves
   // This fixes the race condition where getCurrentUser() returns null
@@ -417,6 +425,27 @@ async function restoreProgress(): Promise<void> {
         cardStatus.className = `card-status ${result.correct ? 'status-passed' : 'status-failed'}`;
       }
     }
+  }
+}
+
+// ── Live User Count ─────────────────────────────────────────────────────
+
+async function loadUserCount(): Promise<void> {
+  const count = await getUserCount();
+  const el = document.getElementById('stat-user-count');
+  if (el && count > 0) {
+    el.setAttribute('data-target', count.toString());
+    // Re-animate this single counter
+    const duration = 1500;
+    const start = performance.now();
+    function update(now: number) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el!.textContent = Math.round(count * eased).toString();
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
   }
 }
 

@@ -3,8 +3,8 @@
 
 export function render(): string {
   return `
-    <section class="lesson-hero" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 100%);">
-      <div class="lesson-hero-content">
+    <section class="lesson-hero" style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 40%, #C7D2FE 100%);">
+      <div class="lesson-hero-content" style="color: var(--text-primary);">
         <span class="lesson-badge">Help</span>
         <h1>FAQ</h1>
         <p>Common questions about AI agent development and the Antigravity Learning platform.</p>

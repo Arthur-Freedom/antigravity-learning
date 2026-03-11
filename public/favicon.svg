@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#283A4A"/>
+  <!-- Inner glow ring -->
+  <circle cx="32" cy="32" r="24" stroke="url(#grad)" stroke-width="3" fill="none" opacity="0.5"/>
+  <!-- "A" letterform — stylized upward arrow/antigravity symbol -->
+  <path d="M32 14 L44 46 L40 46 L37 38 L27 38 L24 46 L20 46 Z" fill="url(#grad)"/>
+  <!-- Crossbar with gap for modern look -->
+  <rect x="28.5" y="33" width="7" height="3" rx="1" fill="#283A4A"/>
+  <!-- Floating dot above — the "antigravity" element -->
+  <circle cx="32" cy="11" r="2.5" fill="#d4a853"/>
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="64" y2="64">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#a0c4ff"/>
+    </linearGradient>
+  </defs>
+</svg>

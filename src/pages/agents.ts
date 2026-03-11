@@ -45,7 +45,7 @@ const quizQuestions: QuizQuestion[] = [
 
 export function render(): string {
   return `
-    <section class="lesson-hero" style="background: linear-gradient(135deg, #141e30 0%, #243b55 50%, #4a00e0 100%);">
+    <section class="lesson-hero" style="background: linear-gradient(135deg, #FEF9C3 0%, #FDE68A 50%, #FCD34D 100%);">
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="/">Home</a>
         <span class="breadcrumb-sep">›</span>
@@ -57,6 +57,7 @@ export function render(): string {
         <span class="lesson-badge">Module 3</span>
         <h1>Autonomous Agents</h1>
         <p>Understand how AI agents execute tasks directly on your machine — and how to orchestrate multiple agents at once.</p>
+        <span class="lesson-reading-time">⏱️ ~12 min read</span>
       </div>
     </section>
 

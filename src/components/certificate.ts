@@ -2,8 +2,8 @@
 // Generates a downloadable certificate using Canvas API.
 // No external dependencies — pure browser-side rendering.
 
-import { getCurrentUser } from '../auth'
-import { isCertificateEligible, getUserProfile } from '../db'
+import { getCurrentUser } from '../services/authService'
+import { isCertificateEligible, getUserProfile } from '../services/userService'
 import { showToast } from './toast'
 
 /**
@@ -85,6 +85,9 @@ export async function downloadCertificate(): Promise<void> {
     document.body.removeChild(a)
     setTimeout(() => URL.revokeObjectURL(url), 1000)
     showToast({ message: '🎓 Certificate downloaded!', type: 'success' })
+
+    // Show social sharing modal
+    showShareModal(name)
   } catch (err) {
     console.error('[certificate] Generation failed:', err)
     showToast({ message: 'Certificate generation failed. Please try again.', type: 'error' })
@@ -270,4 +273,63 @@ function roundRect(
   ctx.lineTo(x, y + r)
   ctx.quadraticCurveTo(x, y, x + r, y)
   ctx.closePath()
+}
+
+// ── Social Share Modal ──────────────────────────────────────────────────
+
+function showShareModal(name: string): void {
+  // Prevent duplicates
+  if (document.querySelector('.share-modal-overlay')) return
+
+  const siteUrl = 'https://antigravity-learning.web.app'
+  const tweetText = encodeURIComponent(
+    `🎓 I just earned my Antigravity Learning certificate! Mastered Workflows, Skills, and Autonomous Agents.\n\n${siteUrl}`
+  )
+  const linkedInUrl = encodeURIComponent(siteUrl)
+  const linkedInTitle = encodeURIComponent('Antigravity Learning Certificate')
+  const linkedInSummary = encodeURIComponent(
+    `${name} has completed all modules on Antigravity Learning, earning a certificate in AI Agent Development.`
+  )
+
+  const overlay = document.createElement('div')
+  overlay.className = 'share-modal-overlay'
+  overlay.innerHTML = `
+    <div class="share-modal" role="dialog" aria-label="Share your achievement">
+      <button class="share-modal-close">&times;</button>
+      <div class="share-modal-icon">🎉</div>
+      <h3>Share Your Achievement!</h3>
+      <p>Let the world know you've earned your certificate.</p>
+      <div class="share-modal-buttons">
+        <a href="https://twitter.com/intent/tweet?text=${tweetText}"
+           target="_blank" rel="noopener noreferrer"
+           class="share-btn share-btn-twitter">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          Share on X
+        </a>
+        <a href="https://www.linkedin.com/shareArticle?mini=true&url=${linkedInUrl}&title=${linkedInTitle}&summary=${linkedInSummary}"
+           target="_blank" rel="noopener noreferrer"
+           class="share-btn share-btn-linkedin">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+          Share on LinkedIn
+        </a>
+      </div>
+    </div>
+  `
+
+  document.body.appendChild(overlay)
+  requestAnimationFrame(() => overlay.classList.add('share-modal-visible'))
+
+  const close = () => {
+    overlay.classList.remove('share-modal-visible')
+    setTimeout(() => overlay.remove(), 250)
+  }
+
+  overlay.querySelector('.share-modal-close')!.addEventListener('click', close)
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close()
+  })
 }

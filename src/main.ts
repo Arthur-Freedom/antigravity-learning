@@ -1,9 +1,11 @@
 import './style.css'
 import './animations.css'
-// import { initAppCheck } from './appcheck'  // ← Enable once VITE_RECAPTCHA_ENTERPRISE_KEY is set
-import { bindAuthUI, onAuthChange } from './auth'
+// import { initAppCheck } from './lib/appcheck'  // ← Enable once VITE_RECAPTCHA_ENTERPRISE_KEY is set
+import { bindAuthUI } from './components/auth-button'
+import { onAuthChange } from './services/authService'
 import { registerRoutes, initRouter, navigate, getCurrentPath } from './router'
 import { showToast } from './components/toast'
+import { initPresence, onOnlineCountChange } from './services/presenceService'
 
 // App Check is disabled until a ReCAPTCHA Enterprise key is configured.
 // Uncomment the import above and the line below once ready:
@@ -27,7 +29,13 @@ import { downloadCertificate } from './components/certificate'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <header class="navbar">
-    <a href="/" class="nav-brand">Antigravity</a>
+    <div class="nav-brand-group">
+      <a href="/" class="nav-brand">Antigravity</a>
+      <span class="presence-indicator" id="presence-indicator" style="display:none;">
+        <span class="presence-dot"></span>
+        <span class="presence-count" id="presence-count">0</span> online
+      </span>
+    </div>
     <div class="nav-links">
       <a href="/">Home</a>
       <a href="/" id="nav-modules-link">Modules</a>
@@ -36,7 +44,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <a href="/profile" id="nav-profile-link" class="nav-profile-link" style="display:none;">👤 Profile</a>
       <button id="cert-download-btn" class="btn btn-ghost" style="padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: 100px;">🎓 Certificate</button>
       <button id="google-login-btn" class="btn auth-btn auth-btn--logged-out" aria-label="Sign in with Google">Sign in with Google</button>
-      <button id="theme-toggle" class="btn theme-btn" aria-label="Toggle theme">☀️ Light</button>
+
     </div>
     <button class="hamburger" id="hamburger-btn" aria-label="Toggle menu">
       <span></span><span></span><span></span>
@@ -80,6 +88,21 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 // ── Auth Binding ────────────────────────────────────────────────────────
 bindAuthUI('google-login-btn')
 
+// ── Presence Tracking ───────────────────────────────────────────────────
+initPresence()
+onOnlineCountChange((count) => {
+  const indicator = document.getElementById('presence-indicator')
+  const countEl = document.getElementById('presence-count')
+  if (indicator && countEl) {
+    if (count > 0) {
+      indicator.style.display = 'inline-flex'
+      countEl.textContent = count.toString()
+    } else {
+      indicator.style.display = 'none'
+    }
+  }
+})
+
 // ── Route Registration ──────────────────────────────────────────────────
 registerRoutes({
   '/': { render: homePage.render, init: homePage.init, destroy: homePage.destroy },
@@ -102,32 +125,6 @@ document.getElementById('cert-download-btn')?.addEventListener('click', () => {
 // Start the router (renders the initial page)
 initRouter('#page-content')
 
-// ── Theme Toggle with Persistence ───────────────────────────────────────
-import { saveThemePreference, getUserProfile } from './db'
-import { getCurrentUser } from './auth'
-
-const themeBtn = document.getElementById('theme-toggle')!
-
-function applyTheme(theme: 'light' | 'dark') {
-  if (theme === 'dark') {
-    document.body.classList.add('dark-theme')
-    themeBtn.textContent = '🌙 Dark'
-  } else {
-    document.body.classList.remove('dark-theme')
-    themeBtn.textContent = '☀️ Light'
-  }
-}
-
-themeBtn.addEventListener('click', async () => {
-  const isDark = document.body.classList.contains('dark-theme')
-  const newTheme = isDark ? 'light' : 'dark'
-  applyTheme(newTheme)
-
-  const user = getCurrentUser()
-  if (user) {
-    await saveThemePreference(user.uid, newTheme)
-  }
-})
 
 // ── Hamburger Menu (Mobile) ─────────────────────────────────────────────
 const hamburger = document.getElementById('hamburger-btn')!
@@ -205,10 +202,6 @@ onAuthChange(async (user) => {
   if (profileLink) profileLink.style.display = user ? '' : 'none'
 
   if (user) {
-    const profile = await getUserProfile(user.uid)
-    if (profile) {
-      applyTheme(profile.theme ?? 'light')
-    }
     // Show welcome toast (but not on initial page load)
     if (previousUser !== undefined) {
       showToast({

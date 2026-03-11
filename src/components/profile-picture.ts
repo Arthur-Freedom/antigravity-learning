@@ -1,24 +1,11 @@
 // ── Profile Picture Upload Component ────────────────────────────────────
 // A modal dialog for uploading and previewing a custom profile picture.
-// Shows a live preview with crop circle before confirming upload.
+// Uses service layer only — ZERO direct Firebase imports.
 
-import { getCurrentUser } from '../auth';
-import { uploadProfilePicture, deleteProfilePicture } from '../storage';
+import { getCurrentUser, updateAuthProfile } from '../services/authService';
+import { uploadProfilePicture, deleteProfilePicture } from '../services/storageService';
+import { updateProfilePhoto, removeProfilePhoto } from '../services/userService';
 import { showToast } from './toast';
-import { doc, getFirestore, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { getApps, getApp, initializeApp } from 'firebase/app';
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
-
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 let modalElement: HTMLElement | null = null;
 
@@ -94,7 +81,6 @@ export function openProfilePictureModal(): void {
   document.body.appendChild(overlay);
   modalElement = overlay;
 
-  // Force reflow then animate in
   requestAnimationFrame(() => overlay.classList.add('pfp-modal-visible'));
 
   // ── Event Binding ────────────────────────────────────────────────────
@@ -110,7 +96,6 @@ export function openProfilePictureModal(): void {
 
   let selectedFile: File | null = null;
 
-  // Close modal
   const closeModal = () => {
     overlay.classList.remove('pfp-modal-visible');
     setTimeout(() => {
@@ -141,8 +126,6 @@ export function openProfilePictureModal(): void {
     previewImg.classList.remove('pfp-hidden');
     placeholder.classList.add('pfp-hidden');
     uploadBtn.disabled = false;
-
-    // Cleanup old URL
     previewImg.onload = () => URL.revokeObjectURL(url);
   };
 
@@ -177,38 +160,33 @@ export function openProfilePictureModal(): void {
     try {
       const downloadURL = await uploadProfilePicture(user.uid, selectedFile);
 
-      // Update Firestore user document with new photoURL
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        photoURL: downloadURL,
-        customPhotoURL: downloadURL,
-        updatedAt: serverTimestamp(),
-      });
+      // Update Firestore via service function (no direct Firestore imports!)
+      await updateProfilePhoto(user.uid, downloadURL, downloadURL);
+      
+      // Update Firebase Auth profile so the photo is immediately available
+      // on next load via auth.currentUser and when opening this modal again
+      await updateAuthProfile({ photoURL: downloadURL });
 
       showToast({ message: '📷 Profile picture updated!', type: 'success' });
       closeModal();
 
-      // Refresh the auth button avatar
+      // Refresh UI avatars
       const authAvatar = document.querySelector('.auth-avatar') as HTMLImageElement;
-      if (authAvatar) {
-        authAvatar.src = downloadURL;
-      }
+      if (authAvatar) authAvatar.src = downloadURL;
 
-      // Refresh the profile page avatar (the big circle)
       const profileAvatarImg = document.querySelector('.profile-avatar-img') as HTMLImageElement;
       if (profileAvatarImg) {
         profileAvatarImg.src = downloadURL;
       } else {
-        // Replace placeholder with actual image
         const ring = document.querySelector('.profile-avatar-ring');
-        const placeholder = ring?.querySelector('.profile-avatar-placeholder');
-        if (ring && placeholder) {
+        const ph = ring?.querySelector('.profile-avatar-placeholder');
+        if (ring && ph) {
           const img = document.createElement('img');
           img.src = downloadURL;
           img.alt = user.displayName ?? 'Avatar';
           img.className = 'profile-avatar-img';
           img.referrerPolicy = 'no-referrer';
-          placeholder.replaceWith(img);
+          ph.replaceWith(img);
         }
       }
     } catch (error) {
@@ -234,22 +212,17 @@ export function openProfilePictureModal(): void {
     try {
       await deleteProfilePicture(user.uid);
 
-      // Revert to Google photo
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        photoURL: user.photoURL, // Revert to Google photo
-        customPhotoURL: null,
-        updatedAt: serverTimestamp(),
-      });
+      // Update Firestore via service function
+      await removeProfilePhoto(user.uid, user.photoURL);
+
+      // Update Firebase Auth profile
+      await updateAuthProfile({ photoURL: user.photoURL });
 
       showToast({ message: 'Profile picture removed', type: 'info' });
       closeModal();
 
-      // Refresh the auth button avatar
       const authAvatar = document.querySelector('.auth-avatar') as HTMLImageElement;
-      if (authAvatar && user.photoURL) {
-        authAvatar.src = user.photoURL;
-      }
+      if (authAvatar && user.photoURL) authAvatar.src = user.photoURL;
     } catch (error) {
       console.error('[profile-picture] Remove failed:', error);
       showToast({ message: 'Failed to remove photo', type: 'error' });

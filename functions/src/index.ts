@@ -10,6 +10,22 @@
 //   Trigger:  HTTPS Callable (with App Check enforcement)
 //   Action:   Secure server-side check of quiz completion.
 //
+// setAdminClaim:
+//   Trigger:  HTTPS Callable
+//   Action:   Sets admin custom claim on a user's Auth token.
+//             Bootstrapped via ADMIN_EMAILS env var. Once set, the
+//             claim persists on the ID token — no env var needed client-side.
+//
+// onUserDataWrite:
+//   Trigger:  Firestore onDocumentWritten on users/{uid}
+//   Action:   Server-side validation/sanitisation of user-written data.
+//             Trims display names, clamps scores, strips HTML, ensures
+//             data integrity as a second layer of defence.
+//
+// onUserCreated:
+//   Trigger:  Firestore onDocumentCreated on users/{uid}
+//   Action:   Sends a branded welcome email when a new user signs up.
+//
 // ── SMTP Setup (one-time) ───────────────────────────────────────────────
 //
 // Option A — .env file (simplest):
@@ -25,10 +41,15 @@
 //   https://myaccount.google.com/apppasswords
 //   (requires 2-Step Verification enabled on your Google account)
 
-import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import {
+  onDocumentUpdated,
+  onDocumentCreated,
+  onDocumentWritten,
+} from "firebase-functions/v2/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
 import { initializeApp, getApps } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import * as nodemailer from "nodemailer";
 
@@ -219,6 +240,260 @@ export const getCompletionStatus = onCall(
 );
 
 // ═══════════════════════════════════════════════════════════════════════
+// 3. CALLABLE — Set Admin Custom Claim
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Sets the `admin: true` custom claim on a user's Firebase Auth token.
+ *
+ * Access control:
+ *   - If the caller already has `admin` custom claim → allowed
+ *   - Otherwise, falls back to ADMIN_EMAILS env var (bootstrap)
+ *
+ * Client usage:
+ *   const fn = httpsCallable(functions, 'setAdminClaim');
+ *   await fn({ targetUid: 'some-uid' });
+ */
+export const setAdminClaim = onCall(
+  { enforceAppCheck: true },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in required.");
+    }
+
+    const callerUid = request.auth.uid;
+    const callerEmail = request.auth.token.email ?? "";
+    const isCallerAdmin = request.auth.token.admin === true;
+
+    // Bootstrap: allow env-listed emails to self-promote
+    const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+
+    if (!isCallerAdmin && !adminEmails.includes(callerEmail.toLowerCase())) {
+      throw new HttpsError(
+        "permission-denied",
+        "Only administrators can grant admin access."
+      );
+    }
+
+    const targetUid = (request.data as { targetUid?: string })?.targetUid ?? callerUid;
+
+    try {
+      await getAuth().setCustomUserClaims(targetUid, { admin: true });
+
+      // Stamp audit trail on the user doc
+      await db.doc(`users/${targetUid}`).update({
+        isAdmin: true,
+        adminGrantedBy: callerUid,
+        adminGrantedAt: FieldValue.serverTimestamp(),
+      });
+
+      logger.info("✅ Admin claim set", { targetUid, grantedBy: callerUid });
+      return { success: true, targetUid };
+    } catch (error) {
+      logger.error("Failed to set admin claim:", error);
+      throw new HttpsError("internal", "Failed to set admin claim.");
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════
+// 4. FIRESTORE TRIGGER — Server-Side Data Validation
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Maximum allowed display name length */
+const MAX_DISPLAY_NAME_LENGTH = 50;
+
+/** Allowed quiz topics — used to validate quizProgress keys */
+const VALID_TOPICS = ["workflows", "skills", "agents"];
+
+/** Strip HTML tags from a string */
+function stripHtml(str: string): string {
+  return str.replace(/<[^>]*>/g, "");
+}
+
+/**
+ * Fires on every write to users/{userId}.
+ * Validates and sanitises data written by the client:
+ *   - displayName: trimmed, HTML stripped, capped at 50 chars
+ *   - quizScore/quizTotal: clamped 0–3, must be integers
+ *   - completedAll: recalculated from actual quizProgress
+ *   - quizProgress keys: must be valid topics
+ *
+ * If violations are found, the function writes corrected values back.
+ * Uses a `_sanitizedAt` stamp to prevent infinite trigger loops.
+ */
+export const onUserDataWrite = onDocumentWritten(
+  "users/{userId}",
+  async (event) => {
+    const userId = event.params.userId;
+    const afterData = event.data?.after.data();
+
+    // Document was deleted — nothing to validate
+    if (!afterData) return;
+
+    // Prevent infinite loops: if we just sanitised, skip
+    const beforeData = event.data?.before.data();
+    if (
+      afterData._sanitizedAt &&
+      beforeData?._sanitizedAt &&
+      afterData._sanitizedAt === beforeData._sanitizedAt
+    ) {
+      return;
+    }
+
+    const fixes: Record<string, unknown> = {};
+    let needsFix = false;
+
+    // ── Display name validation ─────────────────────────────────────
+    if (typeof afterData.displayName === "string") {
+      const cleaned = stripHtml(afterData.displayName).trim();
+      const capped = cleaned.slice(0, MAX_DISPLAY_NAME_LENGTH);
+      if (capped !== afterData.displayName) {
+        fixes.displayName = capped || "Learner";
+        needsFix = true;
+        logger.warn("Sanitised displayName", {
+          userId,
+          original: afterData.displayName,
+          fixed: fixes.displayName,
+        });
+      }
+    }
+
+    // ── Quiz score validation ───────────────────────────────────────
+    const progress = afterData.quizProgress ?? {};
+    const validProgress: Record<string, unknown> = {};
+    let invalidKeys = false;
+
+    for (const [key, value] of Object.entries(progress)) {
+      if (VALID_TOPICS.includes(key)) {
+        validProgress[key] = value;
+      } else {
+        invalidKeys = true;
+        logger.warn("Removed invalid quiz topic", { userId, key });
+      }
+    }
+
+    if (invalidKeys) {
+      fixes.quizProgress = validProgress;
+      needsFix = true;
+    }
+
+    // Recalculate denormalised fields from actual progress
+    const results = Object.values(validProgress) as Array<{ correct?: boolean }>;
+    const correctCount = results.filter((r) => r.correct === true).length;
+    const totalCount = results.length;
+    const shouldBeComplete = correctCount >= 3;
+
+    if (
+      afterData.quizScore !== correctCount ||
+      afterData.quizTotal !== totalCount ||
+      afterData.completedAll !== shouldBeComplete
+    ) {
+      fixes.quizScore = correctCount;
+      fixes.quizTotal = totalCount;
+      fixes.completedAll = shouldBeComplete;
+      needsFix = true;
+      logger.warn("Recalculated denormalised quiz fields", {
+        userId,
+        correctCount,
+        totalCount,
+        shouldBeComplete,
+      });
+    }
+
+    // ── Apply fixes ─────────────────────────────────────────────────
+    if (needsFix) {
+      fixes._sanitizedAt = FieldValue.serverTimestamp();
+      await db.doc(`users/${userId}`).update(fixes);
+      logger.info("✅ Applied data sanitisation", { userId, fixedFields: Object.keys(fixes) });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════
+// 5. FIRESTORE TRIGGER — Welcome Email on Sign-Up
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Fires when a new user document is created (first sign-in).
+ * Sends a branded welcome email via the existing Nodemailer transporter.
+ */
+export const onUserCreated = onDocumentCreated(
+  "users/{userId}",
+  async (event) => {
+    const userId = event.params.userId;
+    const data = event.data?.data();
+
+    if (!data) {
+      logger.warn("onUserCreated: no data", { userId });
+      return;
+    }
+
+    const displayName = data.displayName ?? "Learner";
+    const email = data.email;
+
+    if (!email) {
+      logger.warn("New user has no email — skipping welcome.", { userId });
+      return;
+    }
+
+    logger.info("👋 New user signed up!", { userId, displayName, email });
+
+    const subject = "🚀 Welcome to Antigravity Learning!";
+    const html = generateWelcomeHtml(displayName);
+    const text = generateWelcomeText(displayName);
+
+    try {
+      const transporter = createTransporter();
+
+      const info = await transporter.sendMail({
+        from: `"Antigravity Learning" <${process.env.SMTP_EMAIL}>`,
+        to: email,
+        subject,
+        html,
+        text,
+      });
+
+      logger.info("✉️  Welcome email sent!", {
+        messageId: info.messageId,
+        to: email,
+      });
+
+      // Audit record
+      await db.collection("mail").add({
+        to: email,
+        subject,
+        userId,
+        type: "welcome",
+        status: "sent",
+        messageId: info.messageId,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+
+      // Stamp user doc
+      await db.doc(`users/${userId}`).update({
+        welcomeEmailSentAt: FieldValue.serverTimestamp(),
+      });
+    } catch (error) {
+      logger.error("❌ Failed to send welcome email:", error);
+
+      await db.collection("mail").add({
+        to: email,
+        subject,
+        userId,
+        type: "welcome",
+        status: "failed",
+        error: String(error),
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════
 // EMAIL TEMPLATES
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -281,7 +556,7 @@ function generateCongratulationsHtml(displayName: string): string {
         <table cellspacing="0" cellpadding="0" style="margin:0 auto;">
           <tr>
             <td style="background:#283A4A; border-radius:6px;">
-              <a href="https://antigravity-learning.web.app/#/"
+              <a href="https://antigravity-learning.web.app/"
                  style="display:inline-block; padding:14px 32px; color:#fff; text-decoration:none; font-weight:600; font-size:14px; letter-spacing:0.5px;">
                 Download Certificate →
               </a>
@@ -314,9 +589,116 @@ You've completed all three modules in the Antigravity Learning program:
   ✅ Autonomous Agents
 
 You can now download your completion certificate from the website:
-https://antigravity-learning.web.app/#/
+https://antigravity-learning.web.app/
 
 Click the 🎓 Certificate button in the navigation bar.
+
+© ${new Date().getFullYear()} Antigravity Learning`;
+}
+
+// ── Welcome Email Templates ─────────────────────────────────────────────
+
+function generateWelcomeHtml(displayName: string): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0; padding:0; background:#f0f0f0; font-family:'Inter','Helvetica',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:40px auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <!-- Header -->
+    <tr>
+      <td style="background:linear-gradient(135deg,#283A4A 0%,#3178C6 100%); padding:40px 32px; text-align:center;">
+        <h1 style="color:#fff; font-size:28px; margin:0 0 8px;">🚀 Welcome aboard!</h1>
+        <p style="color:rgba(255,255,255,0.85); font-size:14px; margin:0;">Your learning journey starts now</p>
+      </td>
+    </tr>
+
+    <!-- Body -->
+    <tr>
+      <td style="padding:32px;">
+        <p style="font-size:16px; color:#283A4A; margin:0 0 16px;">
+          Hey <strong>${displayName}</strong>,
+        </p>
+        <p style="font-size:15px; color:#5a6b7c; line-height:1.7; margin:0 0 20px;">
+          Welcome to <strong>Antigravity Learning</strong>! You've just joined a platform
+          designed to teach you how to build and work with AI agents.
+        </p>
+
+        <p style="font-size:15px; color:#5a6b7c; line-height:1.7; margin:0 0 8px;">Here's what's waiting for you:</p>
+
+        <!-- Modules -->
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+          <tr>
+            <td style="padding:10px 14px; background:#eff6ff; border-radius:6px;">
+              <span style="font-size:14px; color:#2563eb; font-weight:600;">📋 Module 1 — Workflows</span>
+              <p style="font-size:13px; color:#5a6b7c; margin:4px 0 0;">Automate repetitive tasks with step-by-step recipes</p>
+            </td>
+          </tr>
+          <tr><td style="height:6px;"></td></tr>
+          <tr>
+            <td style="padding:10px 14px; background:#eff6ff; border-radius:6px;">
+              <span style="font-size:14px; color:#2563eb; font-weight:600;">🧠 Module 2 — Skills</span>
+              <p style="font-size:13px; color:#5a6b7c; margin:4px 0 0;">Give your agent permanent knowledge with SKILL.md files</p>
+            </td>
+          </tr>
+          <tr><td style="height:6px;"></td></tr>
+          <tr>
+            <td style="padding:10px 14px; background:#eff6ff; border-radius:6px;">
+              <span style="font-size:14px; color:#2563eb; font-weight:600;">🤖 Module 3 — Autonomous Agents</span>
+              <p style="font-size:13px; color:#5a6b7c; margin:4px 0 0;">Build agents that think, act, and observe autonomously</p>
+            </td>
+          </tr>
+        </table>
+
+        <p style="font-size:15px; color:#5a6b7c; line-height:1.7; margin:0 0 24px;">
+          Complete all 3 modules to earn your <strong>completion certificate</strong>
+          and join the leaderboard!
+        </p>
+
+        <!-- CTA Button -->
+        <table cellspacing="0" cellpadding="0" style="margin:0 auto;">
+          <tr>
+            <td style="background:#283A4A; border-radius:6px;">
+              <a href="https://antigravity-learning.web.app/learn/workflows"
+                 style="display:inline-block; padding:14px 32px; color:#fff; text-decoration:none; font-weight:600; font-size:14px; letter-spacing:0.5px;">
+                Start Module 1 →
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- Footer -->
+    <tr>
+      <td style="padding:20px 32px; background:#f8fafc; border-top:1px solid #e2e8f0; text-align:center;">
+        <p style="font-size:12px; color:#94a3b8; margin:0;">
+          © ${new Date().getFullYear()} Antigravity Learning · Built with ❤️ by AI agents
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function generateWelcomeText(displayName: string): string {
+  return `🚀 Welcome to Antigravity Learning, ${displayName}!
+
+You've just joined a platform designed to teach you how to build and work with AI agents.
+
+Here's what's waiting for you:
+
+  📋 Module 1 — Workflows: Automate repetitive tasks
+  🧠 Module 2 — Skills: Give your agent permanent knowledge
+  🤖 Module 3 — Autonomous Agents: Build agents that think and act
+
+Complete all 3 modules to earn your completion certificate!
+
+Start here: https://antigravity-learning.web.app/learn/workflows
 
 © ${new Date().getFullYear()} Antigravity Learning`;
 }

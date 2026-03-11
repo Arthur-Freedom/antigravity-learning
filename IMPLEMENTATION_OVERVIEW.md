@@ -24,7 +24,7 @@
 | Feature | Description | Files | Effort |
 |---------|-------------|-------|--------|
 | **Vite + TypeScript Project** | Full SPA scaffold with build tooling, tsconfig, dev server | `vite.config.ts`, `tsconfig.json`, `package.json`, `index.html` | Low |
-| **SPA Hash Router** | Custom client-side router with route registration, page transitions, destroy hooks | `src/router.ts` (111 lines) | Medium |
+| **SPA History Router** | Custom client-side router with route registration, page transitions, destroy hooks | `src/router.ts` (111 lines) | Medium |
 | **Design System (CSS)** | Premium dark-theme CSS with 3,600+ lines: gradients, glassmorphism, responsive grid, animations | `src/style.css` (88KB) | High |
 | **Animation System** | Dedicated animation CSS: reveal-on-scroll, gradient text, hero particles, floating shapes | `src/animations.css` (665 lines) | Medium |
 | **Firebase Hosting + Deploy** | `firebase.json` config, deploy workflow, `.firebaserc` | `firebase.json`, `.agent/workflows/deploy.md` | Low |
