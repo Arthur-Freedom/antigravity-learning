@@ -1,12 +1,13 @@
 import './style.css'
 import './animations.css'
-import { initAppCheck } from './appcheck'
+// import { initAppCheck } from './appcheck'  // ← Enable once VITE_RECAPTCHA_ENTERPRISE_KEY is set
 import { bindAuthUI, onAuthChange } from './auth'
 import { registerRoutes, initRouter, navigate, getCurrentPath } from './router'
 import { showToast } from './components/toast'
 
-// ── App Check (must be initialized BEFORE any Firebase service calls) ──
-initAppCheck()
+// App Check is disabled until a ReCAPTCHA Enterprise key is configured.
+// Uncomment the import above and the line below once ready:
+// initAppCheck()
 
 // ── Page Modules ────────────────────────────────────────────────────────
 import * as homePage from './pages/home'
@@ -132,17 +133,46 @@ themeBtn.addEventListener('click', async () => {
 const hamburger = document.getElementById('hamburger-btn')!
 const navLinks = document.querySelector('.nav-links')!
 
+function openMobileMenu(): void {
+  navLinks.classList.add('nav-open')
+  hamburger.classList.add('hamburger-active')
+  document.body.style.overflow = 'hidden' // Prevent background scroll
+}
+
+function closeMobileMenu(): void {
+  navLinks.classList.remove('nav-open')
+  hamburger.classList.remove('hamburger-active')
+  document.body.style.overflow = ''
+}
+
 hamburger.addEventListener('click', () => {
-  navLinks.classList.toggle('nav-open')
-  hamburger.classList.toggle('hamburger-active')
+  if (navLinks.classList.contains('nav-open')) {
+    closeMobileMenu()
+  } else {
+    openMobileMenu()
+  }
 })
 
 // Close mobile menu on link click
 navLinks.querySelectorAll('a').forEach((link) => {
-  link.addEventListener('click', () => {
-    navLinks.classList.remove('nav-open')
-    hamburger.classList.remove('hamburger-active')
-  })
+  link.addEventListener('click', closeMobileMenu)
+})
+
+// Close mobile menu on button click (certificate, theme toggle)
+navLinks.querySelectorAll('button').forEach((btn) => {
+  btn.addEventListener('click', closeMobileMenu)
+})
+
+// Close on backdrop click (the ::before pseudo-element area)
+navLinks.addEventListener('click', (e) => {
+  if (e.target === navLinks) closeMobileMenu()
+})
+
+// Close on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && navLinks.classList.contains('nav-open')) {
+    closeMobileMenu()
+  }
 })
 
 // ── Modules Link Scroll Handler ─────────────────────────────────────────

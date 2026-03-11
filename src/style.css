@@ -2038,15 +2038,60 @@ body.dark-theme .logout-confirm-cancel:hover {
     right: -100%;
     width: 280px;
     height: 100vh;
+    height: 100dvh;
     background: var(--bg-primary);
     flex-direction: column;
-    padding: 5rem 2rem 2rem;
+    padding: 5rem 1.5rem 2rem;
     box-shadow: -4px 0 20px rgba(0,0,0,0.15);
-    transition: right 0.3s ease;
+    transition: right 0.35s cubic-bezier(0.23, 1, 0.32, 1);
     z-index: 105;
+    overflow-y: auto;
+    gap: 0.25rem;
+  }
+
+  /* Backdrop overlay */
+  .nav-links::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: -1;
   }
 
   .nav-links.nav-open { right: 0; }
+  .nav-links.nav-open::before { opacity: 1; pointer-events: auto; }
+
+  /* Stack nav items vertically with good tap targets */
+  .nav-links a {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+    width: 100%;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+  }
+
+  .nav-links a:hover {
+    background: var(--bg-secondary);
+  }
+
+  /* Nav link underlines don't make sense in vertical menu */
+  .nav-links a::after {
+    display: none;
+  }
+
+  /* Full-width buttons in mobile menu */
+  .nav-links .btn,
+  .nav-links .auth-btn,
+  .nav-links .theme-btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
 
   .hero {
     flex-direction: column;
@@ -2101,12 +2146,16 @@ body.dark-theme .logout-confirm-cancel:hover {
 
 @media (max-width: 480px) {
   .hero h1 { font-size: 2.2rem; }
-  .lesson-hero-content h1 { font-size: 1.8rem; }
+  .lesson-hero { padding: 2rem 1rem 2.5rem; }
+  .lesson-hero-content h1 { font-size: 1.5rem; }
   .feature-grid { grid-template-columns: 1fr; }
   .tools-grid { grid-template-columns: 1fr; }
   .card-footer { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
   .stats-inner { gap: 1.5rem; }
   .stat-item { flex: 0 0 40%; }
+
+  /* Nav drawer on very small screens */
+  .nav-links { width: 100%; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -3213,19 +3262,7 @@ body.dark-theme .pfp-btn-remove:hover {
   height: 110px;
   border-radius: 50%;
   padding: 4px;
-  background: conic-gradient(
-    from 0deg,
-    var(--accent-color),
-    #6366f1,
-    #a855f7,
-    #ec4899,
-    var(--accent-color)
-  );
-  animation: profile-ring-spin 6s linear infinite;
-}
-
-@keyframes profile-ring-spin {
-  to { transform: rotate(360deg); }
+  background: var(--accent-color);
 }
 
 .profile-avatar-img {
@@ -3279,7 +3316,7 @@ body.dark-theme .pfp-btn-remove:hover {
 }
 
 .profile-avatar-wrapper:hover .profile-avatar-ring {
-  animation-play-state: paused;
+  filter: brightness(1.15);
 }
 
 /* ── Header Info ─────────────────────────────────────────────────────── */
@@ -3818,6 +3855,286 @@ body.dark-theme .profile-badge-new {
   color: #a78bfa;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   PROFILE PICTURE MODAL
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.pfp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pfp-modal-overlay.pfp-modal-visible {
+  opacity: 1;
+}
+
+.pfp-modal {
+  background: var(--bg-primary);
+  border-radius: 20px;
+  max-width: 480px;
+  width: 100%;
+  padding: 2.5rem;
+  position: relative;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+  transform: scale(0.92) translateY(12px);
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.pfp-modal-visible .pfp-modal {
+  transform: scale(1) translateY(0);
+}
+
+.pfp-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--bg-secondary);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.3rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pfp-modal-close:hover {
+  background: var(--error-bg);
+  color: var(--error);
+  transform: rotate(90deg);
+}
+
+.pfp-modal-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.pfp-modal-header h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.35rem;
+}
+
+.pfp-modal-header p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ── Preview Area ────────────────────────────────────────────────────── */
+
+.pfp-preview-area {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.pfp-preview-ring {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--accent-color);
+  box-shadow: 0 0 0 4px rgba(49, 120, 198, 0.15);
+  position: relative;
+  background: var(--bg-secondary);
+}
+
+.pfp-preview-ring img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pfp-preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.pfp-preview-icon {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.pfp-hidden {
+  display: none !important;
+}
+
+/* ── Drop Zone ───────────────────────────────────────────────────────── */
+
+.pfp-drop-zone {
+  border: 2px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: all 0.25s ease;
+  margin-bottom: 1.5rem;
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.pfp-drop-zone.pfp-drop-active {
+  border-color: var(--accent-color);
+  background: rgba(49, 120, 198, 0.04);
+  transform: scale(1.01);
+}
+
+.pfp-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pfp-drop-icon {
+  font-size: 2rem;
+  opacity: 0.6;
+}
+
+.pfp-drop-text {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.pfp-drop-sub {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pfp-browse-btn {
+  display: inline-block !important;
+  padding: 0.6rem 1.5rem !important;
+  font-size: 0.85rem !important;
+  border-radius: 10px !important;
+  background: var(--accent-color) !important;
+  color: #fff !important;
+  cursor: pointer;
+  margin-top: 0.25rem;
+}
+
+.pfp-browse-btn:hover {
+  background: var(--accent-hover) !important;
+  transform: translateY(-1px);
+}
+
+.pfp-drop-hint {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin-top: 0.25rem;
+}
+
+/* ── Action Buttons ──────────────────────────────────────────────────── */
+
+.pfp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pfp-btn-upload {
+  width: 100%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem !important;
+  border-radius: 12px !important;
+  background: var(--accent-color) !important;
+  color: #fff !important;
+  font-size: 0.9rem !important;
+}
+
+.pfp-btn-upload:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pfp-btn-upload:not(:disabled):hover {
+  background: var(--accent-hover) !important;
+  transform: translateY(-1px);
+}
+
+.pfp-btn-remove {
+  width: 100%;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  color: var(--error) !important;
+  border: 2px solid rgba(220, 38, 38, 0.2) !important;
+  font-size: 0.85rem !important;
+}
+
+.pfp-btn-remove:hover {
+  background: var(--error-bg) !important;
+  border-color: var(--error) !important;
+}
+
+.pfp-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Dark Mode ───────────────────────────────────────────────────────── */
+
+body.dark-theme .pfp-modal {
+  background: var(--bg-secondary);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-theme .pfp-modal-close {
+  background: var(--bg-primary);
+}
+
+body.dark-theme .pfp-drop-zone {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+body.dark-theme .pfp-drop-zone.pfp-drop-active {
+  border-color: var(--accent-color);
+  background: rgba(49, 120, 198, 0.08);
+}
+
+body.dark-theme .pfp-preview-ring {
+  background: var(--bg-primary);
+}
+
+body.dark-theme .pfp-btn-remove {
+  border-color: rgba(220, 38, 38, 0.3) !important;
+}
+
 /* ── Mobile Responsive ───────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
@@ -3843,14 +4160,42 @@ body.dark-theme .profile-badge-new {
     padding: 1.25rem 1.5rem 1.5rem;
   }
 
+  /* Input row wraps so Save button goes below */
+  .profile-field-input-row {
+    flex-wrap: wrap;
+  }
+
+  .profile-field-input-row .profile-input {
+    flex: 1 1 100%;
+  }
+
+  .profile-field-input-row .profile-save-btn {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
   .profile-progress-overview {
     flex-direction: column;
     gap: 2rem;
     text-align: center;
   }
 
+  .profile-progress-ring {
+    width: 100px;
+    height: 100px;
+  }
+
+  .profile-progress-pct {
+    font-size: 1.4rem;
+  }
+
   .profile-progress-stats {
     justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .profile-stat-number {
+    font-size: 1.5rem;
   }
 
   .profile-account-grid {
@@ -3868,6 +4213,99 @@ body.dark-theme .profile-badge-new {
 
   .profile-theme-toggle {
     flex-direction: column;
+  }
+
+  /* Profile picture modal on mobile */
+  .pfp-modal {
+    padding: 1.75rem 1.25rem;
+    border-radius: 16px;
+    max-height: 85vh;
+  }
+
+  .pfp-preview-ring {
+    width: 120px;
+    height: 120px;
+  }
+
+  .pfp-drop-zone {
+    padding: 1.5rem 1rem;
+  }
+}
+
+/* ── Extra small screens ─────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .profile-page {
+    padding: 1.5rem 0.75rem 3rem;
+  }
+
+  .profile-card-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .profile-avatar-ring {
+    width: 80px;
+    height: 80px;
+  }
+
+  .profile-avatar-placeholder {
+    font-size: 1.8rem;
+  }
+
+  .profile-name {
+    font-size: 1.3rem;
+  }
+
+  .profile-email {
+    font-size: 0.85rem;
+  }
+
+  .profile-badge {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.6rem;
+  }
+
+  .profile-section-header {
+    padding: 1.25rem 1.25rem 0;
+  }
+
+  .profile-section-body {
+    padding: 1rem 1.25rem 1.25rem;
+  }
+
+  .profile-module-card {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .profile-module-icon {
+    font-size: 1.2rem;
+  }
+
+  .profile-module-name {
+    font-size: 0.88rem;
+  }
+
+  .profile-module-status {
+    font-size: 0.75rem;
+  }
+
+  .profile-completion-banner {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .profile-completion-banner span:first-child {
+    font-size: 1.5rem;
+  }
+
+  .pfp-modal {
+    padding: 1.5rem 1rem;
+  }
+
+  .pfp-preview-ring {
+    width: 100px;
+    height: 100px;
   }
 }
 

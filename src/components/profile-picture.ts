@@ -193,6 +193,24 @@ export function openProfilePictureModal(): void {
       if (authAvatar) {
         authAvatar.src = downloadURL;
       }
+
+      // Refresh the profile page avatar (the big circle)
+      const profileAvatarImg = document.querySelector('.profile-avatar-img') as HTMLImageElement;
+      if (profileAvatarImg) {
+        profileAvatarImg.src = downloadURL;
+      } else {
+        // Replace placeholder with actual image
+        const ring = document.querySelector('.profile-avatar-ring');
+        const placeholder = ring?.querySelector('.profile-avatar-placeholder');
+        if (ring && placeholder) {
+          const img = document.createElement('img');
+          img.src = downloadURL;
+          img.alt = user.displayName ?? 'Avatar';
+          img.className = 'profile-avatar-img';
+          img.referrerPolicy = 'no-referrer';
+          placeholder.replaceWith(img);
+        }
+      }
     } catch (error) {
       console.error('[profile-picture] Upload failed:', error);
       showToast({

@@ -68,7 +68,7 @@ export function initActivityFeed(): void {
     snapshot.forEach((docSnap) => {
       const data = docSnap.data()
       const progress = data.quizProgress ?? {}
-      const name = (data.displayName ?? 'Someone').split(' ')[0]
+      const name = data.displayName ?? 'Someone'
 
       // Find the most recently answered quiz
       let latestTopic = ''

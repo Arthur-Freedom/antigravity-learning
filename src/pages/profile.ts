@@ -340,6 +340,15 @@ async function loadProfileData(uid: string): Promise<void> {
   const profile = await getUserProfile(uid)
   if (!profile) return
 
+  // ── Display Name (use Firestore value, which may be custom) ───────
+  if (profile.displayName) {
+    const nameDisplay = document.getElementById('profile-display-name')
+    if (nameDisplay) nameDisplay.textContent = profile.displayName
+
+    const nameInput = document.getElementById('profile-name-input') as HTMLInputElement | null
+    if (nameInput) nameInput.value = profile.displayName
+  }
+
   // ── Badges ────────────────────────────────────────────────────────
   const badgesEl = document.getElementById('profile-badges')
   if (badgesEl) {

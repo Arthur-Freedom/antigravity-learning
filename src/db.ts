@@ -20,6 +20,7 @@ import {
   type Firestore,
   type Unsubscribe,
 } from 'firebase/firestore';
+import { getAuth, updateProfile } from 'firebase/auth';
 
 // ── Firebase app (reuse existing instance from auth.ts) ─────────────────
 const firebaseConfig = {
@@ -87,6 +88,7 @@ export async function ensureUserProfile(
       console.info('[db] Created new user profile:', uid);
     } else {
       // Returning user → update display info + backfill denormalized fields
+      // Note: Do NOT overwrite displayName if user has a custom one in Firestore
       const existingData = snap.data() as Partial<UserProfile>;
       const progress = existingData.quizProgress ?? {};
       const results = Object.values(progress);
@@ -94,14 +96,20 @@ export async function ensureUserProfile(
       const quizTotal = existingData.quizTotal ?? results.length;
       const completedAll = existingData.completedAll ?? (quizScore >= 3);
 
-      await updateDoc(ref, {
-        displayName: data.displayName,
+      const updateFields: Record<string, unknown> = {
         photoURL: data.photoURL,
         quizScore,
         quizTotal,
         completedAll,
         updatedAt: serverTimestamp(),
-      });
+      };
+
+      // Only set displayName if the user doesn't already have one in Firestore
+      if (!existingData.displayName) {
+        updateFields.displayName = data.displayName;
+      }
+
+      await updateDoc(ref, updateFields);
       console.info('[db] Updated existing user profile:', uid);
     }
   } catch (error) {
@@ -182,18 +190,26 @@ export async function saveThemePreference(
 }
 
 /**
- * Update the user's display name.
+ * Update the user's display name in both Firestore and Firebase Auth.
  */
 export async function updateDisplayName(
   uid: string,
   displayName: string
 ): Promise<void> {
   try {
+    // Update Firestore
     const ref = doc(db, 'users', uid);
     await updateDoc(ref, {
       displayName,
       updatedAt: serverTimestamp(),
     });
+
+    // Also update Firebase Auth profile so the name persists across reloads
+    const currentUser = getAuth().currentUser;
+    if (currentUser && currentUser.uid === uid) {
+      await updateProfile(currentUser, { displayName });
+    }
+
     console.info('[db] Updated display name:', displayName);
   } catch (error) {
     console.error('[db] updateDisplayName failed:', error);
