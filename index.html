@@ -28,6 +28,57 @@
 
     <!-- Theme color for mobile browsers -->
     <meta name="theme-color" content="#283A4A" />
+    <link rel="canonical" href="https://antigravity-learning.web.app/" />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Antigravity Learning",
+      "url": "https://antigravity-learning.web.app",
+      "description": "A premium learning experience for building AI agents, workflows, and skills.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://antigravity-learning.web.app/#/glossary?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "Master AI Agent Development",
+      "description": "Interactive lessons on building AI agents, workflows, and skills. Includes quizzes of each module and a certificate of completion.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Antigravity Learning",
+        "url": "https://antigravity-learning.web.app"
+      },
+      "isAccessibleForFree": true,
+      "hasCourseInstance": [
+        {
+          "@type": "CourseInstance",
+          "courseMode": "online",
+          "name": "Workflows",
+          "description": "Automate repetitive tasks with explicitly defined steps and shell commands."
+        },
+        {
+          "@type": "CourseInstance",
+          "courseMode": "online",
+          "name": "Skills",
+          "description": "Extend the agent's permanent knowledge base with custom paradigms and libraries."
+        },
+        {
+          "@type": "CourseInstance",
+          "courseMode": "online",
+          "name": "Autonomous Agents",
+          "description": "Learn how an agent executes tasks directly on your computer."
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="app"></div>

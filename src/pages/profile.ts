@@ -230,6 +230,15 @@ function renderProfileContent(user: { uid: string; displayName: string | null; e
     </div>
   `
 
+  // ── Reveal dynamically-injected elements ────────────────────────────
+  // The router's IntersectionObserver already ran, so it won't pick up
+  // these new .reveal-on-scroll elements. Trigger them manually.
+  requestAnimationFrame(() => {
+    root.querySelectorAll('.reveal-on-scroll').forEach((el, i) => {
+      setTimeout(() => el.classList.add('revealed'), i * 80)
+    })
+  })
+
   // ── Bind all interactive elements ───────────────────────────────────
   bindProfileInteractions(user)
 }

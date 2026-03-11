@@ -17,6 +17,8 @@ import * as leaderboardPage from './pages/leaderboard'
 import * as adminPage from './pages/admin'
 import * as resourcesPage from './pages/resources'
 import * as profilePage from './pages/profile'
+import * as faqPage from './pages/faq'
+import * as glossaryPage from './pages/glossary'
 import { downloadCertificate } from './components/certificate'
 
 // ── Render App Shell ────────────────────────────────────────────────────
@@ -62,6 +64,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <a href="#/" class="scroll-to-modules">All Modules</a>
           <a href="#/leaderboard">Leaderboard</a>
           <a href="#/profile">Profile</a>
+          <a href="#/faq">FAQ</a>
+          <a href="#/glossary">Glossary</a>
           <a href="#/admin">Analytics</a>
         </div>
       </div>
@@ -85,6 +89,8 @@ registerRoutes({
   '/resources': { render: resourcesPage.render, init: resourcesPage.init },
   '/admin': { render: adminPage.render, init: adminPage.init },
   '/profile': { render: profilePage.render, init: profilePage.init, destroy: profilePage.destroy },
+  '/faq': { render: faqPage.render, init: faqPage.init },
+  '/glossary': { render: glossaryPage.render, init: glossaryPage.init },
 })
 
 // ── Certificate Download ────────────────────────────────────────────────
