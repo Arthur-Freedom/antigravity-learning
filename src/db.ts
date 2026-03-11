@@ -12,7 +12,13 @@ import {
   serverTimestamp,
   collection,
   getDocs,
+  onSnapshot,
+  query,
+  orderBy,
+  limit,
+  where,
   type Firestore,
+  type Unsubscribe,
 } from 'firebase/firestore';
 
 // ── Firebase app (reuse existing instance from auth.ts) ─────────────────
@@ -41,7 +47,11 @@ export interface UserProfile {
   photoURL: string | null;
   theme: 'light' | 'dark';
   quizProgress: Record<string, QuizResult>;
-  createdAt: unknown; // Firestore server timestamp
+  // ── Denormalized leaderboard fields (kept in sync on every quiz save) ──
+  quizScore: number;     // count of correct answers
+  quizTotal: number;     // count of total attempts
+  completedAll: boolean; // true when quizScore >= 3
+  createdAt: unknown;    // Firestore server timestamp
   updatedAt: unknown;
 }
 
@@ -67,16 +77,29 @@ export async function ensureUserProfile(
         photoURL: data.photoURL,
         theme: 'light',
         quizProgress: {},
+        quizScore: 0,
+        quizTotal: 0,
+        completedAll: false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
       await setDoc(ref, profile);
       console.info('[db] Created new user profile:', uid);
     } else {
-      // Returning user → update display info only
+      // Returning user → update display info + backfill denormalized fields
+      const existingData = snap.data() as Partial<UserProfile>;
+      const progress = existingData.quizProgress ?? {};
+      const results = Object.values(progress);
+      const quizScore = existingData.quizScore ?? results.filter(r => r.correct).length;
+      const quizTotal = existingData.quizTotal ?? results.length;
+      const completedAll = existingData.completedAll ?? (quizScore >= 3);
+
       await updateDoc(ref, {
         displayName: data.displayName,
         photoURL: data.photoURL,
+        quizScore,
+        quizTotal,
+        completedAll,
         updatedAt: serverTimestamp(),
       });
       console.info('[db] Updated existing user profile:', uid);
@@ -110,14 +133,30 @@ export async function saveQuizResult(
 ): Promise<void> {
   try {
     const ref = doc(db, 'users', uid);
+
+    // Read current progress to recalculate denormalized fields
+    const snap = await getDoc(ref);
+    const existing = snap.exists() ? (snap.data() as UserProfile) : null;
+    const progress = { ...(existing?.quizProgress ?? {}) };
+    progress[topic] = { correct, answeredAt: new Date().toISOString() };
+
+    const results = Object.values(progress);
+    const quizScore = results.filter(r => r.correct).length;
+    const quizTotal = results.length;
+    const completedAll = quizScore >= 3;
+
     await updateDoc(ref, {
       [`quizProgress.${topic}`]: {
         correct,
         answeredAt: new Date().toISOString(),
       } satisfies QuizResult,
+      quizScore,
+      quizTotal,
+      completedAll,
       updatedAt: serverTimestamp(),
     });
-    console.info(`[db] Saved quiz result for ${topic}:`, correct);
+    console.info(`[db] Saved quiz result for ${topic}:`, correct,
+      `(score: ${quizScore}/${quizTotal}, completedAll: ${completedAll})`);
   } catch (error) {
     console.error('[db] saveQuizResult failed:', error);
   }
@@ -142,6 +181,26 @@ export async function saveThemePreference(
   }
 }
 
+/**
+ * Update the user's display name.
+ */
+export async function updateDisplayName(
+  uid: string,
+  displayName: string
+): Promise<void> {
+  try {
+    const ref = doc(db, 'users', uid);
+    await updateDoc(ref, {
+      displayName,
+      updatedAt: serverTimestamp(),
+    });
+    console.info('[db] Updated display name:', displayName);
+  } catch (error) {
+    console.error('[db] updateDisplayName failed:', error);
+    throw error;
+  }
+}
+
 // ── Leaderboard ─────────────────────────────────────────────────────────
 
 export interface LeaderboardEntry {
@@ -159,17 +218,62 @@ export interface LeaderboardEntry {
  */
 export async function getLeaderboard(topN = 20): Promise<LeaderboardEntry[]> {
   try {
+    // ── Server-side query using composite index ──────────────────────
+    // Index: quizScore DESC, quizTotal ASC → Firestore handles ranking.
+    // Only users who have attempted at least 1 quiz are returned
+    // (quizTotal > 0 filter via where clause).
+    const usersRef = collection(db, 'users');
+    const leaderboardQuery = query(
+      usersRef,
+      where('quizTotal', '>', 0),
+      orderBy('quizScore', 'desc'),
+      orderBy('quizTotal', 'asc'),
+      limit(topN)
+    );
+    const snapshot = await getDocs(leaderboardQuery);
+
+    const entries: LeaderboardEntry[] = [];
+
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data() as UserProfile;
+      entries.push({
+        uid: docSnap.id,
+        displayName: data.displayName ?? 'Anonymous',
+        photoURL: data.photoURL ?? null,
+        score: data.quizScore ?? 0,
+        total: data.quizTotal ?? 0,
+        completedAll: data.completedAll ?? false,
+      });
+    });
+
+    return entries;
+  } catch (error) {
+    console.error('[db] getLeaderboard failed:', error);
+    // Fallback: fetch all users and sort client-side (for existing data
+    // that may not have denormalized fields yet)
+    return getLeaderboardFallback(topN);
+  }
+}
+
+/**
+ * Fallback leaderboard that works without indexes or denormalized fields.
+ * Used when the indexed query fails (e.g. indexes not deployed yet or
+ * legacy data without quizScore/quizTotal fields).
+ */
+async function getLeaderboardFallback(topN: number): Promise<LeaderboardEntry[]> {
+  try {
+    console.info('[db] Using fallback leaderboard (client-side sort)');
     const usersRef = collection(db, 'users');
     const snapshot = await getDocs(usersRef);
-    
+
     const entries: LeaderboardEntry[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data() as UserProfile;
       const progress = data.quizProgress ?? {};
       const results = Object.values(progress);
       const correct = results.filter(r => r.correct).length;
-      
+
       if (results.length > 0) {
         entries.push({
           uid: docSnap.id,
@@ -177,22 +281,76 @@ export async function getLeaderboard(topN = 20): Promise<LeaderboardEntry[]> {
           photoURL: data.photoURL ?? null,
           score: correct,
           total: results.length,
-          completedAll: correct >= 3, // all 3 modules passed
+          completedAll: correct >= 3,
         });
       }
     });
-    
-    // Sort by score desc, then by total attempts asc (fewer attempts = better)
+
     entries.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       return a.total - b.total;
     });
-    
+
     return entries.slice(0, topN);
-  } catch (error) {
-    console.error('[db] getLeaderboard failed:', error);
+  } catch (fallbackError) {
+    console.error('[db] Fallback leaderboard also failed:', fallbackError);
     return [];
   }
+}
+
+/**
+ * Subscribe to real-time leaderboard updates via Firestore onSnapshot.
+ * Calls `callback` with the latest sorted LeaderboardEntry[] whenever
+ * any user document in the collection changes.
+ *
+ * @returns An unsubscribe function — call it to stop listening.
+ */
+export function onLeaderboardUpdate(
+  topN: number,
+  callback: (entries: LeaderboardEntry[]) => void,
+  onError?: (error: Error) => void,
+): Unsubscribe {
+  const usersRef = collection(db, 'users');
+
+  const unsubscribe = onSnapshot(
+    usersRef,
+    (snapshot) => {
+      const entries: LeaderboardEntry[] = [];
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data() as UserProfile;
+        const progress = data.quizProgress ?? {};
+        const results = Object.values(progress);
+        const correct = results.filter(r => r.correct).length;
+
+        if (results.length > 0) {
+          entries.push({
+            uid: docSnap.id,
+            displayName: data.displayName ?? 'Anonymous',
+            photoURL: data.photoURL ?? null,
+            score: correct,
+            total: results.length,
+            completedAll: correct >= 3,
+          });
+        }
+      });
+
+      // Sort: score desc, then fewer attempts first
+      entries.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.total - b.total;
+      });
+
+      callback(entries.slice(0, topN));
+    },
+    (error) => {
+      console.error('[db] onLeaderboardUpdate error:', error);
+      onError?.(error);
+    },
+  );
+
+  console.info('[db] 🔴 Real-time leaderboard listener attached');
+  return unsubscribe;
 }
 
 /**

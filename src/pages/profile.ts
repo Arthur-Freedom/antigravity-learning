@@ -1,0 +1,477 @@
+// ── Profile & Settings Page ─────────────────────────────────────────────
+// Lets authenticated users view and edit their profile information,
+// change their profile picture, manage theme preferences, and view
+// their quiz progress / account details.
+//
+// Auth-aware: render() outputs a loading shell, and init() waits for
+// onAuthStateChanged to populate the real content. This avoids the
+// race condition where auth.currentUser is null on first render.
+
+import { getCurrentUser, onAuthChange } from '../auth'
+import { getUserProfile, saveThemePreference, updateDisplayName, type UserProfile } from '../db'
+import { openProfilePictureModal } from '../components/profile-picture'
+import { showToast } from '../components/toast'
+
+/** Auth listener unsubscribe — cleaned up if the route changes */
+let unsubAuth: (() => void) | null = null
+
+export function render(): string {
+  // Always render a shell — init() will fill in the real content
+  // once Firebase Auth has resolved the user state.
+  return `
+    <section class="lesson-hero profile-hero" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #3178C6 100%);">
+      <div class="lesson-hero-content">
+        <span class="lesson-badge">Account</span>
+        <h1>Profile & Settings</h1>
+        <p>Manage your account, customize your experience, and track your progress.</p>
+      </div>
+    </section>
+
+    <section class="profile-page">
+      <div class="profile-container" id="profile-root">
+        <div class="profile-progress-loading" style="padding: 4rem 0;">
+          <div class="loading-spinner"></div>
+          <p>Loading profile...</p>
+        </div>
+      </div>
+    </section>
+  `
+}
+
+export function init(): void {
+  // Check if user is already available (fast path)
+  const existingUser = getCurrentUser()
+  if (existingUser) {
+    renderProfileContent(existingUser)
+    return
+  }
+
+  // Otherwise wait for auth to resolve
+  unsubAuth = onAuthChange((user) => {
+    if (user) {
+      renderProfileContent(user)
+    } else {
+      renderSignInRequired()
+    }
+    // Only need the first resolved state — unsubscribe
+    if (unsubAuth) {
+      unsubAuth()
+      unsubAuth = null
+    }
+  })
+}
+
+export function destroy(): void {
+  if (unsubAuth) {
+    unsubAuth()
+    unsubAuth = null
+  }
+}
+
+// ── Render the signed-out state ─────────────────────────────────────────
+
+function renderSignInRequired(): void {
+  const root = document.getElementById('profile-root')
+  if (!root) return
+
+  root.innerHTML = `
+    <div class="profile-login-prompt">
+      <div class="profile-login-icon">🔒</div>
+      <h2>Sign in Required</h2>
+      <p>Please sign in with your Google account to access your profile and settings.</p>
+    </div>
+  `
+}
+
+// ── Render the full profile page for an authenticated user ──────────────
+
+function renderProfileContent(user: { uid: string; displayName: string | null; email: string | null; photoURL: string | null }): void {
+  const root = document.getElementById('profile-root')
+  if (!root) return
+
+  const displayName = user.displayName ?? 'User'
+  const email = user.email ?? ''
+  const photoURL = user.photoURL
+
+  root.innerHTML = `
+    <!-- Profile Card -->
+    <div class="profile-card reveal-on-scroll">
+      <div class="profile-card-header">
+        <div class="profile-avatar-wrapper" id="profile-avatar-btn" title="Change profile picture">
+          <div class="profile-avatar-ring">
+            ${photoURL
+              ? `<img src="${photoURL}" alt="${displayName}" class="profile-avatar-img" referrerpolicy="no-referrer" />`
+              : `<div class="profile-avatar-placeholder">${displayName.charAt(0).toUpperCase()}</div>`
+            }
+          </div>
+          <div class="profile-avatar-overlay">
+            <span>📷</span>
+            <span>Change</span>
+          </div>
+        </div>
+        <div class="profile-header-info">
+          <h2 class="profile-name" id="profile-display-name">${displayName}</h2>
+          <p class="profile-email">${email}</p>
+          <div class="profile-badges" id="profile-badges">
+            <span class="profile-badge-loading">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Grid -->
+    <div class="profile-settings-grid">
+
+      <!-- Edit Profile Section -->
+      <div class="profile-section reveal-on-scroll">
+        <div class="profile-section-header">
+          <span class="profile-section-icon">✏️</span>
+          <h3>Edit Profile</h3>
+        </div>
+        <div class="profile-section-body">
+          <div class="profile-field">
+            <label for="profile-name-input" class="profile-field-label">Display Name</label>
+            <div class="profile-field-input-row">
+              <input
+                type="text"
+                id="profile-name-input"
+                class="profile-input"
+                value="${displayName}"
+                maxlength="100"
+                placeholder="Your display name"
+              />
+              <button id="profile-save-name-btn" class="btn profile-save-btn" disabled>Save</button>
+            </div>
+            <p class="profile-field-hint">This name will be shown on the leaderboard and your certificate.</p>
+          </div>
+          <div class="profile-field">
+            <label class="profile-field-label">Email</label>
+            <div class="profile-field-value">${email}</div>
+            <p class="profile-field-hint">Email is managed by your Google account and cannot be changed here.</p>
+          </div>
+          <div class="profile-field">
+            <label class="profile-field-label">Profile Picture</label>
+            <button id="profile-change-photo-btn" class="btn profile-outline-btn">
+              📷 Change Profile Picture
+            </button>
+            <p class="profile-field-hint">Upload a custom avatar or use your Google profile picture.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences Section -->
+      <div class="profile-section reveal-on-scroll">
+        <div class="profile-section-header">
+          <span class="profile-section-icon">⚙️</span>
+          <h3>Preferences</h3>
+        </div>
+        <div class="profile-section-body">
+          <div class="profile-field">
+            <label class="profile-field-label">Theme</label>
+            <div class="profile-theme-toggle">
+              <button id="profile-theme-light" class="profile-theme-option" data-theme="light">
+                <span class="profile-theme-icon">☀️</span>
+                <span>Light</span>
+              </button>
+              <button id="profile-theme-dark" class="profile-theme-option" data-theme="dark">
+                <span class="profile-theme-icon">🌙</span>
+                <span>Dark</span>
+              </button>
+            </div>
+            <p class="profile-field-hint">Your theme preference is synced across devices.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiz Progress Section -->
+      <div class="profile-section profile-section-wide reveal-on-scroll">
+        <div class="profile-section-header">
+          <span class="profile-section-icon">📊</span>
+          <h3>Quiz Progress</h3>
+        </div>
+        <div class="profile-section-body">
+          <div id="profile-progress" class="profile-progress-area">
+            <div class="profile-progress-loading">
+              <div class="loading-spinner"></div>
+              <p>Loading progress...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Info Section -->
+      <div class="profile-section profile-section-wide reveal-on-scroll">
+        <div class="profile-section-header">
+          <span class="profile-section-icon">🔐</span>
+          <h3>Account</h3>
+        </div>
+        <div class="profile-section-body">
+          <div class="profile-account-grid" id="profile-account-info">
+            <div class="profile-account-item">
+              <span class="profile-account-label">Provider</span>
+              <span class="profile-account-value">Google</span>
+            </div>
+            <div class="profile-account-item">
+              <span class="profile-account-label">User ID</span>
+              <span class="profile-account-value profile-uid">${user.uid.slice(0, 12)}…</span>
+            </div>
+            <div class="profile-account-item">
+              <span class="profile-account-label">Member Since</span>
+              <span class="profile-account-value" id="profile-member-since">—</span>
+            </div>
+            <div class="profile-account-item">
+              <span class="profile-account-label">Last Active</span>
+              <span class="profile-account-value" id="profile-last-active">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `
+
+  // ── Bind all interactive elements ───────────────────────────────────
+  bindProfileInteractions(user)
+}
+
+// ── Bind event listeners after the profile content is in the DOM ─────────
+
+function bindProfileInteractions(user: { uid: string; displayName: string | null }): void {
+  // ── Load profile data ───────────────────────────────────────────────
+  loadProfileData(user.uid)
+
+  // ── Display Name editing ────────────────────────────────────────────
+  const nameInput = document.getElementById('profile-name-input') as HTMLInputElement | null
+  const saveBtn = document.getElementById('profile-save-name-btn') as HTMLButtonElement | null
+  const originalName = user.displayName ?? 'User'
+
+  if (nameInput && saveBtn) {
+    nameInput.addEventListener('input', () => {
+      const trimmed = nameInput.value.trim()
+      saveBtn.disabled = trimmed === originalName || trimmed.length === 0
+    })
+
+    saveBtn.addEventListener('click', async () => {
+      const newName = nameInput.value.trim()
+      if (!newName || newName === originalName) return
+
+      saveBtn.disabled = true
+      saveBtn.textContent = 'Saving...'
+
+      try {
+        await updateDisplayName(user.uid, newName)
+        showToast({ message: '✅ Display name updated!', type: 'success' })
+
+        // Update name in the header
+        const nameDisplay = document.getElementById('profile-display-name')
+        if (nameDisplay) nameDisplay.textContent = newName
+
+        // Update navbar avatar name
+        const authName = document.querySelector('.auth-name')
+        if (authName) authName.textContent = newName.split(' ')[0]
+      } catch (error) {
+        console.error('[profile] Failed to update name:', error)
+        showToast({ message: 'Failed to update name', type: 'error' })
+      } finally {
+        saveBtn.textContent = 'Save'
+      }
+    })
+  }
+
+  // ── Profile Picture ─────────────────────────────────────────────────
+  document.getElementById('profile-avatar-btn')?.addEventListener('click', () => {
+    openProfilePictureModal()
+  })
+  document.getElementById('profile-change-photo-btn')?.addEventListener('click', () => {
+    openProfilePictureModal()
+  })
+
+  // ── Theme Toggle ────────────────────────────────────────────────────
+  const lightBtn = document.getElementById('profile-theme-light')
+  const darkBtn = document.getElementById('profile-theme-dark')
+
+  updateThemeButtons()
+
+  lightBtn?.addEventListener('click', () => switchTheme('light', user.uid))
+  darkBtn?.addEventListener('click', () => switchTheme('dark', user.uid))
+}
+
+async function switchTheme(theme: 'light' | 'dark', uid: string): Promise<void> {
+  // Apply theme to body
+  if (theme === 'dark') {
+    document.body.classList.add('dark-theme')
+  } else {
+    document.body.classList.remove('dark-theme')
+  }
+
+  // Update the global theme toggle button text
+  const themeBtn = document.getElementById('theme-toggle')
+  if (themeBtn) {
+    themeBtn.textContent = theme === 'dark' ? '🌙 Dark' : '☀️ Light'
+  }
+
+  // Update profile page theme buttons
+  updateThemeButtons()
+
+  // Persist to Firestore
+  await saveThemePreference(uid, theme)
+  showToast({ message: `Theme switched to ${theme} mode`, type: 'info' })
+}
+
+function updateThemeButtons(): void {
+  const isDark = document.body.classList.contains('dark-theme')
+  const lightBtn = document.getElementById('profile-theme-light')
+  const darkBtn = document.getElementById('profile-theme-dark')
+
+  lightBtn?.classList.toggle('profile-theme-active', !isDark)
+  darkBtn?.classList.toggle('profile-theme-active', isDark)
+}
+
+async function loadProfileData(uid: string): Promise<void> {
+  const profile = await getUserProfile(uid)
+  if (!profile) return
+
+  // ── Badges ────────────────────────────────────────────────────────
+  const badgesEl = document.getElementById('profile-badges')
+  if (badgesEl) {
+    const badges: string[] = []
+    if (profile.completedAll) badges.push('<span class="profile-badge profile-badge-certified">🎓 Certified</span>')
+    if (profile.quizScore > 0) badges.push(`<span class="profile-badge profile-badge-score">🏆 Score: ${profile.quizScore}/3</span>`)
+    if (!profile.completedAll && profile.quizTotal > 0) badges.push('<span class="profile-badge profile-badge-progress">🔄 In Progress</span>')
+    if (profile.quizTotal === 0) badges.push('<span class="profile-badge profile-badge-new">✨ New Learner</span>')
+    badgesEl.innerHTML = badges.join('')
+  }
+
+  // ── Quiz Progress ─────────────────────────────────────────────────
+  renderQuizProgress(profile)
+
+  // ── Account Dates ─────────────────────────────────────────────────
+  const memberSince = document.getElementById('profile-member-since')
+  const lastActive = document.getElementById('profile-last-active')
+
+  if (memberSince && profile.createdAt) {
+    const date = (profile.createdAt as { toDate: () => Date })?.toDate?.()
+    if (date) memberSince.textContent = formatDate(date)
+  }
+  if (lastActive && profile.updatedAt) {
+    const date = (profile.updatedAt as { toDate: () => Date })?.toDate?.()
+    if (date) lastActive.textContent = formatRelativeTime(date)
+  }
+}
+
+function renderQuizProgress(profile: UserProfile): void {
+  const container = document.getElementById('profile-progress')
+  if (!container) return
+
+  const quizzes = [
+    { key: 'workflows', label: 'Workflows', icon: '🔄', href: '#/learn/workflows' },
+    { key: 'skills', label: 'Skills', icon: '🛠️', href: '#/learn/skills' },
+    { key: 'agents', label: 'Autonomous Agents', icon: '🤖', href: '#/learn/agents' },
+  ]
+
+  const progress = profile.quizProgress ?? {}
+
+  const totalCorrect = Object.values(progress).filter(r => r.correct).length
+  const totalAttempts = Object.keys(progress).length
+  const pct = totalAttempts > 0 ? Math.round((totalCorrect / 3) * 100) : 0
+
+  container.innerHTML = `
+    <!-- Overall Progress -->
+    <div class="profile-progress-overview">
+      <div class="profile-progress-ring-wrapper">
+        <svg class="profile-progress-ring" viewBox="0 0 120 120">
+          <circle class="progress-ring-bg" cx="60" cy="60" r="52" fill="none" stroke-width="8" />
+          <circle class="progress-ring-fill" cx="60" cy="60" r="52"
+            fill="none" stroke-width="8" stroke-linecap="round"
+            stroke-dasharray="${2 * Math.PI * 52}"
+            stroke-dashoffset="${2 * Math.PI * 52 * (1 - pct / 100)}"
+            style="transition: stroke-dashoffset 1s ease;"
+          />
+        </svg>
+        <div class="profile-progress-ring-label">
+          <span class="profile-progress-pct">${pct}%</span>
+          <span class="profile-progress-sub">Complete</span>
+        </div>
+      </div>
+      <div class="profile-progress-stats">
+        <div class="profile-stat">
+          <span class="profile-stat-number">${totalCorrect}</span>
+          <span class="profile-stat-label">Passed</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-number">${totalAttempts}</span>
+          <span class="profile-stat-label">Attempted</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-number">${3 - totalCorrect}</span>
+          <span class="profile-stat-label">Remaining</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Per-module breakdown -->
+    <div class="profile-progress-modules">
+      ${quizzes.map(q => {
+        const result = progress[q.key]
+        const status = result
+          ? result.correct
+            ? 'passed'
+            : 'failed'
+          : 'not-started'
+        const statusLabel = status === 'passed' ? '✅ Passed' : status === 'failed' ? '❌ Failed' : '⬜ Not Started'
+        const dateStr = result?.answeredAt
+          ? formatDate(new Date(result.answeredAt))
+          : '—'
+
+        return `
+          <a href="${q.href}" class="profile-module-card profile-module-${status}">
+            <span class="profile-module-icon">${q.icon}</span>
+            <div class="profile-module-info">
+              <span class="profile-module-name">${q.label}</span>
+              <span class="profile-module-date">${dateStr}</span>
+            </div>
+            <span class="profile-module-status">${statusLabel}</span>
+          </a>
+        `
+      }).join('')}
+    </div>
+
+    ${profile.completedAll
+      ? `<div class="profile-completion-banner">
+           <span>🎉</span>
+           <div>
+             <strong>All modules completed!</strong>
+             <p>You've earned your certificate. Download it from the navbar.</p>
+           </div>
+         </div>`
+      : `<div class="profile-completion-cta">
+           <p>Complete all 3 modules to earn your certificate!</p>
+           <a href="#/" class="btn profile-outline-btn">Continue Learning →</a>
+         </div>`
+    }
+  `
+}
+
+// ── Formatting helpers ──────────────────────────────────────────────────
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffHrs = Math.floor(diffMin / 60)
+  const diffDays = Math.floor(diffHrs / 24)
+
+  if (diffMin < 1) return 'Just now'
+  if (diffMin < 60) return `${diffMin} min ago`
+  if (diffHrs < 24) return `${diffHrs} hour${diffHrs > 1 ? 's' : ''} ago`
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+  return formatDate(date)
+}

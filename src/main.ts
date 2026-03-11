@@ -1,7 +1,12 @@
 import './style.css'
+import './animations.css'
+import { initAppCheck } from './appcheck'
 import { bindAuthUI, onAuthChange } from './auth'
 import { registerRoutes, initRouter } from './router'
 import { showToast } from './components/toast'
+
+// ── App Check (must be initialized BEFORE any Firebase service calls) ──
+initAppCheck()
 
 // ── Page Modules ────────────────────────────────────────────────────────
 import * as homePage from './pages/home'
@@ -11,6 +16,7 @@ import * as agentsPage from './pages/agents'
 import * as leaderboardPage from './pages/leaderboard'
 import * as adminPage from './pages/admin'
 import * as resourcesPage from './pages/resources'
+import * as profilePage from './pages/profile'
 import { downloadCertificate } from './components/certificate'
 
 // ── Render App Shell ────────────────────────────────────────────────────
@@ -21,9 +27,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <a href="#/" class="nav-brand">Antigravity</a>
     <div class="nav-links">
       <a href="#/">Home</a>
-      <a href="#modules">Modules</a>
+      <a href="#/" id="nav-modules-link">Modules</a>
       <a href="#/leaderboard">🏆 Leaderboard</a>
       <a href="#/resources">📚 Resources</a>
+      <a href="#/profile" id="nav-profile-link" class="nav-profile-link" style="display:none;">👤 Profile</a>
       <button id="cert-download-btn" class="btn btn-ghost" style="padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: 100px;">🎓 Certificate</button>
       <button id="google-login-btn" class="btn auth-btn auth-btn--logged-out" aria-label="Sign in with Google">Sign in with Google</button>
       <button id="theme-toggle" class="btn theme-btn" aria-label="Toggle theme">☀️ Light</button>
@@ -52,8 +59,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <div class="footer-col">
           <h4>Resources</h4>
           <a href="#/">Home</a>
-          <a href="#modules">All Modules</a>
+          <a href="#/" class="scroll-to-modules">All Modules</a>
           <a href="#/leaderboard">Leaderboard</a>
+          <a href="#/profile">Profile</a>
           <a href="#/admin">Analytics</a>
         </div>
       </div>
@@ -69,13 +77,14 @@ bindAuthUI('google-login-btn')
 
 // ── Route Registration ──────────────────────────────────────────────────
 registerRoutes({
-  '/': { render: homePage.render, init: homePage.init },
+  '/': { render: homePage.render, init: homePage.init, destroy: homePage.destroy },
   '/learn/workflows': { render: workflowsPage.render, init: workflowsPage.init },
   '/learn/skills': { render: skillsPage.render, init: skillsPage.init },
   '/learn/agents': { render: agentsPage.render, init: agentsPage.init },
-  '/leaderboard': { render: leaderboardPage.render, init: leaderboardPage.init },
+  '/leaderboard': { render: leaderboardPage.render, init: leaderboardPage.init, destroy: leaderboardPage.destroy },
   '/resources': { render: resourcesPage.render, init: resourcesPage.init },
   '/admin': { render: adminPage.render, init: adminPage.init },
+  '/profile': { render: profilePage.render, init: profilePage.init, destroy: profilePage.destroy },
 })
 
 // ── Certificate Download ────────────────────────────────────────────────
@@ -130,10 +139,35 @@ navLinks.querySelectorAll('a').forEach((link) => {
   })
 })
 
+// ── Modules Link Scroll Handler ─────────────────────────────────────────
+function scrollToModules(e: Event): void {
+  e.preventDefault()
+  const currentPath = window.location.hash.slice(1) || '/'
+  if (currentPath === '/') {
+    // Already on home, just scroll
+    document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' })
+  } else {
+    // Navigate to home first, then scroll after render
+    window.location.hash = '#/'
+    setTimeout(() => {
+      document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' })
+    }, 400)
+  }
+}
+
+document.getElementById('nav-modules-link')?.addEventListener('click', scrollToModules)
+document.querySelectorAll('.scroll-to-modules').forEach(el =>
+  el.addEventListener('click', scrollToModules)
+)
+
 // ── Auth State → Restore Theme + Toasts ─────────────────────────────────
 let previousUser: unknown = undefined; // track to avoid initial toast
 
 onAuthChange(async (user) => {
+  // Show/hide profile link based on auth state
+  const profileLink = document.getElementById('nav-profile-link')
+  if (profileLink) profileLink.style.display = user ? '' : 'none'
+
   if (user) {
     const profile = await getUserProfile(user.uid)
     if (profile) {
@@ -151,4 +185,48 @@ onAuthChange(async (user) => {
   }
   previousUser = user
 })
+
+// ── Navbar scroll effect ────────────────────────────────────────────────
+const navbar = document.querySelector('header.navbar')!
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 40) {
+    navbar.classList.add('scrolled')
+  } else {
+    navbar.classList.remove('scrolled')
+  }
+}, { passive: true })
+
+// ── Hero Particles ──────────────────────────────────────────────────────
+function spawnParticles(): void {
+  const hero = document.querySelector('.hero-animated')
+  if (!hero) return
+  // Don't duplicate
+  if (hero.querySelector('.hero-particles')) return
+
+  const container = document.createElement('div')
+  container.className = 'hero-particles'
+
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div')
+    p.className = 'particle'
+    p.style.left = Math.random() * 100 + '%'
+    p.style.top = (60 + Math.random() * 40) + '%'
+    p.style.width = (2 + Math.random() * 3) + 'px'
+    p.style.height = p.style.width
+    p.style.animationDuration = (8 + Math.random() * 12) + 's'
+    p.style.animationDelay = (Math.random() * 8) + 's'
+    p.style.opacity = (0.15 + Math.random() * 0.35).toString()
+    container.appendChild(p)
+  }
+  hero.prepend(container)
+}
+
+// Spawn particles on route change too
+const origHashHandler = () => {
+  requestAnimationFrame(() => {
+    setTimeout(spawnParticles, 300)
+  })
+}
+window.addEventListener('hashchange', origHashHandler)
+spawnParticles()
 

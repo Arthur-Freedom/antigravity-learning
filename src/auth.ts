@@ -6,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   type User,
+  type Unsubscribe,
 } from 'firebase/auth';
 import { ensureUserProfile } from './db';
 
@@ -29,8 +30,8 @@ export function getCurrentUser(): User | null {
 }
 
 /** Subscribe to auth state changes from external modules */
-export function onAuthChange(callback: (user: User | null) => void): void {
-  onAuthStateChanged(auth, callback);
+export function onAuthChange(callback: (user: User | null) => void): Unsubscribe {
+  return onAuthStateChanged(auth, callback);
 }
 
 // ── Public API ──────────────────────────────────────────────────────────
@@ -61,6 +62,10 @@ export async function logout(): Promise<void> {
  * Binds the auth state to a navbar button element.
  * Call this once after the DOM is rendered.
  *
+ * - When logged out: clicking the button triggers Google sign-in.
+ * - When logged in: the avatar/name area navigates to the profile page,
+ *   and the separate "Logout" label shows a confirmation dialog.
+ *
  * @param btnId  – the id of the login/logout button in the navbar
  */
 export function bindAuthUI(btnId: string): void {
@@ -70,13 +75,15 @@ export function bindAuthUI(btnId: string): void {
     return;
   }
 
-  // ── Click handler (toggles login / logout) ──
-  btn.addEventListener('click', async () => {
+  // ── Click handler (only handles login; logout is handled separately) ──
+  btn.addEventListener('click', async (e) => {
+    // When logged in, the button itself does nothing —
+    // inner elements handle their own clicks
     if (auth.currentUser) {
-      await logout();
-    } else {
-      await loginWithGoogle();
+      e.preventDefault();
+      return;
     }
+    await loginWithGoogle();
   });
 
   // ── React to auth state changes ──
@@ -97,22 +104,41 @@ export function bindAuthUI(btnId: string): void {
 
 function renderAuthButton(btn: HTMLElement, user: User | null): void {
   if (user) {
-    // Logged-in state: show avatar + first name + logout affordance
+    // Logged-in state: profile link (avatar + name) | logout button
     const displayName = user.displayName?.split(' ')[0] ?? 'User';
     const photoURL = user.photoURL;
 
     btn.innerHTML = `
-      ${
-        photoURL
-          ? `<img src="${photoURL}" alt="${displayName}" class="auth-avatar" referrerpolicy="no-referrer" />`
-          : `<span class="auth-avatar-placeholder">${displayName.charAt(0).toUpperCase()}</span>`
-      }
-      <span class="auth-name">${displayName}</span>
-      <span class="auth-separator">·</span>
-      <span class="auth-logout-label">Logout</span>
+      <a href="#/profile" class="auth-profile-link" title="View your profile">
+        ${
+          photoURL
+            ? `<img src="${photoURL}" alt="${displayName}" class="auth-avatar" referrerpolicy="no-referrer" />`
+            : `<span class="auth-avatar-placeholder">${displayName.charAt(0).toUpperCase()}</span>`
+        }
+        <span class="auth-name">${displayName}</span>
+      </a>
+      <span class="auth-divider"></span>
+      <span class="auth-logout-label" role="button" tabindex="0" title="Sign out">Logout</span>
     `;
     btn.classList.add('auth-btn--logged-in');
     btn.classList.remove('auth-btn--logged-out');
+
+    // ── Profile link: navigate to #/profile (stop button click) ──
+    const profileLink = btn.querySelector('.auth-profile-link');
+    if (profileLink) {
+      profileLink.addEventListener('click', (e) => {
+        e.stopPropagation(); // Don't let btn click handler fire
+      });
+    }
+
+    // ── Logout label: show confirmation dialog ──
+    const logoutLabel = btn.querySelector('.auth-logout-label');
+    if (logoutLabel) {
+      logoutLabel.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showLogoutConfirmation();
+      });
+    }
   } else {
     // Logged-out state: show Google icon + "Sign in"
     btn.innerHTML = `
@@ -127,4 +153,45 @@ function renderAuthButton(btn: HTMLElement, user: User | null): void {
     btn.classList.add('auth-btn--logged-out');
     btn.classList.remove('auth-btn--logged-in');
   }
+}
+
+// ── Logout Confirmation Dialog ──────────────────────────────────────────
+
+function showLogoutConfirmation(): void {
+  // Prevent duplicates
+  if (document.querySelector('.logout-confirm-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'logout-confirm-overlay';
+  overlay.innerHTML = `
+    <div class="logout-confirm-modal" role="dialog" aria-label="Confirm sign out">
+      <div class="logout-confirm-icon">👋</div>
+      <h3>Sign out?</h3>
+      <p>Are you sure you want to sign out of your account?</p>
+      <div class="logout-confirm-actions">
+        <button class="btn logout-confirm-cancel">Cancel</button>
+        <button class="btn logout-confirm-yes">Yes, Sign Out</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('logout-confirm-visible'));
+
+  const close = () => {
+    overlay.classList.remove('logout-confirm-visible');
+    setTimeout(() => overlay.remove(), 250);
+  };
+
+  // Cancel
+  overlay.querySelector('.logout-confirm-cancel')!.addEventListener('click', close);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
+
+  // Confirm
+  overlay.querySelector('.logout-confirm-yes')!.addEventListener('click', async () => {
+    close();
+    await logout();
+  });
 }

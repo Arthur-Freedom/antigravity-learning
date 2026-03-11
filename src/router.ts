@@ -6,12 +6,14 @@
 export interface RouteHandler {
   render: () => string;
   init?: () => void;
+  destroy?: () => void;
 }
 
 type RouteMap = Record<string, RouteHandler>;
 
 let routes: RouteMap = {};
 let contentEl: HTMLElement | null = null;
+let currentPath: string | null = null;
 
 /** Register one or more routes */
 export function registerRoutes(routeMap: RouteMap): void {
@@ -60,6 +62,16 @@ function renderCurrentRoute(): void {
       </section>`;
     return;
   }
+
+  // Destroy the previous route's resources (real-time listeners, etc.)
+  if (currentPath) {
+    const prevHandler = routes[currentPath] || routes['/'];
+    if (prevHandler?.destroy) {
+      prevHandler.destroy();
+      console.info('[router] Destroyed resources for route:', currentPath);
+    }
+  }
+  currentPath = path;
 
   // Fade-out transition
   contentEl.classList.add('page-exit');

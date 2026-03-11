@@ -25,11 +25,11 @@ export function render(): string {
             </div>
           </div>
           <div class="resource-grid">
-            <a href="https://developers.google.com/gemini" target="_blank" rel="noopener" class="resource-card">
+            <a href="https://ai.google.dev/gemini-api/docs" target="_blank" rel="noopener" class="resource-card">
               <div class="resource-card-icon">🤖</div>
               <h4>Google Gemini API</h4>
               <p>Build with the Gemini model family — multimodal, grounded, and agentic capabilities.</p>
-              <span class="resource-link-label">developers.google.com →</span>
+              <span class="resource-link-label">ai.google.dev →</span>
             </a>
             <a href="https://firebase.google.com/docs" target="_blank" rel="noopener" class="resource-card">
               <div class="resource-card-icon">🔥</div>

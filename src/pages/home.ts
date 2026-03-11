@@ -3,6 +3,7 @@
 
 import { getCurrentUser, onAuthChange } from '../auth';
 import { getUserProfile } from '../db';
+import { renderActivityFeed, initActivityFeed, destroyActivityFeed } from '../components/activity-feed';
 
 // ── Quiz Data (kept for backward compat with modal fallback) ────────────
 export interface Quiz {
@@ -57,16 +58,16 @@ export function render(): string {
         <div class="hero-shape shape-2"></div>
         <div class="hero-shape shape-3"></div>
       </div>
-      <div class="hero-content">
-        <span class="hero-badge reveal-on-scroll">✨ Learn AI Agent Development</span>
-        <h1>Master<br>Autonomy</h1>
+      <div class="hero-content" style="position: relative; z-index: 1;">
+        <span class="hero-badge">✨ Learn AI Agent Development</span>
+        <h1 class="gradient-text">Master<br>Autonomy</h1>
         <p>A premium learning experience for AI agents, workflows, and skills. Designed to perfection.</p>
         <div class="hero-cta-group">
           <a href="#modules" class="btn btn-primary" id="scroll-btn">Discover the Curriculum</a>
           <a href="#how-it-works" class="btn btn-ghost" id="scroll-how">How It Works</a>
         </div>
       </div>
-      <div class="hero-image-container">
+      <div class="hero-image-container" style="position: relative; z-index: 1;">
         <img src="/images/hero.png" alt="Modern learning environment" />
       </div>
     </section>
@@ -94,6 +95,11 @@ export function render(): string {
           <span class="stat-label">Free Forever</span>
         </div>
       </div>
+    </section>
+
+    <!-- Live Activity Feed -->
+    <section class="section activity-feed-section reveal-on-scroll">
+      ${renderActivityFeed()}
     </section>
 
     <!-- How It Works -->
@@ -267,6 +273,9 @@ export function init(): void {
   // Animated stat counters
   initStatCounters();
 
+  // Live activity feed
+  initActivityFeed();
+
   // Restore progress reactively when auth state resolves
   // This fixes the race condition where getCurrentUser() returns null
   // at init time because Firebase hasn't resolved auth yet.
@@ -409,4 +418,9 @@ async function restoreProgress(): Promise<void> {
       }
     }
   }
+}
+
+/** Clean up Firestore listeners when navigating away */
+export function destroy(): void {
+  destroyActivityFeed()
 }

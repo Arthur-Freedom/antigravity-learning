@@ -3,7 +3,7 @@
 // Only accessible to logged-in users (could restrict to specific UIDs).
 
 import { getLeaderboard, type LeaderboardEntry } from '../db'
-import { getCurrentUser } from '../auth'
+import { getCurrentUser, onAuthChange } from '../auth'
 
 interface Analytics {
   totalUsers: number
@@ -36,21 +36,78 @@ export function render(): string {
 }
 
 export function init(): void {
+  // Admin whitelist from environment variable
+  const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((e: string) => e.trim().toLowerCase())
+    .filter(Boolean)
+
+  // Check if already logged in
   const user = getCurrentUser()
-  if (!user) {
-    const container = document.getElementById('admin-container')
-    if (container) {
-      container.innerHTML = `
-        <div class="leaderboard-empty">
-          <span class="leaderboard-empty-icon">🔒</span>
-          <h3>Sign in required</h3>
-          <p>Please sign in to access analytics.</p>
-        </div>
-      `
+  if (user) {
+    if (isAdmin(user.email, adminEmails)) {
+      loadAnalytics()
+    } else {
+      showAccessDenied()
     }
     return
   }
-  loadAnalytics()
+
+  // Otherwise wait for auth state to resolve (Firebase loads async)
+  const unsubscribe = onAuthChange((user) => {
+    unsubscribe() // only need the first callback
+    if (user) {
+      if (isAdmin(user.email, adminEmails)) {
+        loadAnalytics()
+      } else {
+        showAccessDenied()
+      }
+    } else {
+      showSignInRequired()
+    }
+  })
+
+  // Timeout fallback — if auth doesn't resolve in 3s, show sign-in prompt
+  setTimeout(() => {
+    const loading = document.getElementById('admin-loading')
+    if (loading && loading.style.display !== 'none') {
+      if (!getCurrentUser()) {
+        showSignInRequired()
+      }
+    }
+  }, 3000)
+}
+
+function isAdmin(email: string | null, adminEmails: string[]): boolean {
+  if (!email) return false
+  return adminEmails.includes(email.toLowerCase())
+}
+
+function showSignInRequired(): void {
+  const container = document.getElementById('admin-container')
+  if (container) {
+    container.innerHTML = `
+      <div class="leaderboard-empty">
+        <span class="leaderboard-empty-icon">🔒</span>
+        <h3>Sign in required</h3>
+        <p>Please sign in to access analytics.</p>
+      </div>
+    `
+  }
+}
+
+function showAccessDenied(): void {
+  const container = document.getElementById('admin-container')
+  if (container) {
+    container.innerHTML = `
+      <div class="leaderboard-empty">
+        <span class="leaderboard-empty-icon">🚫</span>
+        <h3>Access denied</h3>
+        <p>This page is restricted to site administrators.</p>
+        <a href="#/" class="btn btn-primary" style="margin-top: 1rem;">Back to Home</a>
+      </div>
+    `
+  }
 }
 
 async function loadAnalytics(): Promise<void> {

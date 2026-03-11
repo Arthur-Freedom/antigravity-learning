@@ -1,0 +1,665 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   MASTERFUL ANIMATIONS & DESIGN UPGRADES
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Animated Gradient Text ─────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #fff 0%, #89b4fa 40%, #cba6f7 60%, #fff 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 6s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ── Navbar Glassmorphism ───────────────────────────────────────────── */
+header.navbar {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 30px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+body.dark-theme header.navbar {
+  background: rgba(26, 29, 32, 0.85) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+header.navbar.scrolled {
+  padding-top: 0.8rem !important;
+  padding-bottom: 0.8rem !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Nav link animated underline */
+.nav-links a {
+  position: relative;
+  text-decoration: none !important;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-color), #8b5cf6);
+  border-radius: 2px;
+  transition: width 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+.nav-links a:hover {
+  text-decoration: none !important;
+}
+
+/* ── Hero Upgrades ──────────────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #1a2332 0%, #283A4A 30%, #2d4a5e 60%, #1e3a4f 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero h1 {
+  animation: heroSlideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.hero p {
+  color: rgba(255, 255, 255, 0.75) !important;
+  animation: heroSlideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.15s both;
+}
+
+.hero-cta-group {
+  animation: heroSlideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.3s both;
+}
+
+.hero-badge {
+  animation: heroSlideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) both;
+  opacity: 1 !important;
+  transform: none !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(12px);
+}
+
+.hero-image-container img {
+  animation: heroImageFloat 1s cubic-bezier(0.23, 1, 0.32, 1) 0.4s both;
+  border-radius: 16px !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+@keyframes heroSlideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroImageFloat {
+  from { opacity: 0; transform: translateY(40px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Hero floating shapes upgrade */
+.hero-shape {
+  opacity: 0.08 !important;
+  filter: blur(80px) !important;
+}
+
+.shape-1 { animation: floatShapeNew1 14s ease-in-out infinite !important; }
+.shape-2 { animation: floatShapeNew2 18s ease-in-out infinite !important; }
+.shape-3 { animation: floatShapeNew3 12s ease-in-out infinite !important; }
+
+@keyframes floatShapeNew1 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  25% { transform: translate(40px, -30px) scale(1.15) rotate(5deg); }
+  50% { transform: translate(-20px, 20px) scale(0.9) rotate(-3deg); }
+  75% { transform: translate(30px, 10px) scale(1.05) rotate(2deg); }
+}
+
+@keyframes floatShapeNew2 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate(-30px, -25px) scale(1.1) rotate(-4deg); }
+  66% { transform: translate(25px, 15px) scale(0.95) rotate(3deg); }
+}
+
+@keyframes floatShapeNew3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-35px, -20px) scale(1.2); }
+}
+
+/* ── Particle Field (added via JS) ──────────────────────────────────── */
+.hero-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  animation: particleFloat linear infinite;
+}
+
+@keyframes particleFloat {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100vh) scale(0); opacity: 0; }
+}
+
+/* ── Enhanced Button Styles ─────────────────────────────────────────── */
+.btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.btn:hover::before {
+  width: 400px;
+  height: 400px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #283A4A 0%, #1a2832 100%) !important;
+  box-shadow: 0 4px 15px rgba(40, 58, 74, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(40, 58, 74, 0.4) !important;
+}
+
+/* btn-ghost inside hero: light-on-dark */
+.hero .btn-ghost {
+  backdrop-filter: blur(8px);
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #fff !important;
+}
+
+.hero .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: #fff !important;
+  transform: translateY(-2px);
+}
+
+/* btn-ghost in navbar: adapts to theme */
+.navbar .btn-ghost {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
+  backdrop-filter: blur(8px);
+  transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.navbar .btn-ghost:hover {
+  background: var(--bg-secondary);
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+body.dark-theme .navbar .btn-ghost {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Card 3D Tilt & Glow ────────────────────────────────────────────── */
+.card {
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-color), #8b5cf6, #f97316);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 2;
+}
+
+.card:hover {
+  transform: translateY(-8px) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+body.dark-theme .card {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Card image zoom */
+.card-image img {
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.card:hover .card-image img {
+  transform: scale(1.08) !important;
+}
+
+/* Card badge pulse */
+.card-badge {
+  background: linear-gradient(135deg, var(--accent-color), #4f8fe0) !important;
+  border-radius: 6px !important;
+  letter-spacing: 2px;
+}
+
+/* ── Stats Bar Glow ─────────────────────────────────────────────────── */
+.stats-bar {
+  background: linear-gradient(135deg, #1a2332 0%, #283A4A 50%, #1e3a4f 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-bar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(137, 180, 250, 0.06) 0%, transparent 60%);
+  animation: statsGlow 8s ease-in-out infinite;
+}
+
+@keyframes statsGlow {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, -20px); }
+}
+
+.stat-number {
+  background: linear-gradient(135deg, #fff 20%, #89b4fa 50%, #cba6f7 80%, #fff 100%) !important;
+  background-size: 200% 200% !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  animation: statGradient 4s ease infinite;
+}
+
+@keyframes statGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ── How It Works Upgrade ───────────────────────────────────────────── */
+.hiw-icon {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(49, 120, 198, 0.08) 100%) !important;
+  border-radius: 24px !important;
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.hiw-step:hover .hiw-icon {
+  transform: translateY(-6px) rotate(3deg) !important;
+  box-shadow: 0 12px 35px rgba(49, 120, 198, 0.15) !important;
+}
+
+.hiw-step-num {
+  animation: numPulse 3s ease-in-out infinite;
+}
+
+@keyframes numPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(49, 120, 198, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(49, 120, 198, 0); }
+}
+
+/* ── Testimonial Cards Shine ────────────────────────────────────────── */
+.testimonial-card {
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.testimonial-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.03) 45%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 55%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  transition: none;
+}
+
+.testimonial-card:hover::after {
+  animation: cardShine 0.8s ease forwards;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1) !important;
+}
+
+@keyframes cardShine {
+  to { transform: translateX(100%); }
+}
+
+body.dark-theme .testimonial-card {
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+body.dark-theme .testimonial-card::after {
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.01) 45%,
+    rgba(255, 255, 255, 0.04) 50%,
+    rgba(255, 255, 255, 0.01) 55%,
+    transparent 60%
+  );
+}
+
+/* ── Scroll Reveal Upgrades ─────────────────────────────────────────── */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+              transform 0.7s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger animations for grids */
+.grid .reveal-on-scroll:nth-child(1) { transition-delay: 0s !important; }
+.grid .reveal-on-scroll:nth-child(2) { transition-delay: 0.15s !important; }
+.grid .reveal-on-scroll:nth-child(3) { transition-delay: 0.3s !important; }
+
+.testimonials-grid .reveal-on-scroll:nth-child(1) { transition-delay: 0s; }
+.testimonials-grid .reveal-on-scroll:nth-child(2) { transition-delay: 0.15s; }
+.testimonials-grid .reveal-on-scroll:nth-child(3) { transition-delay: 0.3s; }
+
+/* ── Section Titles Animation ───────────────────────────────────────── */
+.section-title {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-color), #8b5cf6);
+  margin: 1rem auto 0;
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.section-title:hover::after {
+  width: 120px;
+}
+
+/* ── Footer Upgrade ─────────────────────────────────────────────────── */
+.site-footer {
+  background: linear-gradient(135deg, #1a1d20 0%, #283A4A 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.site-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(137, 180, 250, 0.3), transparent);
+}
+
+.footer-col a {
+  position: relative;
+}
+
+.footer-col a::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  transform: translateY(-50%) scale(0);
+  transition: transform 0.3s ease;
+}
+
+.footer-col a:hover::before {
+  transform: translateY(-50%) scale(1);
+}
+
+/* ── Dashboard Upgrade ──────────────────────────────────────────────── */
+.dashboard-overview {
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: linear-gradient(135deg, var(--bg-secondary), rgba(49, 120, 198, 0.03)) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-overview::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-color), #16a34a, #8b5cf6);
+}
+
+/* ── Progress Ring Animation ────────────────────────────────────────── */
+.progress-ring-fill {
+  animation: ringDraw 1.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes ringDraw {
+  from { stroke-dashoffset: 326.73; }
+}
+
+/* ── Resource Card Hover ────────────────────────────────────────────── */
+.resource-card {
+  border-radius: 14px !important;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.resource-card:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ── Leaderboard Row Hover ──────────────────────────────────────────── */
+.leaderboard-row {
+  transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.leaderboard-row:hover {
+  transform: scale(1.01);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Smooth Scroll ──────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Active Nav Link ────────────────────────────────────────────────── */
+.nav-links a.nav-active::after {
+  width: 100%;
+  background: var(--accent-color);
+}
+
+/* ── Loading Shimmer ────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg,
+    var(--bg-secondary) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    var(--bg-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Magnetic hover for feature cards ───────────────────────────────── */
+.feature-card, .tool-card {
+  border-radius: 12px !important;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ── Quiz Option Hover ──────────────────────────────────────────────── */
+.quiz-q-option {
+  border-radius: 10px !important;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.quiz-q-option:hover:not(:disabled) {
+  transform: translateX(4px);
+}
+
+/* ── Theme Toggle Button ───────────────────────────────────────────── */
+.theme-btn {
+  border-radius: 100px !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.82rem !important;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.theme-btn:hover {
+  transform: rotate(15deg) scale(1.05);
+}
+
+/* ── Dash Module Cards ──────────────────────────────────────────────── */
+.dash-module-card {
+  border-radius: 12px !important;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.dash-module-card:hover {
+  transform: translateX(6px) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Lesson Hero Gradient ───────────────────────────────────────────── */
+.lesson-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Code Block Upgrade ─────────────────────────────────────────────── */
+.code-block {
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.code-block:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Inline Quiz Upgrade ────────────────────────────────────────────── */
+.inline-quiz {
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.inline-quiz::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-color), #8b5cf6, var(--accent-color));
+  background-size: 200% 100%;
+  animation: quizBarShift 3s ease infinite;
+}
+
+@keyframes quizBarShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ── Callout Upgrade ────────────────────────────────────────────────── */
+.callout {
+  border-radius: 12px !important;
+  transition: all 0.3s ease;
+}
+
+.callout:hover {
+  transform: translateX(4px);
+}
+
+/* ── Admin Cards ────────────────────────────────────────────────────── */
+.admin-stat-card {
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-5px) scale(1.02) !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1) !important;
+}

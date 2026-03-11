@@ -1,5 +1,5 @@
 ---
-description: Build and deploy to GitHub pages
+description: Build and deploy to Firebase Hosting
 ---
 
 This workflow builds the Vite app and deploys it to Firebase Hosting.
