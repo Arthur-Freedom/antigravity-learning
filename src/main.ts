@@ -2,7 +2,7 @@ import './style.css'
 import './animations.css'
 import { initAppCheck } from './appcheck'
 import { bindAuthUI, onAuthChange } from './auth'
-import { registerRoutes, initRouter } from './router'
+import { registerRoutes, initRouter, navigate, getCurrentPath } from './router'
 import { showToast } from './components/toast'
 
 // ── App Check (must be initialized BEFORE any Firebase service calls) ──
@@ -26,13 +26,13 @@ import { downloadCertificate } from './components/certificate'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <header class="navbar">
-    <a href="#/" class="nav-brand">Antigravity</a>
+    <a href="/" class="nav-brand">Antigravity</a>
     <div class="nav-links">
-      <a href="#/">Home</a>
-      <a href="#/" id="nav-modules-link">Modules</a>
-      <a href="#/leaderboard">🏆 Leaderboard</a>
-      <a href="#/resources">📚 Resources</a>
-      <a href="#/profile" id="nav-profile-link" class="nav-profile-link" style="display:none;">👤 Profile</a>
+      <a href="/">Home</a>
+      <a href="/" id="nav-modules-link">Modules</a>
+      <a href="/leaderboard">🏆 Leaderboard</a>
+      <a href="/resources">📚 Resources</a>
+      <a href="/profile" id="nav-profile-link" class="nav-profile-link" style="display:none;">👤 Profile</a>
       <button id="cert-download-btn" class="btn btn-ghost" style="padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: 100px;">🎓 Certificate</button>
       <button id="google-login-btn" class="btn auth-btn auth-btn--logged-out" aria-label="Sign in with Google">Sign in with Google</button>
       <button id="theme-toggle" class="btn theme-btn" aria-label="Toggle theme">☀️ Light</button>
@@ -53,20 +53,20 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="footer-links">
         <div class="footer-col">
           <h4>Modules</h4>
-          <a href="#/learn/workflows">Workflows</a>
-          <a href="#/learn/skills">Skills</a>
-          <a href="#/learn/agents">Autonomous Agents</a>
-          <a href="#/resources">Resources</a>
+          <a href="/learn/workflows">Workflows</a>
+          <a href="/learn/skills">Skills</a>
+          <a href="/learn/agents">Autonomous Agents</a>
+          <a href="/resources">Resources</a>
         </div>
         <div class="footer-col">
           <h4>Resources</h4>
-          <a href="#/">Home</a>
-          <a href="#/" class="scroll-to-modules">All Modules</a>
-          <a href="#/leaderboard">Leaderboard</a>
-          <a href="#/profile">Profile</a>
-          <a href="#/faq">FAQ</a>
-          <a href="#/glossary">Glossary</a>
-          <a href="#/admin">Analytics</a>
+          <a href="/">Home</a>
+          <a href="/" class="scroll-to-modules">All Modules</a>
+          <a href="/leaderboard">Leaderboard</a>
+          <a href="/profile">Profile</a>
+          <a href="/faq">FAQ</a>
+          <a href="/glossary">Glossary</a>
+          <a href="/admin">Analytics</a>
         </div>
       </div>
     </div>
@@ -148,13 +148,13 @@ navLinks.querySelectorAll('a').forEach((link) => {
 // ── Modules Link Scroll Handler ─────────────────────────────────────────
 function scrollToModules(e: Event): void {
   e.preventDefault()
-  const currentPath = window.location.hash.slice(1) || '/'
+  const currentPath = getCurrentPath()
   if (currentPath === '/') {
     // Already on home, just scroll
     document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' })
   } else {
     // Navigate to home first, then scroll after render
-    window.location.hash = '#/'
+    navigate('/')
     setTimeout(() => {
       document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' })
     }, 400)
@@ -228,11 +228,9 @@ function spawnParticles(): void {
 }
 
 // Spawn particles on route change too
-const origHashHandler = () => {
+window.addEventListener('routechange', () => {
   requestAnimationFrame(() => {
     setTimeout(spawnParticles, 300)
   })
-}
-window.addEventListener('hashchange', origHashHandler)
+})
 spawnParticles()
-

@@ -206,8 +206,8 @@ export function render(): string {
           <h3>Still have questions?</h3>
           <p>Jump into the modules and learn by doing — or check out the Resources page for more reading material.</p>
           <div class="faq-cta-buttons">
-            <a href="#/" class="btn btn-primary">Start Learning</a>
-            <a href="#/resources" class="btn btn-ghost">Browse Resources</a>
+            <a href="/" class="btn btn-primary">Start Learning</a>
+            <a href="/resources" class="btn btn-ghost">Browse Resources</a>
           </div>
         </div>
 

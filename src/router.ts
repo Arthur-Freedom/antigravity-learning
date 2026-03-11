@@ -1,5 +1,5 @@
-// ── Hash-based SPA Router ───────────────────────────────────────────────
-// Simple client-side router that swaps #page-content based on URL hash.
+// ── History-based SPA Router ────────────────────────────────────────────
+// Clean-URL client-side router using the HTML5 History API (pushState).
 // Each route provides a render() function for HTML and an optional init()
 // function to bind event listeners after the content is inserted.
 
@@ -20,17 +20,19 @@ export function registerRoutes(routeMap: RouteMap): void {
   routes = { ...routes, ...routeMap };
 }
 
-/** Programmatically navigate to a path */
+/** Programmatically navigate to a path (clean URL) */
 export function navigate(path: string): void {
-  window.location.hash = '#' + path;
+  if (path === getCurrentPath()) return;
+  history.pushState(null, '', path);
+  renderCurrentRoute();
 }
 
-/** Get current hash path (without #) */
+/** Get current pathname */
 export function getCurrentPath(): string {
-  return window.location.hash.slice(1) || '/';
+  return window.location.pathname || '/';
 }
 
-/** Start listening for hash changes and render the initial route */
+/** Start listening for popstate and render the initial route */
 export function initRouter(containerSelector: string): void {
   contentEl = document.querySelector(containerSelector);
   if (!contentEl) {
@@ -38,7 +40,38 @@ export function initRouter(containerSelector: string): void {
     return;
   }
 
-  window.addEventListener('hashchange', () => renderCurrentRoute());
+  // Handle browser back/forward
+  window.addEventListener('popstate', () => renderCurrentRoute());
+
+  // Intercept all internal <a> clicks to use pushState
+  document.addEventListener('click', (e) => {
+    const anchor = (e.target as HTMLElement).closest('a');
+    if (!anchor) return;
+
+    const href = anchor.getAttribute('href');
+    if (!href) return;
+
+    // Skip external links, anchors, mailto, etc.
+    if (href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+    if (anchor.getAttribute('target') === '_blank') return;
+    if (anchor.hasAttribute('download')) return;
+
+    // Skip pure anchor links (#modules, etc.) — let them scroll naturally
+    if (href.startsWith('#') && !href.startsWith('#/')) return;
+
+    // Legacy hash links: convert #/ to / (just in case any slip through)
+    let cleanPath = href;
+    if (cleanPath.startsWith('#/')) {
+      cleanPath = cleanPath.slice(1); // remove the #
+    }
+
+    // Only handle local paths
+    if (cleanPath.startsWith('/')) {
+      e.preventDefault();
+      navigate(cleanPath);
+    }
+  });
+
   renderCurrentRoute();
 }
 
@@ -58,7 +91,7 @@ function renderCurrentRoute(): void {
       <section class="not-found-page">
         <h2>Page not found</h2>
         <p>The page you're looking for doesn't exist.</p>
-        <a href="#/" class="btn">Back to Home</a>
+        <a href="/" class="btn">Back to Home</a>
       </section>`;
     return;
   }
@@ -88,6 +121,9 @@ function renderCurrentRoute(): void {
 
     // Kick off scroll-reveal animations
     initScrollReveal();
+
+    // Dispatch a custom event so other parts of the app can react
+    window.dispatchEvent(new CustomEvent('routechange', { detail: { path } }));
 
     setTimeout(() => contentEl!.classList.remove('page-enter'), 400);
   }, 200);

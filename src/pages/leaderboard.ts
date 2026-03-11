@@ -91,7 +91,7 @@ function handleLeaderboardUpdate(entries: LeaderboardEntry[]): void {
         <span class="leaderboard-empty-icon">🏆</span>
         <h3>No entries yet</h3>
         <p>Be the first to complete a quiz and claim the #1 spot!</p>
-        <a href="#/" class="btn btn-primary">Start Learning</a>
+        <a href="/" class="btn btn-primary">Start Learning</a>
       </div>
     `
     isFirstSnapshot = false

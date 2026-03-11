@@ -109,7 +109,7 @@ function renderAuthButton(btn: HTMLElement, user: User | null): void {
     const photoURL = user.photoURL;
 
     btn.innerHTML = `
-      <a href="#/profile" class="auth-profile-link" title="View your profile">
+      <a href="/profile" class="auth-profile-link" title="View your profile">
         ${
           photoURL
             ? `<img src="${photoURL}" alt="${displayName}" class="auth-avatar" referrerpolicy="no-referrer" />`
@@ -123,7 +123,7 @@ function renderAuthButton(btn: HTMLElement, user: User | null): void {
     btn.classList.add('auth-btn--logged-in');
     btn.classList.remove('auth-btn--logged-out');
 
-    // ── Profile link: navigate to #/profile (stop button click) ──
+    // ── Profile link: navigate to /profile (stop button click) ──
     const profileLink = btn.querySelector('.auth-profile-link');
     if (profileLink) {
       profileLink.addEventListener('click', (e) => {

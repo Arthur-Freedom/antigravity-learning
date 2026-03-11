@@ -104,7 +104,7 @@ function showAccessDenied(): void {
         <span class="leaderboard-empty-icon">🚫</span>
         <h3>Access denied</h3>
         <p>This page is restricted to site administrators.</p>
-        <a href="#/" class="btn btn-primary" style="margin-top: 1rem;">Back to Home</a>
+        <a href="/" class="btn btn-primary" style="margin-top: 1rem;">Back to Home</a>
       </div>
     `
   }

@@ -373,9 +373,9 @@ function renderQuizProgress(profile: UserProfile): void {
   if (!container) return
 
   const quizzes = [
-    { key: 'workflows', label: 'Workflows', icon: '🔄', href: '#/learn/workflows' },
-    { key: 'skills', label: 'Skills', icon: '🛠️', href: '#/learn/skills' },
-    { key: 'agents', label: 'Autonomous Agents', icon: '🤖', href: '#/learn/agents' },
+    { key: 'workflows', label: 'Workflows', icon: '🔄', href: '/learn/workflows' },
+    { key: 'skills', label: 'Skills', icon: '🛠️', href: '/learn/skills' },
+    { key: 'agents', label: 'Autonomous Agents', icon: '🤖', href: '/learn/agents' },
   ]
 
   const progress = profile.quizProgress ?? {}
@@ -455,7 +455,7 @@ function renderQuizProgress(profile: UserProfile): void {
          </div>`
       : `<div class="profile-completion-cta">
            <p>Complete all 3 modules to earn your certificate!</p>
-           <a href="#/" class="btn profile-outline-btn">Continue Learning →</a>
+           <a href="/" class="btn profile-outline-btn">Continue Learning →</a>
          </div>`
     }
   `

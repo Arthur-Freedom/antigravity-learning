@@ -155,7 +155,7 @@ export function render(): string {
             </div>
             <div class="card-footer">
               <span class="card-status" id="status-workflows">Not started</span>
-              <a href="#/learn/workflows" class="btn">Start Learning</a>
+              <a href="/learn/workflows" class="btn">Start Learning</a>
             </div>
           </div>
         </div>
@@ -175,7 +175,7 @@ export function render(): string {
             </div>
             <div class="card-footer">
               <span class="card-status" id="status-skills">Not started</span>
-              <a href="#/learn/skills" class="btn">Start Learning</a>
+              <a href="/learn/skills" class="btn">Start Learning</a>
             </div>
           </div>
         </div>
@@ -195,7 +195,7 @@ export function render(): string {
             </div>
             <div class="card-footer">
               <span class="card-status" id="status-agents">Not started</span>
-              <a href="#/learn/agents" class="btn">Start Learning</a>
+              <a href="/learn/agents" class="btn">Start Learning</a>
             </div>
           </div>
         </div>
@@ -392,7 +392,7 @@ async function restoreProgress(): Promise<void> {
                 <h4>${quizzes[t].title.replace(' Quiz', '')}</h4>
                 <span class="dash-module-label">${passed ? 'Passed' : attempted ? 'Try again' : 'Not attempted'}</span>
               </div>
-              <a href="#/learn/${t}" class="btn btn-sm">${passed ? 'Review' : 'Start'}</a>
+              <a href="/learn/${t}" class="btn btn-sm">${passed ? 'Review' : 'Start'}</a>
             </div>`;
           })
           .join('')}

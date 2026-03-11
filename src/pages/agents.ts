@@ -47,9 +47,9 @@ export function render(): string {
   return `
     <section class="lesson-hero" style="background: linear-gradient(135deg, #141e30 0%, #243b55 50%, #4a00e0 100%);">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="#/">Home</a>
+        <a href="/">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <a href="#/">Modules</a>
+        <a href="/">Modules</a>
         <span class="breadcrumb-sep">›</span>
         <span class="breadcrumb-current">Autonomous Agents</span>
       </nav>
@@ -311,11 +311,11 @@ export function render(): string {
 
         <!-- Navigation -->
         <nav class="lesson-nav reveal-on-scroll">
-          <a href="#/learn/skills" class="lesson-nav-btn nav-prev">
+          <a href="/learn/skills" class="lesson-nav-btn nav-prev">
             <span class="nav-label">← Previous</span>
             <span class="nav-page">Skills</span>
           </a>
-          <a href="#/" class="lesson-nav-btn nav-next">
+          <a href="/" class="lesson-nav-btn nav-next">
             <span class="nav-label">Finish →</span>
             <span class="nav-page">Back to Home</span>
           </a>

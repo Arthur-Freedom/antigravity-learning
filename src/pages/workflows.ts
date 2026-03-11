@@ -47,9 +47,9 @@ export function render(): string {
   return `
     <section class="lesson-hero" style="background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="#/">Home</a>
+        <a href="/">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <a href="#/">Modules</a>
+        <a href="/">Modules</a>
         <span class="breadcrumb-sep">›</span>
         <span class="breadcrumb-current">Workflows</span>
       </nav>
@@ -271,11 +271,11 @@ npm test
 
         <!-- Navigation -->
         <nav class="lesson-nav reveal-on-scroll">
-          <a href="#/" class="lesson-nav-btn nav-prev">
+          <a href="/" class="lesson-nav-btn nav-prev">
             <span class="nav-label">← Back</span>
             <span class="nav-page">Home</span>
           </a>
-          <a href="#/learn/skills" class="lesson-nav-btn nav-next">
+          <a href="/learn/skills" class="lesson-nav-btn nav-next">
             <span class="nav-label">Next Module →</span>
             <span class="nav-page">Skills</span>
           </a>

@@ -61,6 +61,22 @@ export function initAppCheck(siteKey?: string): AppCheck | null {
 
   const key = siteKey ?? import.meta.env.VITE_RECAPTCHA_ENTERPRISE_KEY;
 
+  // ── In dev mode, only init App Check if a real debug token is set ────
+  // Without a registered debug token, App Check init will poison ALL
+  // Storage requests with 403s (shown as CORS errors in the browser).
+  // Skip it entirely so Storage, Auth etc. work normally on localhost.
+  if (import.meta.env.DEV) {
+    const debugToken = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN;
+    if (!debugToken || debugToken === 'true') {
+      console.info(
+        '[appcheck] ⏭️  Skipping App Check on localhost (no debug token configured). ' +
+          'To enable: add VITE_APPCHECK_DEBUG_TOKEN=<your-token> to .env ' +
+          'and register it in Firebase Console → App Check → Manage Debug Tokens.'
+      );
+      return null;
+    }
+  }
+
   if (!key && !import.meta.env.DEV) {
     console.warn(
       '[appcheck] ⚠️  No ReCAPTCHA Enterprise key found. ' +

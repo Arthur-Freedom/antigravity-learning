@@ -47,9 +47,9 @@ export function render(): string {
   return `
     <section class="lesson-hero" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 40%, #2c5364 100%);">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="#/">Home</a>
+        <a href="/">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <a href="#/">Modules</a>
+        <a href="/">Modules</a>
         <span class="breadcrumb-sep">›</span>
         <span class="breadcrumb-current">Skills</span>
       </nav>
@@ -308,11 +308,11 @@ Return appropriate HTTP status codes:
 
         <!-- Navigation -->
         <nav class="lesson-nav reveal-on-scroll">
-          <a href="#/learn/workflows" class="lesson-nav-btn nav-prev">
+          <a href="/learn/workflows" class="lesson-nav-btn nav-prev">
             <span class="nav-label">← Previous</span>
             <span class="nav-page">Workflows</span>
           </a>
-          <a href="#/learn/agents" class="lesson-nav-btn nav-next">
+          <a href="/learn/agents" class="lesson-nav-btn nav-next">
             <span class="nav-label">Next Module →</span>
             <span class="nav-page">Autonomous Agents</span>
           </a>
