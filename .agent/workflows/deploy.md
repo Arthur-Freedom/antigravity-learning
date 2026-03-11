@@ -2,14 +2,16 @@
 description: Build and deploy to GitHub pages
 ---
 
-// turbo-all
+This workflow builds the Vite app and deploys it to Firebase Hosting.
 
-1. Build the Vite app
-```bash
-npm run build
-```
+// turbo
+1. Build the production bundle: `npm run build`
 
-2. Deploy to GitHub Pages
-```bash
-npx gh-pages -d dist
-```
+// turbo
+2. Deploy to Firebase Hosting: `npx firebase deploy --only hosting`
+
+// turbo
+3. Deploy Firestore security rules: `npx firebase deploy --only firestore:rules`
+
+// turbo
+4. Echo the live URL: `echo "🚀 Deployed to https://antigravity-learning.web.app"`

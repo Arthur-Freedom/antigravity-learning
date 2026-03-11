@@ -19,9 +19,19 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+
+/** Returns the currently signed-in user, or null */
+export function getCurrentUser(): User | null {
+  return auth.currentUser;
+}
+
+/** Subscribe to auth state changes from external modules */
+export function onAuthChange(callback: (user: User | null) => void): void {
+  onAuthStateChanged(auth, callback);
+}
 
 // ── Public API ──────────────────────────────────────────────────────────
 
@@ -72,6 +82,14 @@ export function bindAuthUI(btnId: string): void {
   // ── React to auth state changes ──
   onAuthStateChanged(auth, (user) => {
     renderAuthButton(btn, user);
+    // Create / update Firestore profile on sign-in
+    if (user) {
+      ensureUserProfile(user.uid, {
+        displayName: user.displayName ?? 'User',
+        email: user.email ?? '',
+        photoURL: user.photoURL,
+      });
+    }
   });
 }
 

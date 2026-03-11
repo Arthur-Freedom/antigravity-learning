@@ -1,127 +1,137 @@
 import './style.css'
-import { bindAuthUI } from './auth'
+import { bindAuthUI, onAuthChange } from './auth'
+import { registerRoutes, initRouter } from './router'
+import { showToast } from './components/toast'
+
+// ── Page Modules ────────────────────────────────────────────────────────
+import * as homePage from './pages/home'
+import * as workflowsPage from './pages/workflows'
+import * as skillsPage from './pages/skills'
+import * as agentsPage from './pages/agents'
+
+// ── Render App Shell ────────────────────────────────────────────────────
+// The navbar and footer persist; only #page-content is swapped by router.
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <header class="navbar">
-    <div class="nav-brand">Antigravity</div>
+    <a href="#/" class="nav-brand">Antigravity</a>
     <div class="nav-links">
-      <a href="#workflows">Workflows</a>
-      <a href="#skills">Skills</a>
-      <a href="#agents">Agents</a>
+      <a href="#/">Home</a>
+      <a href="#modules">Modules</a>
       <button id="google-login-btn" class="btn auth-btn auth-btn--logged-out" aria-label="Sign in with Google">Sign in with Google</button>
-      <button id="theme-toggle" class="btn" style="padding: 0.5rem 1rem; border: 2px solid var(--text-primary); background: transparent; color: var(--text-primary);">Toggle Theme</button>
+      <button id="theme-toggle" class="btn theme-btn" aria-label="Toggle theme">☀️ Light</button>
     </div>
+    <button class="hamburger" id="hamburger-btn" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
   </header>
 
-  <section class="hero">
-    <div class="hero-content">
-      <h1>Master<br>Autonomy</h1>
-      <p>A premium learning experience for AI agents, workflows, and skills. Designed to perfection.</p>
-      <a href="#workflows" class="btn" id="scroll-btn">Discover the Curriculum</a>
-    </div>
-    
-    <div style="flex: 1; min-height: 400px; margin-left: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.1);">
-      <img src="/images/hero.png" alt="Outdoor Patio" style="width: 100%; height: 100%; object-fit: cover;" />
-    </div>
-  </section>
+  <main id="page-content"></main>
 
-  <section id="workflows" class="section">
-    <h2 class="section-title">Core Modules</h2>
-    <div class="grid">
-      
-      <div class="card">
-        <div class="card-image">
-          <img src="/images/workflows.png" alt="Workflows" />
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="footer-logo">Antigravity</span>
+        <p class="footer-tagline">A premium learning experience for AI agents.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Modules</h4>
+          <a href="#/learn/workflows">Workflows</a>
+          <a href="#/learn/skills">Skills</a>
+          <a href="#/learn/agents">Autonomous Agents</a>
         </div>
-        <div class="card-content">
-          <h3>Workflows</h3>
-          <p>Automate repetitive tasks with explicitly defined steps and shell commands. Learn how to scaffold projects instantly.</p>
-          <button class="btn interactive-btn" data-topic="workflows">Test Knowledge</button>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="#/">Home</a>
+          <a href="#modules">All Modules</a>
+          <a href="#progress">Your Progress</a>
         </div>
       </div>
-      
-      <div class="card">
-        <div class="card-image">
-          <img src="/images/skills.png" alt="Skills" />
-        </div>
-        <div class="card-content">
-          <h3>Skills</h3>
-          <p>Extend the agent's permanent knowledge base with custom paradigms, design systems, and external libraries.</p>
-          <button class="btn interactive-btn" data-topic="skills">Test Knowledge</button>
-        </div>
-      </div>
-      
-      <div class="card">
-        <div class="card-image">
-          <img src="/images/agents.png" alt="Agents" />
-        </div>
-        <div class="card-content">
-          <h3>Autonomous Agents</h3>
-          <p>Learn how an autonomous agent is different from a simple chatbot and how it executes tasks directly on your computer.</p>
-          <button class="btn interactive-btn" data-topic="agents">Test Knowledge</button>
-        </div>
-      </div>
-
     </div>
-  </section>
-
-  <!-- Interactive Quiz Modal -->
-  <div id="quiz-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 3rem; border-radius: 8px; max-width: 500px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
-      <h3 id="quiz-title" style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.8rem;">Quiz</h3>
-      <p id="quiz-question" style="margin-bottom: 2rem; color: var(--text-secondary); font-size: 1.1rem;"></p>
-      <button id="close-modal" class="btn" style="background: var(--text-primary); color: white;">Close</button>
+    <div class="footer-bottom">
+      <p>&copy; ${new Date().getFullYear()} Antigravity Learning. Built with ❤️ by AI agents.</p>
     </div>
-  </div>
+  </footer>
 `
 
-// Smooth Scroll Interactivity
-document.getElementById('scroll-btn')?.addEventListener('click', (e) => {
-  e.preventDefault();
-  document.getElementById('workflows')?.scrollIntoView({ behavior: 'smooth' });
-});
+// ── Auth Binding ────────────────────────────────────────────────────────
+bindAuthUI('google-login-btn')
 
-// Interactive Quiz System
-const quizzes: Record<string, { title: string, question: string }> = {
-  workflows: { title: 'Workflows Quiz', question: 'What is the purpose of the // turbo flag in a workflow file?' },
-  skills: { title: 'Skills Quiz', question: 'Where should you save a skill file so the agent automatically reads it before performing relevant tasks?' },
-  agents: { title: 'Agents Quiz', question: 'What is the primary difference between a simple chatbot and an autonomous agent like Antigravity?' }
-};
+// ── Route Registration ──────────────────────────────────────────────────
+registerRoutes({
+  '/': { render: homePage.render, init: homePage.init },
+  '/learn/workflows': { render: workflowsPage.render, init: workflowsPage.init },
+  '/learn/skills': { render: skillsPage.render, init: skillsPage.init },
+  '/learn/agents': { render: agentsPage.render, init: agentsPage.init },
+})
 
-const modal = document.getElementById('quiz-modal');
-const closeBtn = document.getElementById('close-modal');
-const quizTitleSpan = document.getElementById('quiz-title');
-const quizQuestionSpan = document.getElementById('quiz-question');
+// Start the router (renders the initial page)
+initRouter('#page-content')
 
-document.querySelectorAll('.interactive-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    const topic = (e.target as HTMLButtonElement).dataset.topic;
-    if (topic && quizzes[topic] && modal && quizTitleSpan && quizQuestionSpan) {
-      quizTitleSpan.textContent = quizzes[topic].title;
-      quizQuestionSpan.textContent = quizzes[topic].question;
-      modal.style.display = 'flex';
-    }
-  });
-});
+// ── Theme Toggle with Persistence ───────────────────────────────────────
+import { saveThemePreference, getUserProfile } from './db'
+import { getCurrentUser } from './auth'
 
-closeBtn?.addEventListener('click', () => {
-  if (modal) modal.style.display = 'none';
-});
+const themeBtn = document.getElementById('theme-toggle')!
 
-// Theme Toggle Logic
-const themeBtn = document.getElementById('theme-toggle');
-themeBtn?.addEventListener('click', () => {
-  document.body.classList.toggle('dark-theme');
-  if (document.body.classList.contains('dark-theme')) {
-    themeBtn.textContent = 'Light Theme';
-    themeBtn.style.color = 'var(--text-light)';
-    themeBtn.style.borderColor = 'var(--text-light)';
+function applyTheme(theme: 'light' | 'dark') {
+  if (theme === 'dark') {
+    document.body.classList.add('dark-theme')
+    themeBtn.textContent = '🌙 Dark'
   } else {
-    themeBtn.textContent = 'Dark Theme';
-    themeBtn.style.color = 'var(--text-primary)';
-    themeBtn.style.borderColor = 'var(--text-primary)';
+    document.body.classList.remove('dark-theme')
+    themeBtn.textContent = '☀️ Light'
   }
-});
+}
 
-// ── Google Auth UI Binding ──
-bindAuthUI('google-login-btn');
+themeBtn.addEventListener('click', async () => {
+  const isDark = document.body.classList.contains('dark-theme')
+  const newTheme = isDark ? 'light' : 'dark'
+  applyTheme(newTheme)
+
+  const user = getCurrentUser()
+  if (user) {
+    await saveThemePreference(user.uid, newTheme)
+  }
+})
+
+// ── Hamburger Menu (Mobile) ─────────────────────────────────────────────
+const hamburger = document.getElementById('hamburger-btn')!
+const navLinks = document.querySelector('.nav-links')!
+
+hamburger.addEventListener('click', () => {
+  navLinks.classList.toggle('nav-open')
+  hamburger.classList.toggle('hamburger-active')
+})
+
+// Close mobile menu on link click
+navLinks.querySelectorAll('a').forEach((link) => {
+  link.addEventListener('click', () => {
+    navLinks.classList.remove('nav-open')
+    hamburger.classList.remove('hamburger-active')
+  })
+})
+
+// ── Auth State → Restore Theme + Toasts ─────────────────────────────────
+let previousUser: unknown = undefined; // track to avoid initial toast
+
+onAuthChange(async (user) => {
+  if (user) {
+    const profile = await getUserProfile(user.uid)
+    if (profile) {
+      applyTheme(profile.theme ?? 'light')
+    }
+    // Show welcome toast (but not on initial page load)
+    if (previousUser !== undefined) {
+      showToast({
+        message: `Welcome back, ${user.displayName?.split(' ')[0] ?? 'User'}!`,
+        type: 'success',
+      })
+    }
+  } else if (previousUser) {
+    showToast({ message: 'Signed out successfully', type: 'info' })
+  }
+  previousUser = user
+})
+
