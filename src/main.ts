@@ -16,6 +16,12 @@ import * as homePage from './pages/home'
 import * as workflowsPage from './pages/workflows'
 import * as skillsPage from './pages/skills'
 import * as agentsPage from './pages/agents'
+import * as promptsPage from './pages/prompts'
+import * as contextPage from './pages/context'
+import * as mcpPage from './pages/mcp'
+import * as toolsPage from './pages/tools'
+import * as safetyPage from './pages/safety'
+import * as projectsPage from './pages/projects'
 import * as leaderboardPage from './pages/leaderboard'
 import * as adminPage from './pages/admin'
 import * as resourcesPage from './pages/resources'
@@ -47,6 +53,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <button class="hamburger" id="hamburger-btn" aria-label="Toggle menu">
       <span></span><span></span><span></span>
     </button>
+    <div class="scroll-progress" id="scroll-progress"></div>
   </header>
 
   <main id="page-content"></main>
@@ -63,6 +70,12 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <a href="/learn/workflows">Workflows</a>
           <a href="/learn/skills">Skills</a>
           <a href="/learn/agents">Autonomous Agents</a>
+          <a href="/learn/prompts">Prompt Engineering</a>
+          <a href="/learn/context">Context Windows</a>
+          <a href="/learn/mcp">MCP</a>
+          <a href="/learn/tools">Tool Use</a>
+          <a href="/learn/safety">Safety & Guardrails</a>
+          <a href="/learn/projects">Real-World Projects</a>
           <a href="/resources">Resources</a>
         </div>
         <div class="footer-col">
@@ -107,6 +120,12 @@ registerRoutes({
   '/learn/workflows': { render: workflowsPage.render, init: workflowsPage.init },
   '/learn/skills': { render: skillsPage.render, init: skillsPage.init },
   '/learn/agents': { render: agentsPage.render, init: agentsPage.init },
+  '/learn/prompts': { render: promptsPage.render, init: promptsPage.init },
+  '/learn/context': { render: contextPage.render, init: contextPage.init },
+  '/learn/mcp': { render: mcpPage.render, init: mcpPage.init },
+  '/learn/tools': { render: toolsPage.render, init: toolsPage.init },
+  '/learn/safety': { render: safetyPage.render, init: safetyPage.init },
+  '/learn/projects': { render: projectsPage.render, init: projectsPage.init },
   '/leaderboard': { render: leaderboardPage.render, init: leaderboardPage.init, destroy: leaderboardPage.destroy },
   '/resources': { render: resourcesPage.render, init: resourcesPage.init },
   '/admin': { render: adminPage.render, init: adminPage.init },
@@ -208,15 +227,40 @@ onAuthChange(async (user) => {
   previousUser = user
 })
 
-// ── Navbar scroll effect ────────────────────────────────────────────────
+// ── Navbar scroll effect + Reading progress bar ────────────────────────
 const navbar = document.querySelector('header.navbar')!
-window.addEventListener('scroll', () => {
+const scrollProgress = document.getElementById('scroll-progress')!
+let ticking = false
+
+function updateScrollUI(): void {
+  // Navbar shrink effect
   if (window.scrollY > 40) {
     navbar.classList.add('scrolled')
   } else {
     navbar.classList.remove('scrolled')
   }
+
+  // Reading progress bar
+  const scrollTop = window.scrollY
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight
+  const progress = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0
+  scrollProgress.style.transform = `scaleX(${progress})`
+  ticking = false
+}
+
+window.addEventListener('scroll', () => {
+  if (!ticking) {
+    requestAnimationFrame(updateScrollUI)
+    ticking = true
+  }
 }, { passive: true })
+
+// Reset progress bar on route changes
+window.addEventListener('routechange', () => {
+  scrollProgress.style.transform = 'scaleX(0)'
+  // Re-calculate after content renders
+  setTimeout(() => requestAnimationFrame(updateScrollUI), 400)
+})
 
 // ── Hero Particles ──────────────────────────────────────────────────────
 function spawnParticles(): void {

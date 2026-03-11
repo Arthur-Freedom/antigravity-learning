@@ -316,9 +316,9 @@ export function render(): string {
             <span class="nav-label">← Previous</span>
             <span class="nav-page">Skills</span>
           </a>
-          <a href="/" class="lesson-nav-btn nav-next">
-            <span class="nav-label">Finish →</span>
-            <span class="nav-page">Back to Home</span>
+          <a href="/learn/prompts" class="lesson-nav-btn nav-next">
+            <span class="nav-label">Next Module →</span>
+            <span class="nav-page">Prompt Engineering</span>
           </a>
         </nav>
       </div>

@@ -57,7 +57,7 @@ export async function ensureUserProfile(
       const results = Object.values(progress);
       const quizScore = existingData.quizScore ?? results.filter(r => r.correct).length;
       const quizTotal = existingData.quizTotal ?? results.length;
-      const completedAll = existingData.completedAll ?? (quizScore >= 3);
+      const completedAll = existingData.completedAll ?? (quizScore >= 9);
       const xp = existingData.xp ?? 0;
       const level = existingData.level ?? 1;
       const streak = existingData.streak ?? 0;
@@ -119,7 +119,7 @@ export async function saveQuizResult(
     const results = Object.values(progress);
     const quizScore = results.filter(r => r.correct).length;
     const quizTotal = results.length;
-    const completedAll = quizScore >= 3;
+    const completedAll = quizScore >= 9;
 
     let xp = existing?.xp ?? 0;
     if (correct && !(existing?.quizProgress?.[topic]?.correct)) {
@@ -287,5 +287,5 @@ export async function isCertificateEligible(uid: string): Promise<boolean> {
   const profile = await getUserProfile(uid);
   if (!profile?.quizProgress) return false;
   const correct = Object.values(profile.quizProgress).filter(r => r.correct).length;
-  return correct >= 3;
+  return correct >= 9;
 }

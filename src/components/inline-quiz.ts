@@ -181,21 +181,59 @@ export function initInlineQuiz(
         }
 
         // Save to Firestore if logged in
+        // Use a helper that retries with onAuthChange in case auth hasn't resolved yet
+        const saveForUser = async (uid: string) => {
+          try {
+            await saveQuizResult(uid, topic, passed);
+            // Check if user just completed ALL modules → celebrate!
+            if (passed) {
+              const eligible = await isCertificateEligible(uid);
+              if (eligible) {
+                fireConfetti();
+                showToast({
+                  message: '🎓 You earned your certificate! Download it from your profile.',
+                  type: 'success',
+                  duration: 6000,
+                });
+              }
+            }
+          } catch (err) {
+            console.error('[quiz] Failed to save result:', err);
+            showToast({
+              message: '⚠️ Could not save your quiz result. Please try again.',
+              type: 'warning',
+              duration: 5000,
+            });
+          }
+        };
+
         const user = getCurrentUser();
         if (user) {
-          await saveQuizResult(user.uid, topic, passed);
-
-          // Check if user just completed ALL modules → celebrate!
-          if (passed) {
-            const eligible = await isCertificateEligible(user.uid);
-            if (eligible) {
-              fireConfetti();
-              showToast({
-                message: '🎓 You earned your certificate! Download it from your profile.',
-                type: 'success',
-                duration: 6000,
-              });
-            }
+          await saveForUser(user.uid);
+        } else {
+          // Auth may not have resolved yet (e.g., page was refreshed).
+          // Wait briefly for the auth state to settle before giving up.
+          const { onAuthChange } = await import('../services/authService');
+          const saved = await new Promise<boolean>((resolve) => {
+            const timeout = setTimeout(() => {
+              unsubscribe();
+              resolve(false);
+            }, 3000);
+            const unsubscribe = onAuthChange(async (resolvedUser) => {
+              if (resolvedUser) {
+                clearTimeout(timeout);
+                unsubscribe();
+                await saveForUser(resolvedUser.uid);
+                resolve(true);
+              }
+            });
+          });
+          if (!saved) {
+            showToast({
+              message: '⚠️ Sign in to save your quiz progress!',
+              type: 'warning',
+              duration: 5000,
+            });
           }
         }
       }

@@ -47,6 +47,72 @@ export const quizzes: Record<string, Quiz> = {
     ],
     correctIndex: 1,
   },
+  prompts: {
+    title: 'Prompt Engineering Quiz',
+    question: 'What is "few-shot prompting"?',
+    options: [
+      'Asking the AI to respond in fewer words',
+      'Providing examples of the desired input/output before your actual request',
+      'Running the prompt multiple times and picking the best answer',
+      'Limiting the AI to a small number of tool calls',
+    ],
+    correctIndex: 1,
+  },
+  context: {
+    title: 'Context Windows Quiz',
+    question: 'What happens when a conversation exceeds the context window?',
+    options: [
+      'The model speeds up',
+      'Earlier messages are forgotten or truncated',
+      'The model switches to a larger context',
+      'Nothing changes',
+    ],
+    correctIndex: 1,
+  },
+  mcp: {
+    title: 'MCP Quiz',
+    question: 'What does MCP stand for?',
+    options: [
+      'Machine Control Protocol',
+      'Model Context Protocol',
+      'Multi-Channel Processing',
+      'Managed Compute Platform',
+    ],
+    correctIndex: 1,
+  },
+  tools: {
+    title: 'Tool Use Quiz',
+    question: 'What is "function calling" in the context of AI agents?',
+    options: [
+      'Writing JavaScript functions',
+      'The AI deciding which external tool/API to invoke based on the user request',
+      'Calling customer support',
+      'Optimizing function performance',
+    ],
+    correctIndex: 1,
+  },
+  safety: {
+    title: 'Safety & Guardrails Quiz',
+    question: 'What is a "prompt injection" attack?',
+    options: [
+      'A way to speed up prompts',
+      'Tricking the AI into ignoring its instructions by hiding commands in user input',
+      'Adding extra context to improve results',
+      'A method to compress prompts',
+    ],
+    correctIndex: 1,
+  },
+  projects: {
+    title: 'Real-World Projects Quiz',
+    question: 'What is the first step when starting a real-world AI agent project?',
+    options: [
+      'Write all the code immediately',
+      'Define the scope and requirements clearly',
+      'Deploy to production',
+      'Skip planning and start coding',
+    ],
+    correctIndex: 1,
+  },
 };
 
 export function render(): string {
@@ -81,12 +147,12 @@ export function render(): string {
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number" data-target="9">0</span>
+          <span class="stat-number" data-target="27">0</span>
           <span class="stat-label">Quiz Questions</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number" data-target="18">0</span>
+          <span class="stat-number" data-target="54">0</span>
           <span class="stat-label">Teaching Sections</span>
         </div>
         <div class="stat-divider"></div>
@@ -138,7 +204,7 @@ export function render(): string {
     <!-- Core Modules -->
     <section id="modules" class="section">
       <h2 class="section-title">Your Learning Path</h2>
-      <p class="section-subtitle">Three bite-sized modules to go from zero to AI agent expert</p>
+      <p class="section-subtitle">Nine comprehensive modules to go from zero to AI agent expert</p>
       <div class="grid">
 
         <div class="card reveal-on-scroll" id="card-workflows">
@@ -203,6 +269,133 @@ export function render(): string {
             </div>
           </div>
         </div>
+
+        <div class="card reveal-on-scroll" id="card-prompts">
+          <div class="card-image">
+            <img src="/images/prompts.png" alt="Prompt Engineering" />
+          </div>
+          <div class="card-content">
+            <div class="card-badge">Module 4</div>
+            <h3>Prompt Engineering</h3>
+            <p>Master the art of writing clear, effective prompts that get the best results from AI agents.</p>
+            <div class="card-tags">
+              <span class="tag">Few-Shot</span>
+              <span class="tag">Chain-of-Thought</span>
+              <span class="tag">Best Practices</span>
+              <span class="tag tag-time">⏱️ ~10 min</span>
+            </div>
+            <div class="card-footer">
+              <span class="card-status" id="status-prompts">Not started</span>
+              <a href="/learn/prompts" class="btn">Start Learning</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card reveal-on-scroll" id="card-context">
+          <div class="card-image">
+            <img src="/images/context.png" alt="Context Windows" />
+          </div>
+          <div class="card-content">
+            <div class="card-badge">Module 5</div>
+            <h3>Context Windows</h3>
+            <p>Understand how AI models process information and manage token limits effectively.</p>
+            <div class="card-tags">
+              <span class="tag">Tokens</span>
+              <span class="tag">Memory</span>
+              <span class="tag">Optimization</span>
+              <span class="tag tag-time">⏱️ ~10 min</span>
+            </div>
+            <div class="card-footer">
+              <span class="card-status" id="status-context">Not started</span>
+              <a href="/learn/context" class="btn">Start Learning</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card reveal-on-scroll" id="card-mcp">
+          <div class="card-image">
+            <img src="/images/mcp.png" alt="MCP" />
+          </div>
+          <div class="card-content">
+            <div class="card-badge">Module 6</div>
+            <h3>Model Context Protocol</h3>
+            <p>Learn MCP — the open standard that connects AI agents to external tools and data sources.</p>
+            <div class="card-tags">
+              <span class="tag">MCP</span>
+              <span class="tag">Integration</span>
+              <span class="tag">Servers</span>
+              <span class="tag tag-time">⏱️ ~12 min</span>
+            </div>
+            <div class="card-footer">
+              <span class="card-status" id="status-mcp">Not started</span>
+              <a href="/learn/mcp" class="btn">Start Learning</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card reveal-on-scroll" id="card-tools">
+          <div class="card-image">
+            <img src="/images/tools.png" alt="Tool Use & Function Calling" />
+          </div>
+          <div class="card-content">
+            <div class="card-badge">Module 7</div>
+            <h3>Tool Use & Function Calling</h3>
+            <p>Discover how agents select and invoke external tools, APIs, and functions dynamically.</p>
+            <div class="card-tags">
+              <span class="tag">Functions</span>
+              <span class="tag">APIs</span>
+              <span class="tag">Dynamic</span>
+              <span class="tag tag-time">⏱️ ~12 min</span>
+            </div>
+            <div class="card-footer">
+              <span class="card-status" id="status-tools">Not started</span>
+              <a href="/learn/tools" class="btn">Start Learning</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card reveal-on-scroll" id="card-safety">
+          <div class="card-image">
+            <img src="/images/safety.png" alt="Safety & Guardrails" />
+          </div>
+          <div class="card-content">
+            <div class="card-badge">Module 8</div>
+            <h3>Safety & Guardrails</h3>
+            <p>Learn how to build responsible AI systems with proper safety measures and prompt injection defenses.</p>
+            <div class="card-tags">
+              <span class="tag">Security</span>
+              <span class="tag">Ethics</span>
+              <span class="tag">Defense</span>
+              <span class="tag tag-time">⏱️ ~10 min</span>
+            </div>
+            <div class="card-footer">
+              <span class="card-status" id="status-safety">Not started</span>
+              <a href="/learn/safety" class="btn">Start Learning</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card reveal-on-scroll" id="card-projects">
+          <div class="card-image">
+            <img src="/images/projects.png" alt="Real-World Projects" />
+          </div>
+          <div class="card-content">
+            <div class="card-badge">Module 9</div>
+            <h3>Real-World Projects</h3>
+            <p>Apply everything you've learned by building real AI agent projects from scratch.</p>
+            <div class="card-tags">
+              <span class="tag">Hands-On</span>
+              <span class="tag">Portfolio</span>
+              <span class="tag">Capstone</span>
+              <span class="tag tag-time">⏱️ ~15 min</span>
+            </div>
+            <div class="card-footer">
+              <span class="card-status" id="status-projects">Not started</span>
+              <a href="/learn/projects" class="btn">Start Learning</a>
+            </div>
+          </div>
+        </div>
+
     </section>
 
     <!-- Testimonials -->

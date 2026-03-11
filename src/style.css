@@ -195,6 +195,26 @@ header.navbar {
 .hamburger-active span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   SCROLL READING PROGRESS BAR
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.scroll-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--accent-gradient);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: none;
+  z-index: 101;
+  pointer-events: none;
+  will-change: transform;
+  box-shadow: 0 0 8px rgba(46, 200, 102, 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    HERO SECTION
    ═══════════════════════════════════════════════════════════════════════ */
 
