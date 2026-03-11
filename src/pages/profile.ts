@@ -11,6 +11,7 @@ import { getCurrentUser, onAuthChange, updateAuthProfile } from '../services/aut
 import { getUserProfile, updateDisplayName, type UserProfile } from '../services/userService'
 import { openProfilePictureModal } from '../components/profile-picture'
 import { showToast } from '../components/toast'
+import { downloadCertificate } from '../components/certificate'
 
 /** Auth listener unsubscribe — cleaned up if the route changes */
 let unsubAuth: (() => void) | null = null
@@ -100,7 +101,7 @@ function renderProfileContent(user: { uid: string; displayName: string | null; e
         <div class="profile-avatar-wrapper" id="profile-avatar-btn" title="Change profile picture">
           <div class="profile-avatar-ring">
             ${photoURL
-              ? `<img src="${photoURL}" alt="${displayName}" class="profile-avatar-img" referrerpolicy="no-referrer" />`
+              ? `<img src="${photoURL}" width="102" height="102" alt="${displayName}" class="profile-avatar-img" referrerpolicy="no-referrer" />`
               : `<div class="profile-avatar-placeholder">${displayName.charAt(0).toUpperCase()}</div>`
             }
           </div>
@@ -155,6 +156,21 @@ function renderProfileContent(user: { uid: string; displayName: string | null; e
               📷 Change Profile Picture
             </button>
             <p class="profile-field-hint">Upload a custom avatar or use your Google profile picture.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gamification Section -->
+      <div class="profile-section reveal-on-scroll">
+        <div class="profile-section-header">
+          <span class="profile-section-icon">⭐</span>
+          <h3>Experience & Level</h3>
+        </div>
+        <div class="profile-section-body">
+          <div id="profile-gamification" class="profile-gamification-area">
+            <div class="profile-progress-loading">
+              <div class="loading-spinner"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -285,7 +301,9 @@ async function loadProfileData(uid: string): Promise<void> {
     // Update profile page avatar
     const avatarImg = document.querySelector('.profile-avatar-img') as HTMLImageElement | null
     if (avatarImg) {
-      avatarImg.src = customPhoto
+      if (avatarImg.src !== customPhoto) {
+        avatarImg.src = customPhoto
+      }
     } else {
       // Replace placeholder with actual image
       const ring = document.querySelector('.profile-avatar-ring')
@@ -294,6 +312,8 @@ async function loadProfileData(uid: string): Promise<void> {
         const img = document.createElement('img')
         img.src = customPhoto
         img.alt = profile.displayName || 'Avatar'
+        img.width = 102
+        img.height = 102
         img.className = 'profile-avatar-img'
         img.referrerPolicy = 'no-referrer'
         placeholder.replaceWith(img)
@@ -302,7 +322,11 @@ async function loadProfileData(uid: string): Promise<void> {
 
     // Update navbar avatar
     const authAvatar = document.querySelector('.auth-avatar') as HTMLImageElement | null
-    if (authAvatar) authAvatar.src = customPhoto
+    if (authAvatar) {
+      if (authAvatar.src !== customPhoto) {
+        authAvatar.src = customPhoto
+      }
+    }
   }
 
   // ── Display Name (use Firestore value, which may be custom) ───────
@@ -318,12 +342,17 @@ async function loadProfileData(uid: string): Promise<void> {
   const badgesEl = document.getElementById('profile-badges')
   if (badgesEl) {
     const badges: string[] = []
+    if (profile.level) badges.push(`<span class="profile-badge profile-badge-level">⭐ Level ${profile.level}</span>`)
+    if (profile.streak && profile.streak > 0) badges.push(`<span class="profile-badge profile-badge-streak" title="Daily streak">🔥 ${profile.streak}</span>`)
     if (profile.completedAll) badges.push('<span class="profile-badge profile-badge-certified">🎓 Certified</span>')
     if (profile.quizScore > 0) badges.push(`<span class="profile-badge profile-badge-score">🏆 Score: ${profile.quizScore}/3</span>`)
     if (!profile.completedAll && profile.quizTotal > 0) badges.push('<span class="profile-badge profile-badge-progress">🔄 In Progress</span>')
     if (profile.quizTotal === 0) badges.push('<span class="profile-badge profile-badge-new">✨ New Learner</span>')
     badgesEl.innerHTML = badges.join('')
   }
+
+  // ── Gamification ──────────────────────────────────────────────────
+  renderGamification(profile)
 
   // ── Quiz Progress ─────────────────────────────────────────────────
   renderQuizProgress(profile)
@@ -424,7 +453,8 @@ function renderQuizProgress(profile: UserProfile): void {
            <span>🎉</span>
            <div>
              <strong>All modules completed!</strong>
-             <p>You've earned your certificate. Download it from the navbar.</p>
+             <p>You've earned your certificate.</p>
+             <button id="profile-cert-download-btn" class="btn profile-outline-btn mt-2" style="background: white; color: var(--color-success); border-color: white; margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem;">🎓 Download Certificate</button>
            </div>
          </div>`
       : `<div class="profile-completion-cta">
@@ -432,6 +462,59 @@ function renderQuizProgress(profile: UserProfile): void {
            <a href="/" class="btn profile-outline-btn">Continue Learning →</a>
          </div>`
     }
+  `
+
+  // ── Certificate Download (Bind after rendering) ─────────────────────
+  const certBtn = document.getElementById('profile-cert-download-btn')
+  if (certBtn) {
+    certBtn.addEventListener('click', () => {
+      downloadCertificate()
+    })
+  }
+}
+
+function renderGamification(profile: UserProfile): void {
+  const container = document.getElementById('profile-gamification')
+  if (!container) return
+
+  const xp = profile.xp ?? 0
+  const level = profile.level ?? 1
+  const streak = profile.streak ?? 0
+  
+  // Calculate XP needed for next level:
+  // Level = floor(sqrt(XP / 100)) + 1 -> Max XP for current level = ((Level)^2) * 100
+  // XP required for next level = Level * Level * 100
+  const xpForNextLevel = level * level * 100
+  const xpForCurrentLevel = (level - 1) * (level - 1) * 100
+  const xpProgress = xp - xpForCurrentLevel
+  const xpNeeded = xpForNextLevel - xpForCurrentLevel
+  const pct = Math.min(100, Math.max(0, Math.round((xpProgress / xpNeeded) * 100)))
+
+  container.innerHTML = `
+    <div class="profile-gamification-stats">
+      <div class="profile-stat">
+        <span class="profile-stat-number">⭐ ${level}</span>
+        <span class="profile-stat-label">Current Level</span>
+      </div>
+      <div class="profile-stat">
+        <span class="profile-stat-number">🔥 ${streak}</span>
+        <span class="profile-stat-label">Day Streak</span>
+      </div>
+      <div class="profile-stat">
+        <span class="profile-stat-number">${xp}</span>
+        <span class="profile-stat-label">Total XP</span>
+      </div>
+    </div>
+    
+    <div class="profile-xp-bar-container">
+      <div class="profile-xp-bar-header">
+        <span class="profile-xp-label">Level Progress</span>
+        <span class="profile-xp-values">${xpProgress} / ${xpNeeded} XP to Level ${level + 1}</span>
+      </div>
+      <div class="profile-xp-bar-bg">
+        <div class="profile-xp-bar-fill" style="width: ${pct}%;"></div>
+      </div>
+    </div>
   `
 }
 

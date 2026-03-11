@@ -7,8 +7,7 @@ import { isCertificateEligible, getUserProfile } from '../services/userService'
 import { showToast } from './toast'
 
 /**
- * Draw text with manual letter spacing (avoids ctx.letterSpacing which
- * freezes some browsers).
+ * Draw text with letter spacing.
  */
 function drawSpacedText(
   ctx: CanvasRenderingContext2D,
@@ -18,46 +17,33 @@ function drawSpacedText(
   spacing: number,
   align: 'center' | 'left' | 'right' = 'center'
 ): void {
-  if (spacing <= 0) {
-    ctx.textAlign = align
-    ctx.fillText(text, x, y)
-    return
-  }
-
-  const totalExtraWidth = spacing * (text.length - 1)
-  const baseWidth = ctx.measureText(text).width
-  const fullWidth = baseWidth + totalExtraWidth
-
-  let startX: number
-  if (align === 'center') {
-    startX = x - fullWidth / 2
-  } else if (align === 'right') {
-    startX = x - fullWidth
-  } else {
-    startX = x
-  }
-
-  ctx.textAlign = 'left'
-  let curX = startX
-  for (const char of text) {
-    ctx.fillText(char, curX, y)
-    curX += ctx.measureText(char).width + spacing
-  }
+  ctx.textAlign = align
+  ctx.letterSpacing = `${spacing}px`
+  ctx.fillText(text, x, y)
+  // Reset letter spacing since it's global
+  ctx.letterSpacing = '0px'
 }
+
+let isGenerating = false
 
 /**
  * Generates a premium completion certificate as a PNG download.
  */
 export async function downloadCertificate(): Promise<void> {
+  if (isGenerating) return
+  isGenerating = true
+
   const user = getCurrentUser()
   if (!user) {
     showToast({ message: 'Please sign in to download your certificate', type: 'warning' })
+    isGenerating = false
     return
   }
 
   const eligible = await isCertificateEligible(user.uid)
   if (!eligible) {
     showToast({ message: 'Complete all 3 modules to earn your certificate!', type: 'info' })
+    isGenerating = false
     return
   }
 
@@ -91,6 +77,8 @@ export async function downloadCertificate(): Promise<void> {
   } catch (err) {
     console.error('[certificate] Generation failed:', err)
     showToast({ message: 'Certificate generation failed. Please try again.', type: 'error' })
+  } finally {
+    isGenerating = false
   }
 }
 

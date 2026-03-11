@@ -3,7 +3,7 @@
 // Imports from authService — NEVER from firebase/* directly.
 
 import { loginWithGoogle, onAuthChange, getCurrentUser } from '../services/authService';
-import { ensureUserProfile } from '../services/userService';
+import { ensureUserProfile, applyDailyLoginStreak, getUserProfile, type UserProfile } from '../services/userService';
 import { showLogoutConfirmation } from './logout-dialog';
 import type { AppUser } from '../types/user';
 
@@ -28,34 +28,45 @@ export function bindAuthUI(btnId: string): void {
   });
 
   // React to auth state changes
-  onAuthChange((user) => {
-    renderAuthButton(btn, user);
+  onAuthChange(async (user) => {
     if (user) {
-      ensureUserProfile(user.uid, {
+      // First, handle gamification updates and profile sync
+      await applyDailyLoginStreak(user.uid);
+      await ensureUserProfile(user.uid, {
         displayName: user.displayName,
         email: user.email,
         photoURL: user.photoURL,
       });
+      // Fetch latest profile to get streak info
+      const profile = await getUserProfile(user.uid);
+      renderAuthButton(btn, user, profile);
+    } else {
+      renderAuthButton(btn, null, null);
     }
   });
 }
 
 // ── Internal ────────────────────────────────────────────────────────────
 
-function renderAuthButton(btn: HTMLElement, user: AppUser | null): void {
+function renderAuthButton(btn: HTMLElement, user: AppUser | null, profile: UserProfile | null): void {
   if (user) {
     const displayName = user.displayName.split(' ')[0];
     const photoURL = user.photoURL;
+    const streak = profile?.streak ?? 0;
+    const streakHtml = streak > 0 
+      ? `<span class="auth-streak" title="${streak} Day Streak!">🔥 ${streak}</span>` 
+      : '';
 
     btn.innerHTML = `
       <a href="/profile" class="auth-profile-link" title="View your profile">
         ${
           photoURL
-            ? `<img src="${photoURL}" alt="${displayName}" class="auth-avatar" referrerpolicy="no-referrer" />`
+            ? `<img src="${photoURL}" width="24" height="24" alt="${displayName}" class="auth-avatar" referrerpolicy="no-referrer" />`
             : `<span class="auth-avatar-placeholder">${displayName.charAt(0).toUpperCase()}</span>`
         }
         <span class="auth-name">${displayName}</span>
       </a>
+      ${streakHtml}
       <span class="auth-divider"></span>
       <span class="auth-logout-label" role="button" tabindex="0" title="Sign out">Logout</span>
     `;

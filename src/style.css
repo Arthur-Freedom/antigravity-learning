@@ -1347,6 +1347,67 @@ header.navbar {
   color: var(--error);
 }
 
+/* ── AI Tutor Hint UI ─────────────────────────────────────────────────── */
+
+.btn-ai-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn-ai-hint:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(34, 197, 94, 0.1);
+}
+
+.btn-ai-hint:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ai-hint-box {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6; /* Blue to distinguish from standard correct/wrong */
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  animation: slideDownFade 0.3s ease forwards;
+}
+
+.ai-hint-box strong {
+  color: #1e40af;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Quiz Result */
 .quiz-result-card {
   display: flex;
@@ -3391,6 +3452,9 @@ header.navbar {
   border-radius: 50%;
   padding: 4px;
   background: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-avatar-img {
@@ -3400,6 +3464,7 @@ header.navbar {
   object-fit: cover;
   background: var(--bg-primary);
   border: 3px solid var(--bg-primary);
+  display: block;
 }
 
 .profile-avatar-placeholder {
@@ -4951,6 +5016,104 @@ header.navbar {
   box-shadow: 0 6px 20px rgba(10, 102, 194, 0.4);
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GAMIFICATION (XP, Levels, Streaks)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.profile-gamification-area {
+  padding: 0.5rem 0;
+}
+
+.profile-gamification-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 2rem;
+  background: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  gap: 1rem;
+}
+
+.profile-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-stat-number {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.profile-stat-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.profile-xp-bar-container {
+  background: transparent;
+}
+
+.profile-xp-bar-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.profile-xp-label {
+  color: var(--text-primary);
+}
+
+.profile-xp-values {
+  color: var(--text-secondary);
+}
+
+.profile-xp-bar-bg {
+  height: 12px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.profile-xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #34D399, #3B82F6);
+  border-radius: 6px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Navbar Streak */
+.auth-streak {
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: rgba(255, 152, 0, 0.15);
+  color: #ff9800;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* New Profile Badges */
+.profile-badge-level {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.profile-badge-streak {
+  background: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
+}
 
 /* Mobile responsive */
 @media (max-width: 768px) {

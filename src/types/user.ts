@@ -23,6 +23,10 @@ export interface UserProfile {
   quizScore: number
   quizTotal: number
   completedAll: boolean
+  xp: number
+  level: number
+  streak: number
+  lastLoginDate: string
   createdAt: unknown
   updatedAt: unknown
 }
@@ -34,6 +38,8 @@ export interface LeaderboardEntry {
   score: number
   total: number
   completedAll: boolean
+  xp: number
+  level: number
 }
 
 export interface RecentSignup {

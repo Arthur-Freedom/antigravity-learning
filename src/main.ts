@@ -22,7 +22,6 @@ import * as resourcesPage from './pages/resources'
 import * as profilePage from './pages/profile'
 import * as faqPage from './pages/faq'
 import * as glossaryPage from './pages/glossary'
-import { downloadCertificate } from './components/certificate'
 
 // ── Render App Shell ────────────────────────────────────────────────────
 // The navbar and footer persist; only #page-content is swapped by router.
@@ -42,7 +41,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <a href="/leaderboard">🏆 Leaderboard</a>
       <a href="/resources">📚 Resources</a>
       <a href="/profile" id="nav-profile-link" class="nav-profile-link" style="display:none;">👤 Profile</a>
-      <button id="cert-download-btn" class="btn btn-ghost" style="padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: 100px;">🎓 Certificate</button>
       <button id="google-login-btn" class="btn auth-btn auth-btn--logged-out" aria-label="Sign in with Google">Sign in with Google</button>
 
     </div>
@@ -117,11 +115,6 @@ registerRoutes({
   '/glossary': { render: glossaryPage.render, init: glossaryPage.init },
 })
 
-// ── Certificate Download ────────────────────────────────────────────────
-document.getElementById('cert-download-btn')?.addEventListener('click', () => {
-  downloadCertificate()
-})
-
 // Start the router (renders the initial page)
 initRouter('#page-content')
 
@@ -155,7 +148,7 @@ navLinks.querySelectorAll('a').forEach((link) => {
   link.addEventListener('click', closeMobileMenu)
 })
 
-// Close mobile menu on button click (certificate, theme toggle)
+// Close mobile menu on button click (theme toggle)
 navLinks.querySelectorAll('button').forEach((btn) => {
   btn.addEventListener('click', closeMobileMenu)
 })

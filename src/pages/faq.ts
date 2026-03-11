@@ -186,7 +186,7 @@ export function render(): string {
               <span class="faq-chevron">▸</span>
             </button>
             <div class="faq-answer">
-              <p>Complete all 3 modules (Workflows, Skills, and Autonomous Agents) by passing each module's knowledge check quiz with at least 70%. Once all 3 are passed, the certificate button in the navbar will generate a personalized PDF certificate for you.</p>
+              <p>Complete all 3 modules (Workflows, Skills, and Autonomous Agents) by passing each module's knowledge check quiz with at least 70%. Once all 3 are passed, the certificate download button will appear on your profile page.</p>
             </div>
           </div>
 

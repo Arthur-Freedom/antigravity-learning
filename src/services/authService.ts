@@ -41,6 +41,14 @@ export function getRawFirebaseUser(): User | null {
   return auth.currentUser;
 }
 
+/** Get the original Google photo URL from the provider data, ignoring custom photoURL overrides */
+export function getGooglePhotoURL(): string | null {
+  const user = auth.currentUser;
+  if (!user) return null;
+  const googleProvider = user.providerData.find(p => p.providerId === 'google.com');
+  return googleProvider?.photoURL || null;
+}
+
 /**
  * Subscribe to auth state changes.
  * Callback receives an AppUser or null — never a raw Firebase User.

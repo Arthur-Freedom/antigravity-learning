@@ -10,6 +10,16 @@ let countCallback: ((count: number) => void) | null = null;
 
 /**
  * Initialize presence tracking.
+ * 
+ * Listener Lifecycle:
+ * 1. Attaches a generic `.info/connected` listener when the user authenticates.
+ * 2. When the client connects (or reconnects) to RTDB, it sets the user's status 
+ *    to `online: true` and configures an `onDisconnect` hook to remove the status.
+ * 3. The generic `/status` listener handles counting total online users.
+ * 
+ * Note: These listeners remain active for the duration of the current auth session
+ * as they represent the physical websocket connection. Firebase SDK automatically 
+ * cleans up these listeners if the client disconnects or the user signs out.
  */
 export function initPresence(): void {
   try {

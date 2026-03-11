@@ -4,6 +4,7 @@
 
 import { getCurrentUser } from '../services/authService';
 import { saveQuizResult, isCertificateEligible } from '../services/userService';
+import { getAiHintForQuiz } from '../services/functionsService';
 import { showToast } from './toast';
 import { fireConfetti } from './confetti';
 
@@ -96,10 +97,50 @@ export function initInlineQuiz(
       // Show feedback
       const fb = document.getElementById(`${quizId}-fb-${qi}`);
       if (fb) {
-        fb.textContent = isCorrect
-          ? `✅ Correct! ${question.explanation}`
-          : `❌ Not quite. ${question.explanation}`;
-        fb.className = `quiz-q-feedback ${isCorrect ? 'feedback-correct' : 'feedback-wrong'}`;
+        if (isCorrect) {
+          fb.innerHTML = `✅ Correct! ${question.explanation}`;
+          fb.className = 'quiz-q-feedback feedback-correct';
+        } else {
+          fb.innerHTML = `
+            <div>❌ Not quite. ${question.explanation}</div>
+            <button class="btn-ai-hint" id="${quizId}-hint-btn-${qi}">✨ Get AI Hint</button>
+            <div class="ai-hint-box pfp-hidden" id="${quizId}-hint-box-${qi}"></div>
+          `;
+          fb.className = 'quiz-q-feedback feedback-wrong';
+
+          // Bind AI Hint Button
+          const hintBtn = document.getElementById(`${quizId}-hint-btn-${qi}`) as HTMLButtonElement;
+          const hintBox = document.getElementById(`${quizId}-hint-box-${qi}`);
+          
+          if (hintBtn && hintBox) {
+            hintBtn.addEventListener('click', async () => {
+              const user = getCurrentUser();
+              if (!user) {
+                showToast({ message: 'Please sign in to use the AI Tutor.', type: 'warning' });
+                return;
+              }
+
+              hintBtn.disabled = true;
+              hintBtn.innerHTML = '<span class="loading-spinner" style="width: 14px; height: 14px; border-width: 2px; border-top-color: currentColor;"></span> Thinking...';
+              hintBox.classList.remove('pfp-hidden');
+              hintBox.textContent = 'Asking Gemini...';
+
+              try {
+                const hint = await getAiHintForQuiz(
+                  question.question,
+                  question.options,
+                  question.options[oi] // The user's wrong answer
+                );
+                hintBox.innerHTML = `<strong>🤖 AI Tutor:</strong> ${hint}`;
+              } catch (error) {
+                console.error('[AI Tutor] Failed:', error);
+                hintBox.innerHTML = `<em>Failed to get hint. Is the API key set?</em>`;
+                hintBtn.disabled = false;
+                hintBtn.innerHTML = '✨ Try Again';
+              }
+            });
+          }
+        }
       }
 
       // Update running score
@@ -150,7 +191,7 @@ export function initInlineQuiz(
             if (eligible) {
               fireConfetti();
               showToast({
-                message: '🎓 You earned your certificate! Download it from the navbar.',
+                message: '🎓 You earned your certificate! Download it from your profile.',
                 type: 'success',
                 duration: 6000,
               });

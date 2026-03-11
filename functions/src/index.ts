@@ -52,6 +52,7 @@ import { initializeApp, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import * as nodemailer from "nodemailer";
+import { GoogleGenAI } from "@google/genai";
 
 // ── Initialise Firebase Admin SDK ───────────────────────────────────────
 if (!getApps().length) {
@@ -300,7 +301,79 @@ export const setAdminClaim = onCall(
 );
 
 // ═══════════════════════════════════════════════════════════════════════
-// 4. FIRESTORE TRIGGER — Server-Side Data Validation
+// 4. CALLABLE — Gemini AI Tutor
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Provides a Socratic hint using the Gemini API.
+ * The model is instructed NOT to give the direct answer.
+ */
+export const getAiHint = onCall(
+  { enforceAppCheck: true, secrets: ["GEMINI_API_KEY"] },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in required to use AI Tutor.");
+    }
+
+    const { question, options, wrongAnswer } = request.data as {
+      question?: string;
+      options?: string[];
+      wrongAnswer?: string;
+    };
+
+    if (!question || !options || !wrongAnswer) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Missing question, options, or wrongAnswer."
+      );
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "your-gemini-api-key") {
+      logger.error("GEMINI_API_KEY is missing or invalid in environment.");
+      throw new HttpsError("internal", "AI Tutor is currently unavailable.");
+    }
+
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+
+      const prompt = `
+A student is taking a multiple-choice quiz on AI agent development.
+They answered a question incorrectly.
+
+QUESTION: ${question}
+OPTIONS: ${options.join(" | ")}
+THEIR WRONG ANSWER: ${wrongAnswer}
+
+You are a wise, encouraging Socratic tutor. 
+1. DO NOT give them the correct answer directly.
+2. Acknowledge their wrong answer briefly and explain why it's incorrect.
+3. Provide a hint or ask a guiding question that points them toward the correct concept.
+4. Keep your response short (2-3 sentences max).
+`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: prompt,
+      });
+
+      const hint = response.text;
+      if (!hint) {
+        throw new Error("No text returned from Gemini");
+      }
+
+      logger.info("✨ AI Hint generated", { uid: request.auth.uid, hintLength: hint.length });
+
+      return { hint };
+    } catch (error) {
+      logger.error("AI Tutor Error:", error);
+      throw new HttpsError("internal", "Failed to generate AI hint.");
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════
+// 5. FIRESTORE TRIGGER — Server-Side Data Validation
 // ═══════════════════════════════════════════════════════════════════════
 
 /** Maximum allowed display name length */
@@ -414,7 +487,7 @@ export const onUserDataWrite = onDocumentWritten(
 );
 
 // ═══════════════════════════════════════════════════════════════════════
-// 5. FIRESTORE TRIGGER — Welcome Email on Sign-Up
+// 6. FIRESTORE TRIGGER — Welcome Email on Sign-Up
 // ═══════════════════════════════════════════════════════════════════════
 
 /**

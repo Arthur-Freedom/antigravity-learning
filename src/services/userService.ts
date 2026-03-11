@@ -42,6 +42,10 @@ export async function ensureUserProfile(
         quizScore: 0,
         quizTotal: 0,
         completedAll: false,
+        xp: 0,
+        level: 1,
+        streak: 0,
+        lastLoginDate: '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -54,12 +58,20 @@ export async function ensureUserProfile(
       const quizScore = existingData.quizScore ?? results.filter(r => r.correct).length;
       const quizTotal = existingData.quizTotal ?? results.length;
       const completedAll = existingData.completedAll ?? (quizScore >= 3);
+      const xp = existingData.xp ?? 0;
+      const level = existingData.level ?? 1;
+      const streak = existingData.streak ?? 0;
+      const lastLoginDate = existingData.lastLoginDate ?? '';
 
       const updateFields: Record<string, unknown> = {
         photoURL: data.photoURL,
         quizScore,
         quizTotal,
         completedAll,
+        xp,
+        level,
+        streak,
+        lastLoginDate,
         updatedAt: serverTimestamp(),
       };
 
@@ -109,6 +121,12 @@ export async function saveQuizResult(
     const quizTotal = results.length;
     const completedAll = quizScore >= 3;
 
+    let xp = existing?.xp ?? 0;
+    if (correct && !(existing?.quizProgress?.[topic]?.correct)) {
+      xp += 50; // Award 50 XP for passing a quiz module
+    }
+    const level = Math.floor(Math.sqrt(xp / 100)) + 1;
+
     await updateDoc(ref, {
       [`quizProgress.${topic}`]: {
         correct,
@@ -117,12 +135,71 @@ export async function saveQuizResult(
       quizScore,
       quizTotal,
       completedAll,
+      xp,
+      level,
       updatedAt: serverTimestamp(),
     });
     console.info(`[userService] Saved quiz result for ${topic}:`, correct,
-      `(score: ${quizScore}/${quizTotal}, completedAll: ${completedAll})`);
+      `(score: ${quizScore}/${quizTotal}, completedAll: ${completedAll}, xp: ${xp})`);
   } catch (error) {
     console.error('[userService] saveQuizResult failed:', error);
+  }
+}
+
+/**
+ * Check the user's lastLoginDate and update their streak and XP daily.
+ */
+export async function applyDailyLoginStreak(uid: string): Promise<void> {
+  try {
+    const ref = doc(db, COLLECTIONS.USERS, uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+
+    const profile = snap.data() as UserProfile;
+    const now = new Date();
+    // Use local date string to keep it simple, e.g., '2023-10-25'
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
+    if (profile.lastLoginDate === todayStr) {
+      // Already logged in today, do nothing
+      return;
+    }
+
+    let newStreak = profile.streak ?? 0;
+    let newXp = profile.xp ?? 0;
+
+    if (!profile.lastLoginDate) {
+      // First time tracking login
+      newStreak = 1;
+    } else {
+      // Parse last login string
+      const [y, m, d] = profile.lastLoginDate.split('-').map(Number);
+      const lastLogin = new Date(y, m - 1, d);
+      const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+      if (diffDays === 1) {
+        // Logged in yesterday
+        newStreak += 1;
+      } else {
+        // Missed a day
+        newStreak = 1;
+      }
+    }
+
+    newXp += 10; // Daily login XP
+    const newLevel = Math.floor(Math.sqrt(newXp / 100)) + 1;
+
+    await updateDoc(ref, {
+      streak: newStreak,
+      xp: newXp,
+      level: newLevel,
+      lastLoginDate: todayStr,
+      updatedAt: serverTimestamp(),
+    });
+    console.info(`[userService] Applied daily login streak for ${uid}. Streak: ${newStreak}, XP: ${newXp}`);
+  } catch (error) {
+    console.error('[userService] applyDailyLoginStreak failed:', error);
   }
 }
 

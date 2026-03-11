@@ -48,6 +48,8 @@ export async function getLeaderboard(topN = 20): Promise<LeaderboardEntry[]> {
         score: data.quizScore ?? 0,
         total: data.quizTotal ?? 0,
         completedAll: data.completedAll ?? false,
+        xp: data.xp ?? 0,
+        level: data.level ?? 1,
       });
     });
 
@@ -79,6 +81,8 @@ async function getLeaderboardFallback(topN: number): Promise<LeaderboardEntry[]>
           score: correct,
           total: results.length,
           completedAll: correct >= 3,
+          xp: data.xp ?? 0,
+          level: data.level ?? 1,
         });
       }
     });
@@ -125,6 +129,8 @@ export function onLeaderboardUpdate(
             score: correct,
             total: results.length,
             completedAll: correct >= 3,
+            xp: data.xp ?? 0,
+            level: data.level ?? 1,
           });
         }
       });

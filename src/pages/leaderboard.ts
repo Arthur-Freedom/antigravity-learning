@@ -163,7 +163,7 @@ function handleLeaderboardUpdate(entries: LeaderboardEntry[]): void {
       <div class="leaderboard-header">
         <span class="lb-col-rank">Rank</span>
         <span class="lb-col-user">Learner</span>
-        <span class="lb-col-score">Score</span>
+        <span class="lb-col-score" style="text-align: right; padding-right: 1rem;">Experience</span>
         <span class="lb-col-badge">Status</span>
       </div>
       ${entries.map((entry, i) => renderRow(entry, i, currentUser?.uid, changedUids.has(entry.uid))).join('')}
@@ -195,13 +195,14 @@ function renderRow(
           ? `<img src="${entry.photoURL}" alt="${entry.displayName}" class="lb-avatar" referrerpolicy="no-referrer" />`
           : `<span class="lb-avatar-placeholder">${entry.displayName.charAt(0).toUpperCase()}</span>`
         }
-        <span class="lb-name">${entry.displayName}${isCurrentUser ? ' <span class="lb-you-badge">You</span>' : ''}</span>
-      </span>
-      <span class="lb-col-score">
-        <span class="lb-score-bar">
-          <span class="lb-score-fill" style="width: ${(entry.score / 3) * 100}%"></span>
+        <span class="lb-name">
+          ${entry.displayName}
+          <span class="profile-badge profile-badge-level" style="font-size: 0.7rem; padding: 2px 6px; margin-left: 6px;">⭐ Lvl ${entry.level}</span>
+          ${isCurrentUser ? ' <span class="lb-you-badge">You</span>' : ''}
         </span>
-        <span class="lb-score-text">${entry.score}/3</span>
+      </span>
+      <span class="lb-col-score" style="text-align: right; padding-right: 1rem; font-weight: 600;">
+        ${entry.xp} XP
       </span>
       <span class="lb-col-badge">
         ${entry.completedAll 

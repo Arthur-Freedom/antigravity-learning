@@ -2,7 +2,7 @@
 // A modal dialog for uploading and previewing a custom profile picture.
 // Uses service layer only — ZERO direct Firebase imports.
 
-import { getCurrentUser, updateAuthProfile } from '../services/authService';
+import { getCurrentUser, updateAuthProfile, getGooglePhotoURL } from '../services/authService';
 import { uploadProfilePicture, deleteProfilePicture } from '../services/storageService';
 import { updateProfilePhoto, removeProfilePhoto } from '../services/userService';
 import { showToast } from './toast';
@@ -212,17 +212,20 @@ export function openProfilePictureModal(): void {
     try {
       await deleteProfilePicture(user.uid);
 
+      // We need the original Google photo URL, not the currently active custom one
+      const googleURL = getGooglePhotoURL();
+
       // Update Firestore via service function
-      await removeProfilePhoto(user.uid, user.photoURL);
+      await removeProfilePhoto(user.uid, googleURL);
 
       // Update Firebase Auth profile
-      await updateAuthProfile({ photoURL: user.photoURL });
+      await updateAuthProfile({ photoURL: googleURL });
 
       showToast({ message: 'Profile picture removed', type: 'info' });
       closeModal();
 
       const authAvatar = document.querySelector('.auth-avatar') as HTMLImageElement;
-      if (authAvatar && user.photoURL) authAvatar.src = user.photoURL;
+      if (authAvatar && googleURL) authAvatar.src = googleURL;
     } catch (error) {
       console.error('[profile-picture] Remove failed:', error);
       showToast({ message: 'Failed to remove photo', type: 'error' });
