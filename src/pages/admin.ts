@@ -6,7 +6,7 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { COLLECTIONS } from '../constants/collections'
 import type { UserProfile } from '../types/user'
-import { getCurrentUser, onAuthChange, getRawFirebaseUser } from '../services/authService'
+import { onAuthChange, getRawFirebaseUser } from '../services/authService'
 import { grantAdminAccess, resetUserProgress } from '../services/functionsService'
 
 // ── Constants ───────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ export function init(): void {
 
   setTimeout(() => {
     const loading = document.getElementById('admin-loading')
-    if (loading && loading.style.display !== 'none' && !getCurrentUser()) {
+    if (loading && loading.style.display !== 'none' && !getRawFirebaseUser()) {
       showSignInRequired()
     }
   }, 3000)
