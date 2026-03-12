@@ -121,27 +121,9 @@ function showAccessDenied(): void {
       <h3>Access denied</h3>
       <p>This page is restricted to site administrators.</p>
       <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;">
-        If you are an authorized admin, click below to activate your access.
+        If you believe this is an error, contact the site owner.
       </p>
-      <button id="admin-bootstrap-btn" class="btn btn-primary" style="margin-top:1rem;">Request Admin Access</button>
-      <p id="admin-bootstrap-status" style="margin-top:0.75rem;font-size:0.85rem;color:var(--text-muted);"></p>
     </div>`
-
-  document.getElementById('admin-bootstrap-btn')?.addEventListener('click', async (e) => {
-    const btn = e.currentTarget as HTMLButtonElement
-    const status = document.getElementById('admin-bootstrap-status')!
-    btn.disabled = true
-    status.textContent = 'Requesting…'
-    try {
-      await grantAdminAccess(getCurrentUser()?.uid ?? '')
-      status.textContent = '✅ Granted! Sign out & back in to activate.'
-      status.style.color = '#16a34a'
-    } catch (err) {
-      status.textContent = `❌ ${err instanceof Error ? err.message : 'Denied.'}`
-      status.style.color = '#dc2626'
-      btn.disabled = false
-    }
-  })
 }
 
 // ── Dashboard ───────────────────────────────────────────────────────────

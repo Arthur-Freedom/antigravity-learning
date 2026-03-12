@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "antigravity-learning"
+    "default": "antigravity-learning",
+    "dev": "antigravity-learning-dev"
   }
 }

@@ -7,12 +7,21 @@ This workflow covers deploying Cloud Functions for the Antigravity Learning plat
 ## Architecture Quick Reference
 
 - **Runtime**: Node 20, Firebase Functions v2
-- **Source**: `functions/src/index.ts` (single file, ~850 lines)
+- **Source**: `functions/src/index.ts` (single file, ~900 lines)
 - **Deployed functions**: onQuizCompletion, getCompletionStatus, setAdminClaim, resetUserProgress, getAiHint, onUserDataWrite, onUserCreated
 - **Dependencies**: Nodemailer (SMTP email), @google/genai (Gemini AI hints)
 - **Secrets**: `SMTP_EMAIL`, `SMTP_PASSWORD`, `ADMIN_EMAILS`, `GEMINI_API_KEY` (all in Secret Manager — NOT in `.env` files)
 - **Rate limits**: `getAiHint` is capped at 10 hints/day/user via `rateLimits/aiHints/users/{uid}`
 - **Smoke tests**: `functions/src/smoke-tests.ts` — runs against emulator to catch runtime errors
+
+## Environments
+
+| Environment | Project ID | Deploy flag | Use case |
+|-------------|-----------|-------------|----------|
+| **Dev** | `antigravity-learning-dev` | `--project antigravity-learning-dev` | Safe to experiment — separate database, users, storage |
+| **Prod** | `antigravity-learning` | `--project antigravity-learning` | Live site at antigravity-learning.web.app |
+
+`.firebaserc` has aliases: `default` → prod, `dev` → dev. You can also use `firebase use dev` or `firebase use default` to switch.
 
 ## Steps
 

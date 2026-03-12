@@ -172,6 +172,8 @@ export function initInlineQuiz(
                   question.options[oi] // The user's wrong answer
                 );
                 hintBox.innerHTML = `<strong>🤖 AI Tutor:</strong> ${hint}`;
+                hintBtn.innerHTML = '✨ Hint received';
+                hintBtn.disabled = true;
                 if (hintsRemaining <= 3) {
                   hintBox.innerHTML += `<p style="margin-top:8px;font-size:0.82rem;color:var(--text-muted);opacity:0.8;">💡 ${hintsRemaining} hint${hintsRemaining === 1 ? '' : 's'} remaining today</p>`;
                 }
