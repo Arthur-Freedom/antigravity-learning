@@ -458,7 +458,7 @@ function renderQuizProgress(profile: UserProfile): void {
            </div>
          </div>`
       : `<div class="profile-completion-cta">
-           <p>Complete all 3 modules to earn your certificate!</p>
+           <p>Complete all 9 modules to earn your certificate!</p>
            <a href="/" class="btn profile-outline-btn">Continue Learning →</a>
          </div>`
     }

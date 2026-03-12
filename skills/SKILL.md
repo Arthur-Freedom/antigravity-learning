@@ -7,9 +7,11 @@ description: Complete architecture, conventions, and how-to guide for the Antigr
 
 ## What this project is
 
-A **premium learning platform** for AI Agent development (workflows, skills, autonomous agents). It's a single-page app with Firebase backend, deployed at **https://antigravity-learning.web.app**.
+A **premium learning platform** for AI Agent development (workflows, skills, autonomous agents, prompt engineering, MCP, and more). It's a single-page app with Firebase backend, deployed at **https://antigravity-learning.web.app**.
 
-Firebase Project ID: `antigravity-learning`
+Firebase Project IDs:
+- **Production:** `antigravity-learning`
+- **Development:** `antigravity-learning-dev`
 
 ---
 
@@ -19,14 +21,15 @@ Firebase Project ID: `antigravity-learning`
 |-------|-----------|-------|
 | **Frontend** | Vanilla TypeScript + Vite | No React/Vue — pure DOM manipulation |
 | **Styling** | Vanilla CSS (`style.css` + `animations.css`) | Dark theme, glassmorphism, micro-animations |
-| **Routing** | Custom hash-based SPA router | `src/router.ts`, uses `#/path` format |
-| **Auth** | Firebase Auth (Google sign-in) | `src/auth.ts` |
-| **Database** | Cloud Firestore | `src/db.ts` — single `users/{uid}` collection |
-| **Storage** | Firebase Storage | `src/storage.ts` — custom profile pictures |
-| **Functions** | Cloud Functions v2 (Node 20) | `functions/src/index.ts` — email triggers |
-| **App Check** | Firebase App Check | `src/appcheck.ts` — reCAPTCHA Enterprise |
+| **Routing** | Custom History API SPA router | `src/router.ts`, uses clean URLs (`/path`) |
+| **Auth** | Firebase Auth (Google sign-in) | `src/services/authService.ts` |
+| **Database** | Cloud Firestore | `src/services/userService.ts` — `users/{uid}` collection |
+| **Storage** | Firebase Storage | `src/services/storageService.ts` — custom profile pictures |
+| **Functions** | Cloud Functions v2 (Node 20) | `functions/src/index.ts` — email triggers, AI tutor, admin |
+| **App Check** | Firebase App Check | `src/lib/appcheck.ts` — reCAPTCHA Enterprise |
 | **Hosting** | Firebase Hosting | Deploys `dist/` folder |
-| **Email** | Nodemailer (Gmail SMTP) | Congratulations email on quiz completion |
+| **Email** | Nodemailer (Gmail SMTP) | Welcome + congratulations emails |
+| **AI** | Gemini API (@google/genai) | Socratic quiz hints |
 
 ---
 
@@ -35,34 +38,65 @@ Firebase Project ID: `antigravity-learning`
 ```
 website-builder/
 ├── .agent/workflows/          # Agent workflows (deploy, create-page, etc.)
+├── skills/                    # Agent skills (project knowledge)
+│   ├── SKILL.md               # This file — master project reference
+│   ├── google-auth/SKILL.md   # Auth implementation guide
+│   ├── styling/SKILL.md       # CSS conventions
+│   ├── quiz-system/SKILL.md   # Quiz pipeline reference
+│   ├── cloud-functions/SKILL.md # Cloud Functions reference
+│   ├── gamification/SKILL.md  # XP/Level/Streak system
+│   ├── router-pages/SKILL.md  # SPA router & page lifecycle
+│   └── firestore-data/SKILL.md # Firestore data model
 ├── functions/                 # Cloud Functions (Node 20, TypeScript)
-│   └── src/index.ts           # onQuizCompletion trigger + getCompletionStatus callable
+│   └── src/index.ts           # 7 functions (triggers + callables)
 ├── src/
 │   ├── main.ts                # App shell, route registration, global listeners
-│   ├── router.ts              # Hash-based SPA router with page transitions
-│   ├── auth.ts                # Firebase Auth (Google), bindAuthUI()
-│   ├── db.ts                  # All Firestore reads/writes
-│   ├── storage.ts             # Firebase Storage (profile pictures)
-│   ├── appcheck.ts            # Firebase App Check init
-│   ├── style.css              # All styles (~85KB, design system + components)
+│   ├── router.ts              # History API SPA router with page transitions
+│   ├── style.css              # All styles (~115KB, design system + components)
 │   ├── animations.css         # Scroll reveals, particles, transitions
-│   ├── pages/
-│   │   ├── home.ts            # Landing page with hero, modules, testimonials
-│   │   ├── workflows.ts       # Module 1: Workflows lesson
-│   │   ├── skills.ts          # Module 2: Skills lesson
-│   │   ├── agents.ts          # Module 3: Autonomous Agents lesson
-│   │   ├── leaderboard.ts     # Real-time leaderboard with rankings
+│   ├── lib/
+│   │   ├── firebase.ts        # Firebase app initialization
+│   │   └── appcheck.ts        # App Check initialization
+│   ├── constants/
+│   │   └── collections.ts     # Firestore collection name constants
+│   ├── types/
+│   │   └── user.ts            # UserProfile, LeaderboardEntry, etc.
+│   ├── services/
+│   │   ├── authService.ts     # Firebase Auth (Google), auth state
+│   │   ├── userService.ts     # User CRUD, quiz saves, XP/streak
+│   │   ├── leaderboardService.ts # Ranked queries, real-time listeners
+│   │   ├── storageService.ts  # Profile photo upload/download
+│   │   ├── presenceService.ts # Online user count
+│   │   └── functionsService.ts # HTTPS callable wrappers
+│   ├── pages/                 # 16 page modules
+│   │   ├── home.ts            # Landing page with hero, modules, stats
+│   │   ├── workflows.ts       # Module 1: Workflows
+│   │   ├── skills.ts          # Module 2: Skills
+│   │   ├── agents.ts          # Module 3: Autonomous Agents
+│   │   ├── prompts.ts         # Module 4: Prompt Engineering
+│   │   ├── context.ts         # Module 5: Context Windows
+│   │   ├── mcp.ts             # Module 6: Model Context Protocol
+│   │   ├── tools.ts           # Module 7: Tool Use & Function Calling
+│   │   ├── safety.ts          # Module 8: Safety & Guardrails
+│   │   ├── projects.ts        # Module 9: Real-World Projects
+│   │   ├── leaderboard.ts     # Real-time leaderboard
 │   │   ├── resources.ts       # Curated external links
-│   │   ├── profile.ts         # User profile page (display name, photo, stats)
-│   │   └── admin.ts           # Analytics dashboard
+│   │   ├── profile.ts         # User profile (name, photo, stats, XP)
+│   │   ├── admin.ts           # Analytics dashboard
+│   │   ├── faq.ts             # Frequently asked questions
+│   │   └── glossary.ts        # AI terms glossary
 │   └── components/
 │       ├── inline-quiz.ts     # Quiz component (3 questions per module)
-│       ├── certificate.ts     # PDF certificate generation (client-side)
-│       ├── profile-picture.ts # Profile picture upload component
-│       └── toast.ts           # Toast notification system
+│       ├── certificate.ts     # PDF certificate generation
+│       ├── profile-picture.ts # Photo upload with preview
+│       ├── auth-button.ts     # Google sign-in button
+│       ├── activity-feed.ts   # Real-time activity feed
+│       ├── confetti.ts        # Celebration animation
+│       ├── logout-dialog.ts   # Logout confirmation
+│       └── toast.ts           # Toast notifications
 ├── firebase.json              # Firebase config (hosting, firestore, functions, storage)
-├── firestore.rules            # Security rules with schema validation
-├── firestore.indexes.json     # Composite indexes for leaderboard queries
+├── firestore.rules            # Security rules
+├── firestore.indexes.json     # Composite indexes
 ├── storage.rules              # Storage security rules
 ├── .env                       # Firebase config env vars (VITE_FIREBASE_*)
 ├── index.html                 # Entry point
@@ -71,18 +105,26 @@ website-builder/
 
 ---
 
-## Routes
+## Routes (16 total)
 
-| Hash Path | Page Module | Description |
-|-----------|------------|-------------|
-| `#/` | `home.ts` | Landing page |
-| `#/learn/workflows` | `workflows.ts` | Module 1 lesson + quiz |
-| `#/learn/skills` | `skills.ts` | Module 2 lesson + quiz |
-| `#/learn/agents` | `agents.ts` | Module 3 lesson + quiz |
-| `#/leaderboard` | `leaderboard.ts` | Real-time ranked leaderboard |
-| `#/resources` | `resources.ts` | Curated links page |
-| `#/profile` | `profile.ts` | User profile (auth required) |
-| `#/admin` | `admin.ts` | Analytics dashboard |
+| Path | Page Module | Description |
+|------|------------|-------------|
+| `/` | `home.ts` | Landing page |
+| `/learn/workflows` | `workflows.ts` | Module 1 lesson + quiz |
+| `/learn/skills` | `skills.ts` | Module 2 lesson + quiz |
+| `/learn/agents` | `agents.ts` | Module 3 lesson + quiz |
+| `/learn/prompts` | `prompts.ts` | Module 4 lesson + quiz |
+| `/learn/context` | `context.ts` | Module 5 lesson + quiz |
+| `/learn/mcp` | `mcp.ts` | Module 6 lesson + quiz |
+| `/learn/tools` | `tools.ts` | Module 7 lesson + quiz |
+| `/learn/safety` | `safety.ts` | Module 8 lesson + quiz |
+| `/learn/projects` | `projects.ts` | Module 9 lesson + quiz |
+| `/leaderboard` | `leaderboard.ts` | Real-time ranked leaderboard |
+| `/resources` | `resources.ts` | Curated links page |
+| `/profile` | `profile.ts` | User profile (auth required) |
+| `/admin` | `admin.ts` | Analytics dashboard |
+| `/faq` | `faq.ts` | FAQ page |
+| `/glossary` | `glossary.ts` | AI glossary |
 
 ---
 
@@ -114,148 +156,48 @@ The router calls `render()` → injects HTML → calls `init()`. On route change
 
 ```typescript
 interface UserProfile {
-  displayName: string;          // max 100 chars
-  email: string;                // max 320 chars
-  photoURL: string | null;      // Google photo, max 2048 chars
-  customPhotoURL?: string;      // Uploaded photo (Firebase Storage URL)
-  theme: 'light' | 'dark';     // only these two values allowed
-  quizProgress: {               // map of topic → result
-    [topic: string]: {
-      correct: boolean;
-      answeredAt: string;       // ISO timestamp
-    }
-  };
-  // Denormalized leaderboard fields (updated on every quiz save)
-  quizScore: number;            // count of correct answers (int, 0-100)
-  quizTotal: number;            // count of total attempts (int, 0-100)
-  completedAll: boolean;        // true when quizScore >= 3
-  congratsEmailSentAt?: timestamp; // set by Cloud Function after email sent
-  createdAt: timestamp;         // server timestamp, immutable after creation
-  updatedAt: timestamp;         // server timestamp, required on every write
+  displayName: string;          // max 50 chars (server enforced)
+  email: string;
+  photoURL: string | null;
+  customPhotoURL?: string;
+  quizProgress: Record<string, QuizResult>;
+  quizScore: number;            // denormalized correct count
+  quizTotal: number;            // denormalized total count
+  completedAll: boolean;        // true when quizScore >= 9
+  xp: number;                   // experience points
+  level: number;                // calculated from xp
+  streak: number;               // consecutive login days
+  lastLoginDate: string;        // "YYYY-MM-DD"
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  congratsEmailSentAt?: Timestamp;
+  welcomeEmailSentAt?: Timestamp;
 }
 ```
 
-### Collection: `mail/{mailId}` (audit log)
-
-Written by Cloud Functions only (Admin SDK bypasses rules). Client access fully denied.
-
-```typescript
-{
-  to: string;
-  subject: string;
-  userId: string;
-  type: 'quiz_completion';
-  status: 'sent' | 'failed';
-  messageId?: string;
-  error?: string;
-  createdAt: timestamp;
-}
-```
+### Collection: `mail/{mailId}` (Cloud Functions only)
+### Collection: `audit/{docId}` (Admin read only)
 
 ---
 
-## Security Rules Summary
+## Cloud Functions (7 total)
 
-**File:** `firestore.rules`
-
-| Operation | Rule |
-|-----------|------|
-| **Read** (any user doc) | Authenticated users only |
-| **Create** (own doc) | Full schema validation — all fields must be present and valid |
-| **Update** (own doc) | Schema validation on merged doc, `createdAt` immutable |
-| **Delete** | Blocked for all |
-| **Mail collection** | `allow read, write: if false` (Admin SDK bypasses) |
-| **Everything else** | Default deny |
-
-### Validators
-
-- `displayName`: string, 1–100 chars
-- `email`: string, ≤ 320 chars
-- `photoURL`: null OR string ≤ 2048
-- `theme`: must be `"light"` or `"dark"`
-- `quizProgress`: must be a map
-- `quizScore`, `quizTotal`: int, 0–100
-- `completedAll`: boolean
-- `createdAt`: must equal `request.time` on create, immutable on update
-- `updatedAt`: must equal `request.time` on every write
-
-### Important: Update rules allow extra fields
-
-The update allowed list includes `customPhotoURL` and `congratsEmailSentAt` (not required on create). This is intentional — these are added later by user actions or Cloud Functions.
-
----
-
-## Composite Indexes
-
-**File:** `firestore.indexes.json`
-
-| Index | Fields | Purpose |
-|-------|--------|---------|
-| 1 | `quizScore` DESC, `quizTotal` ASC | Default leaderboard ranking |
-| 2 | `completedAll` ASC, `quizScore` DESC | Filter certified users |
-
-The leaderboard query uses server-side sorting:
-```typescript
-query(usersRef,
-  where('quizTotal', '>', 0),
-  orderBy('quizScore', 'desc'),
-  orderBy('quizTotal', 'asc'),
-  limit(topN)
-);
-```
-
-A **fallback** (`getLeaderboardFallback`) does client-side sorting if the indexed query fails.
-
----
-
-## Cloud Functions
-
-**File:** `functions/src/index.ts` — Node 20, Firebase Functions v2
-
-### 1. `onQuizCompletion` (Firestore trigger)
-
-- Fires on `users/{uid}` document updates
-- When `completedAll` transitions `false → true`:
-  1. Sends congratulations email via Gmail SMTP (Nodemailer)
-  2. Writes audit record to `mail/` collection
-  3. Stamps `congratsEmailSentAt` on user doc (prevents duplicates)
-- Guards: skips if already complete, already sent, or no email
-
-### 2. `getCompletionStatus` (HTTPS Callable)
-
-- Secured with App Check (`enforceAppCheck: true`)
-- Returns `{ completed, score, total, displayName, congratsEmailSent }`
-- Reads directly from Firestore via Admin SDK
-
-### Secrets
-
-```bash
-firebase functions:secrets:set SMTP_EMAIL      # Gmail address
-firebase functions:secrets:set SMTP_PASSWORD    # 16-char App Password
-```
-
----
-
-## Key Module APIs (`db.ts`)
-
-| Function | What it does |
-|----------|-------------|
-| `ensureUserProfile(uid, data)` | Creates profile on first sign-in, backfills denormalized fields on subsequent sign-ins |
-| `getUserProfile(uid)` | Reads full user profile |
-| `saveQuizResult(uid, topic, correct)` | Saves quiz result + recalculates `quizScore`/`quizTotal`/`completedAll` |
-| `saveThemePreference(uid, theme)` | Saves light/dark preference |
-| `updateDisplayName(uid, name)` | Updates display name |
-| `getLeaderboard(topN)` | Server-side query with composite index, falls back to client-side sort |
-| `getLeaderboardFallback(topN)` | Client-side sort fallback |
-| `onLeaderboardUpdate(topN, callback)` | Real-time listener via `onSnapshot` |
-| `isCertificateEligible(uid)` | Checks if user passed all 3 modules |
+| Function | Type | Purpose |
+|----------|------|---------|
+| `onQuizCompletion` | Firestore trigger | Congrats email when all quizzes passed |
+| `getCompletionStatus` | HTTPS Callable | Server-side completion check |
+| `setAdminClaim` | HTTPS Callable | Grant admin access |
+| `resetUserProgress` | HTTPS Callable | Admin reset of user data |
+| `getAiHint` | HTTPS Callable | Gemini-powered Socratic quiz hints |
+| `onUserDataWrite` | Firestore trigger | Server-side data validation |
+| `onUserCreated` | Firestore trigger | Welcome email on sign-up |
 
 ---
 
 ## Deploy Commands
 
 ```bash
-# Full deploy (hosting + firestore rules/indexes + functions + storage rules)
+# Full deploy (hosting + firestore + functions + storage)
 npx firebase deploy
 
 # Just the frontend
@@ -275,12 +217,14 @@ npm run dev
 
 ## Design Conventions
 
-- **Dark theme by default** — dark navy/slate backgrounds, vibrant accents
-- **Glassmorphism** — frosted glass cards with `backdrop-filter: blur()`
-- **Micro-animations** — scroll reveals (`.reveal-on-scroll`), page transitions, hero particles
-- **Color palette** — `#283A4A` (primary navy), `#3178C6` (accent blue), `#16a34a` (success green)
+- **Light Brilliant-inspired theme** — white/light grey backgrounds with green accents
+- **Color palette** — `#FFFFFF` (primary bg), `#F7F8FA` (secondary bg), `#F0FBF4` (hero bg), `#2EC866` (accent green), `#1A1A2E` (text primary)
+- **Typography** — Inter font family (`var(--font-family)`) for all text
+- **Navbar** — sticky with `backdrop-filter: blur(12px)` on white, subtle border bottom
+- **Micro-animations** — scroll reveals (`.reveal-on-scroll`), page transitions, card hover lifts
 - **No frameworks** — all CSS is vanilla, all JS is vanilla TypeScript
-- **Toast notifications** — `showToast({ message, type: 'success'|'error'|'info' })`
+- **Toast notifications** — `showToast({ message, type: 'success'|'error'|'info'|'warning' })`
+- **Module colors** — Module 1: `#0EA5E9` (teal), Module 2: `#8B5CF6` (purple), Module 3: `#F59E0B` (amber)
 
 ---
 
@@ -288,44 +232,47 @@ npm run dev
 
 ### Adding a new field to user profiles
 
-1. Add the field to `UserProfile` interface in `db.ts`
-2. Add the field name to the `allowed` array in **both** `isValidUserProfileCreate()` and `isValidUserProfileUpdate()` in `firestore.rules`
-3. Add a validator function if the field needs type/value checking
-4. If existing users need the field, backfill it in `ensureUserProfile()`
-5. Deploy rules: `npx firebase deploy --only firestore`
+1. Add the field to `UserProfile` interface in `src/types/user.ts`
+2. Update `firestore.rules` if the field needs write access
+3. Backfill for existing users in `ensureUserProfile()` in `src/services/userService.ts`
+4. Deploy rules: `npx firebase deploy --only firestore`
 
 ### Adding a new page
 
 1. Create `src/pages/yourpage.ts` with `render()` and `init()` exports
 2. Import it in `main.ts`
-3. Register the route in `registerRoutes({ '/your-path': { render: page.render, init: page.init } })`
-4. Add nav link if needed in the `main.ts` app shell HTML
+3. Register the route in `registerRoutes()`
+4. Add nav link in footer/navbar in `main.ts`
 
 ### Quiz topics
 
-The three quiz topics are: `workflows`, `skills`, `agents`. A user is "certified" when they have ≥ 3 correct answers across these.
+The nine quiz topics are: `workflows`, `skills`, `agents`, `prompts`, `context`, `mcp`, `tools`, `safety`, `projects`. A user is "certified" when they have ≥ 9 correct answers across these.
 
 ---
 
 ## Environment Variables
 
-Stored in `.env` (not committed):
+This project uses **two separate Firebase projects** (dev + production).
+Vite automatically loads the right config:
 
-```
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=...
-VITE_FIREBASE_PROJECT_ID=antigravity-learning
-VITE_FIREBASE_STORAGE_BUCKET=...
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
-VITE_RECAPTCHA_SITE_KEY=...
-```
+- `npm run dev` → `.env.development` (dev project)
+- `npm run build` → `.env.production` (production project)
+
+Both files contain `VITE_FIREBASE_*` variables. See `skills/firebase-environments/SKILL.md` for the full setup checklist.
 
 ---
 
-## Known Quirks
+## Related Skills
 
-1. **HMR race condition** — On hot module reload, `ensureUserProfile` may fire before the new code fully loads, causing a brief permission error. Harmless — the subsequent call succeeds.
-2. **Index build time** — After deploying new indexes, Firestore takes 1–5 minutes to build them. The fallback handles this gracefully.
-3. **Admin SDK bypasses rules** — Cloud Functions use the Admin SDK, so writes to `mail/` and `congratsEmailSentAt` are not subject to security rules. This is by design.
-4. **Firebase config is duplicated** — Both `auth.ts` and `db.ts` have `firebaseConfig`. They both use `getApps().length ? getApp() : initializeApp(firebaseConfig)` to avoid re-initialization.
+For deeper knowledge on specific areas, read these skill files:
+
+| Skill | What it covers |
+|-------|---------------|
+| `skills/quiz-system/SKILL.md` | Quiz pipeline: questions → scoring → server validation → email |
+| `skills/cloud-functions/SKILL.md` | All 7 Cloud Functions, secrets, deployment |
+| `skills/gamification/SKILL.md` | XP, levels, daily streaks, formulas |
+| `skills/router-pages/SKILL.md` | SPA router, page lifecycle, route registration |
+| `skills/firestore-data/SKILL.md` | Data model, collections, indexes, real-time listeners |
+| `skills/google-auth/SKILL.md` | Firebase Auth implementation pattern |
+| `skills/styling/SKILL.md` | CSS conventions and design system |
+| `skills/firebase-environments/SKILL.md` | Dev/prod project setup, checklist, service inventory |

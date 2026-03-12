@@ -27,6 +27,21 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── Rate limits (Cloud Functions only) ───────────────────────────────
+    // AI hint rate-limiting counters. Managed exclusively by Cloud Functions.
+    match /rateLimits/{document=**} {
+      allow read, write: if false;
+    }
+
+    // ── Config collection (Cloud Functions + Admin) ─────────────────────
+    // Dynamic configuration (e.g. valid quiz topics).
+    // Cloud Functions read via Admin SDK (bypasses rules).
+    // Admins can read for inspection. No client writes.
+    match /config/{docId} {
+      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow write: if false;
+    }
+
     // ── Default deny ────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

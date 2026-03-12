@@ -207,7 +207,6 @@ export const onQuizCompletion = onDocumentUpdated(
  *   const result = await fn();
  */
 export const getCompletionStatus = onCall(
-  { enforceAppCheck: true },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError(
@@ -256,7 +255,6 @@ export const getCompletionStatus = onCall(
  *   await fn({ targetUid: 'some-uid' });
  */
 export const setAdminClaim = onCall(
-  { enforceAppCheck: true },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in required.");
@@ -301,18 +299,110 @@ export const setAdminClaim = onCall(
 );
 
 // ═══════════════════════════════════════════════════════════════════════
-// 4. CALLABLE — Gemini AI Tutor
+// 4. CALLABLE — Reset User Progress (Admin Only)
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Resets a user's quiz progress, XP, level, and streak.
+ * Only callable by users with the `admin` custom claim.
+ */
+export const resetUserProgress = onCall(
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in required.");
+    }
+
+    if (request.auth.token.admin !== true) {
+      throw new HttpsError(
+        "permission-denied",
+        "Only administrators can reset user progress."
+      );
+    }
+
+    const { targetUid } = request.data as { targetUid?: string };
+    if (!targetUid) {
+      throw new HttpsError("invalid-argument", "targetUid is required.");
+    }
+
+    try {
+      const userRef = db.doc(`users/${targetUid}`);
+      const snap = await userRef.get();
+
+      if (!snap.exists) {
+        throw new HttpsError("not-found", `User ${targetUid} not found.`);
+      }
+
+      await userRef.update({
+        quizProgress: {},
+        quizScore: 0,
+        quizTotal: 0,
+        completedAll: false,
+        xp: 0,
+        level: 1,
+        streak: 0,
+        congratsEmailSentAt: FieldValue.delete(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // Audit trail
+      await db.collection("audit").add({
+        action: "reset_user_progress",
+        targetUid,
+        performedBy: request.auth.uid,
+        timestamp: FieldValue.serverTimestamp(),
+      });
+
+      logger.info("✅ User progress reset", {
+        targetUid,
+        performedBy: request.auth.uid,
+      });
+
+      return { success: true, targetUid };
+    } catch (error) {
+      if (error instanceof HttpsError) throw error;
+      logger.error("Failed to reset user progress:", error);
+      throw new HttpsError("internal", "Failed to reset user progress.");
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════
+// 5. CALLABLE — Gemini AI Tutor
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
  * Provides a Socratic hint using the Gemini API.
  * The model is instructed NOT to give the direct answer.
  */
+/** Max AI hints a single user can request per calendar day */
+const AI_HINT_DAILY_LIMIT = 10;
+
 export const getAiHint = onCall(
-  { enforceAppCheck: true, secrets: ["GEMINI_API_KEY"] },
+  { secrets: ["GEMINI_API_KEY"] },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in required to use AI Tutor.");
+    }
+
+    const uid = request.auth.uid;
+
+    // ── Per-user daily rate limiting ────────────────────────────────
+    const now = new Date();
+    const todayStr = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+    const rateLimitRef = db.doc(`rateLimits/aiHints/users/${uid}`);
+    const rateLimitSnap = await rateLimitRef.get();
+    const rateLimitData = rateLimitSnap.data() as
+      { date: string; count: number } | undefined;
+
+    const hintsUsedToday =
+      rateLimitData?.date === todayStr ? (rateLimitData.count ?? 0) : 0;
+
+    if (hintsUsedToday >= AI_HINT_DAILY_LIMIT) {
+      logger.warn("AI Hint rate limit reached", { uid, hintsUsedToday });
+      throw new HttpsError(
+        "resource-exhausted",
+        `You've used all ${AI_HINT_DAILY_LIMIT} AI hints for today. Try again tomorrow!`
+      );
     }
 
     const { question, options, wrongAnswer } = request.data as {
@@ -362,10 +452,18 @@ You are a wise, encouraging Socratic tutor.
         throw new Error("No text returned from Gemini");
       }
 
-      logger.info("✨ AI Hint generated", { uid: request.auth.uid, hintLength: hint.length });
+      // ── Increment the rate limit counter ──────────────────────────
+      await rateLimitRef.set({ date: todayStr, count: hintsUsedToday + 1 });
 
-      return { hint };
+      logger.info("✨ AI Hint generated", {
+        uid,
+        hintLength: hint.length,
+        hintsUsedToday: hintsUsedToday + 1,
+      });
+
+      return { hint, hintsRemaining: AI_HINT_DAILY_LIMIT - hintsUsedToday - 1 };
     } catch (error) {
+      if (error instanceof HttpsError) throw error;
       logger.error("AI Tutor Error:", error);
       throw new HttpsError("internal", "Failed to generate AI hint.");
     }
@@ -373,14 +471,41 @@ You are a wise, encouraging Socratic tutor.
 );
 
 // ═══════════════════════════════════════════════════════════════════════
-// 5. FIRESTORE TRIGGER — Server-Side Data Validation
+// 6. FIRESTORE TRIGGER — Server-Side Data Validation
 // ═══════════════════════════════════════════════════════════════════════
 
 /** Maximum allowed display name length */
 const MAX_DISPLAY_NAME_LENGTH = 50;
 
-/** Allowed quiz topics — used to validate quizProgress keys */
-const VALID_TOPICS = ["workflows", "skills", "agents"];
+/** Hardcoded fallback — used only if Firestore config doc is missing */
+const FALLBACK_TOPICS = [
+  "workflows", "skills", "agents", "prompts",
+  "context", "mcp", "tools", "safety", "projects",
+];
+
+/**
+ * Reads valid quiz topics from Firestore config/quizTopics doc.
+ * Falls back to FALLBACK_TOPICS if the config doc doesn't exist.
+ *
+ * This means adding a new quiz module NEVER requires redeploying
+ * Cloud Functions — just update the config doc in Firestore.
+ */
+async function getValidTopics(): Promise<string[]> {
+  try {
+    const configDoc = await db.doc("config/quizTopics").get();
+    if (configDoc.exists) {
+      const data = configDoc.data();
+      const topics = data?.topics;
+      if (Array.isArray(topics) && topics.length > 0) {
+        return topics;
+      }
+    }
+    logger.info("No config/quizTopics doc found — using fallback topics");
+  } catch (error) {
+    logger.warn("Failed to read config/quizTopics — using fallback", { error });
+  }
+  return FALLBACK_TOPICS;
+}
 
 /** Strip HTML tags from a string */
 function stripHtml(str: string): string {
@@ -407,12 +532,15 @@ export const onUserDataWrite = onDocumentWritten(
     // Document was deleted — nothing to validate
     if (!afterData) return;
 
-    // Prevent infinite loops: if we just sanitised, skip
+    // Prevent infinite loops: if we just sanitised, skip.
+    // IMPORTANT: Use .isEqual() for Timestamp comparison — NOT ===.
+    // (=== compares object identity, which always fails for Timestamps)
     const beforeData = event.data?.before.data();
     if (
       afterData._sanitizedAt &&
       beforeData?._sanitizedAt &&
-      afterData._sanitizedAt === beforeData._sanitizedAt
+      typeof afterData._sanitizedAt.isEqual === "function" &&
+      afterData._sanitizedAt.isEqual(beforeData._sanitizedAt)
     ) {
       return;
     }
@@ -437,15 +565,16 @@ export const onUserDataWrite = onDocumentWritten(
 
     // ── Quiz score validation ───────────────────────────────────────
     const progress = afterData.quizProgress ?? {};
+    const validTopics = await getValidTopics();
     const validProgress: Record<string, unknown> = {};
     let invalidKeys = false;
 
     for (const [key, value] of Object.entries(progress)) {
-      if (VALID_TOPICS.includes(key)) {
+      if (validTopics.includes(key)) {
         validProgress[key] = value;
       } else {
         invalidKeys = true;
-        logger.warn("Removed invalid quiz topic", { userId, key });
+        logger.warn("Removed invalid quiz topic", { userId, key, validTopics });
       }
     }
 
@@ -458,7 +587,7 @@ export const onUserDataWrite = onDocumentWritten(
     const results = Object.values(validProgress) as Array<{ correct?: boolean }>;
     const correctCount = results.filter((r) => r.correct === true).length;
     const totalCount = results.length;
-    const shouldBeComplete = correctCount >= 3;
+    const shouldBeComplete = correctCount >= 9;
 
     if (
       afterData.quizScore !== correctCount ||
@@ -487,7 +616,7 @@ export const onUserDataWrite = onDocumentWritten(
 );
 
 // ═══════════════════════════════════════════════════════════════════════
-// 6. FIRESTORE TRIGGER — Welcome Email on Sign-Up
+// 7. FIRESTORE TRIGGER — Welcome Email on Sign-Up
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
@@ -595,29 +724,19 @@ function generateCongratulationsHtml(displayName: string): string {
           Hey <strong>${displayName}</strong>,
         </p>
         <p style="font-size:15px; color:#5a6b7c; line-height:1.7; margin:0 0 20px;">
-          You've successfully completed all three modules in the
+          You've successfully completed all nine modules in the
           <strong>Antigravity Learning</strong> program:
         </p>
 
         <!-- Modules -->
         <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
-          <tr>
-            <td style="padding:10px 14px; background:#f0fdf4; border-radius:6px; margin-bottom:8px;">
-              <span style="font-size:14px; color:#16a34a; font-weight:600;">✅ Workflows</span>
-            </td>
-          </tr>
-          <tr><td style="height:6px;"></td></tr>
-          <tr>
-            <td style="padding:10px 14px; background:#f0fdf4; border-radius:6px;">
-              <span style="font-size:14px; color:#16a34a; font-weight:600;">✅ Skills</span>
-            </td>
-          </tr>
-          <tr><td style="height:6px;"></td></tr>
-          <tr>
-            <td style="padding:10px 14px; background:#f0fdf4; border-radius:6px;">
-              <span style="font-size:14px; color:#16a34a; font-weight:600;">✅ Autonomous Agents</span>
-            </td>
-          </tr>
+          ${["Workflows", "Skills", "Autonomous Agents", "Prompt Engineering",
+            "Context Windows", "Model Context Protocol", "Tool Use & Function Calling",
+            "Safety & Guardrails", "Real-World Projects"].map(mod =>
+            `<tr><td style="padding:10px 14px; background:#f0fdf4; border-radius:6px;">
+              <span style="font-size:14px; color:#16a34a; font-weight:600;">✅ ${mod}</span>
+            </td></tr><tr><td style="height:4px;"></td></tr>`
+          ).join("")}
         </table>
 
         <p style="font-size:15px; color:#5a6b7c; line-height:1.7; margin:0 0 24px;">
@@ -655,11 +774,17 @@ function generateCongratulationsHtml(displayName: string): string {
 function generateCongratulationsText(displayName: string): string {
   return `🎓 Congratulations, ${displayName}!
 
-You've completed all three modules in the Antigravity Learning program:
+You've completed all nine modules in the Antigravity Learning program:
 
   ✅ Workflows
   ✅ Skills
   ✅ Autonomous Agents
+  ✅ Prompt Engineering
+  ✅ Context Windows
+  ✅ Model Context Protocol
+  ✅ Tool Use & Function Calling
+  ✅ Safety & Guardrails
+  ✅ Real-World Projects
 
 You can now download your completion certificate from the website:
 https://antigravity-learning.web.app/
@@ -704,30 +829,26 @@ function generateWelcomeHtml(displayName: string): string {
 
         <!-- Modules -->
         <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
-          <tr>
-            <td style="padding:10px 14px; background:#eff6ff; border-radius:6px;">
-              <span style="font-size:14px; color:#2563eb; font-weight:600;">📋 Module 1 — Workflows</span>
-              <p style="font-size:13px; color:#5a6b7c; margin:4px 0 0;">Automate repetitive tasks with step-by-step recipes</p>
-            </td>
-          </tr>
-          <tr><td style="height:6px;"></td></tr>
-          <tr>
-            <td style="padding:10px 14px; background:#eff6ff; border-radius:6px;">
-              <span style="font-size:14px; color:#2563eb; font-weight:600;">🧠 Module 2 — Skills</span>
-              <p style="font-size:13px; color:#5a6b7c; margin:4px 0 0;">Give your agent permanent knowledge with SKILL.md files</p>
-            </td>
-          </tr>
-          <tr><td style="height:6px;"></td></tr>
-          <tr>
-            <td style="padding:10px 14px; background:#eff6ff; border-radius:6px;">
-              <span style="font-size:14px; color:#2563eb; font-weight:600;">🤖 Module 3 — Autonomous Agents</span>
-              <p style="font-size:13px; color:#5a6b7c; margin:4px 0 0;">Build agents that think, act, and observe autonomously</p>
-            </td>
-          </tr>
+          ${[
+            ["📋", "Workflows", "Automate repetitive tasks with step-by-step recipes"],
+            ["🧠", "Skills", "Give your agent permanent knowledge with SKILL.md files"],
+            ["🤖", "Autonomous Agents", "Build agents that think, act, and observe"],
+            ["✍️", "Prompt Engineering", "Master the art of effective AI prompts"],
+            ["🪟", "Context Windows", "Understand token limits and memory management"],
+            ["🔌", "MCP", "Connect agents to external tools via the open standard"],
+            ["🔧", "Tool Use", "Discover how agents invoke functions and APIs"],
+            ["🛡️", "Safety & Guardrails", "Build responsible AI with proper defenses"],
+            ["🚀", "Real-World Projects", "Apply everything with hands-on capstone projects"],
+          ].map(([icon, name, desc]) =>
+            `<tr><td style="padding:10px 14px; background:#eff6ff; border-radius:6px;">
+              <span style="font-size:14px; color:#2563eb; font-weight:600;">${icon} ${name}</span>
+              <p style="font-size:13px; color:#5a6b7c; margin:4px 0 0;">${desc}</p>
+            </td></tr><tr><td style="height:4px;"></td></tr>`
+          ).join("")}
         </table>
 
         <p style="font-size:15px; color:#5a6b7c; line-height:1.7; margin:0 0 24px;">
-          Complete all 3 modules to earn your <strong>completion certificate</strong>
+          Complete all 9 modules to earn your <strong>completion certificate</strong>
           and join the leaderboard!
         </p>
 
@@ -768,8 +889,14 @@ Here's what's waiting for you:
   📋 Module 1 — Workflows: Automate repetitive tasks
   🧠 Module 2 — Skills: Give your agent permanent knowledge
   🤖 Module 3 — Autonomous Agents: Build agents that think and act
+  ✍️ Module 4 — Prompt Engineering: Master effective AI prompts
+  🪟 Module 5 — Context Windows: Understand token limits
+  🔌 Module 6 — MCP: Connect agents to external tools
+  🔧 Module 7 — Tool Use: Invoke functions and APIs dynamically
+  🛡️ Module 8 — Safety & Guardrails: Build responsible AI
+  🚀 Module 9 — Real-World Projects: Hands-on capstone projects
 
-Complete all 3 modules to earn your completion certificate!
+Complete all 9 modules to earn your completion certificate!
 
 Start here: https://antigravity-learning.web.app/learn/workflows
 

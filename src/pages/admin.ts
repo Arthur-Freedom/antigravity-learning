@@ -1,34 +1,65 @@
 // ── Admin Analytics Dashboard ───────────────────────────────────────────
-// Protected page that shows aggregate stats about all users.
-// Uses Firebase Auth custom claims (token.admin === true) for access control.
+// Protected page: Firebase Auth custom claims (token.admin === true).
+// Queries Firestore directly for real per-module quiz data.
 
-import { getLeaderboard, type LeaderboardEntry } from '../services/leaderboardService'
+import { collection, getDocs } from 'firebase/firestore'
+import { db } from '../lib/firebase'
+import { COLLECTIONS } from '../constants/collections'
+import type { UserProfile } from '../types/user'
 import { getCurrentUser, onAuthChange, getRawFirebaseUser } from '../services/authService'
-import { grantAdminAccess } from '../services/functionsService'
+import { grantAdminAccess, resetUserProgress } from '../services/functionsService'
 
-interface Analytics {
-  totalUsers: number
-  totalPassed: number
-  avgScore: number
-  moduleBreakdown: Record<string, { passed: number; attempted: number }>
-  recentCompletions: LeaderboardEntry[]
+// ── Constants ───────────────────────────────────────────────────────────
+
+const ALL_MODULES = ['workflows', 'skills', 'agents', 'prompts', 'context', 'mcp', 'tools', 'safety', 'projects'] as const
+
+const MODULE_META: Record<string, { label: string; icon: string }> = {
+  workflows: { label: 'Workflows', icon: '📋' },
+  skills:    { label: 'Skills',    icon: '🧠' },
+  agents:    { label: 'Agents',    icon: '🤖' },
+  prompts:   { label: 'Prompts',   icon: '✍️' },
+  context:   { label: 'Context',   icon: '🪟' },
+  mcp:       { label: 'MCP',       icon: '🔌' },
+  tools:     { label: 'Tools',     icon: '🔧' },
+  safety:    { label: 'Safety',    icon: '🛡️' },
+  projects:  { label: 'Projects',  icon: '🚀' },
 }
+
+interface AdminUser {
+  uid: string
+  displayName: string
+  email: string
+  photoURL: string | null
+  quizProgress: Record<string, { correct: boolean; answeredAt: string }>
+  quizScore: number
+  completedAll: boolean
+  xp: number
+  level: number
+  streak: number
+  createdAt: unknown
+}
+
+// ── Page Shell ──────────────────────────────────────────────────────────
 
 export function render(): string {
   return `
-    <section class="lesson-hero" style="background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 50%, #D1D5DB 100%);">
-      <div class="lesson-hero-content" style="color: var(--text-primary);">
-        <span class="lesson-badge">Admin</span>
-        <h1>Analytics</h1>
-        <p>Real-time insights into how learners are progressing through the modules.</p>
+    <section class="admin-header">
+      <div class="admin-header-inner">
+        <div>
+          <div class="admin-header-title-row">
+            <span class="admin-header-badge">Admin</span>
+            <h1 class="admin-header-title">Dashboard</h1>
+          </div>
+          <p class="admin-header-subtitle">Analytics & user management</p>
+        </div>
       </div>
     </section>
 
-    <section class="section" style="background: var(--bg-primary);">
+    <section class="admin-body">
       <div class="admin-container" id="admin-container">
         <div id="admin-loading" class="leaderboard-loading">
           <div class="loading-spinner"></div>
-          <p>Verifying admin access...</p>
+          <p>Verifying admin access…</p>
         </div>
         <div id="admin-content" style="display: none;"></div>
       </div>
@@ -36,265 +67,384 @@ export function render(): string {
   `
 }
 
-export function init(): void {
-  // Check if already logged in — use raw Firebase user for token access
-  const rawUser = getRawFirebaseUser()
-  if (rawUser) {
-    checkAdminClaim(rawUser)
-    return
-  }
+// ── Init & Auth Gate ────────────────────────────────────────────────────
 
-  // Otherwise wait for auth state to resolve
+export function init(): void {
+  const rawUser = getRawFirebaseUser()
+  if (rawUser) { checkAdminClaim(rawUser); return }
+
   const unsubscribe = onAuthChange((appUser) => {
     unsubscribe()
     if (appUser) {
-      const rawUser = getRawFirebaseUser()
-      if (rawUser) checkAdminClaim(rawUser)
+      const raw = getRawFirebaseUser()
+      if (raw) checkAdminClaim(raw)
       else showAccessDenied()
     } else {
       showSignInRequired()
     }
   })
 
-  // Timeout fallback
   setTimeout(() => {
     const loading = document.getElementById('admin-loading')
-    if (loading && loading.style.display !== 'none') {
-      if (!getCurrentUser()) {
-        showSignInRequired()
-      }
+    if (loading && loading.style.display !== 'none' && !getCurrentUser()) {
+      showSignInRequired()
     }
   }, 3000)
 }
 
-/**
- * Checks the user's ID token for the `admin` custom claim.
- * This is the proper Firebase way to do role-based access —
- * claims are set server-side via Cloud Functions and embedded
- * in the JWT, so they can't be spoofed client-side.
- */
 async function checkAdminClaim(user: import('firebase/auth').User): Promise<void> {
-  // Note: We accept the raw Firebase User here because getIdTokenResult()
-  // is a Firebase Auth method. This is the ONE place where raw user is needed.
   try {
-    const tokenResult = await user.getIdTokenResult()
-    if (tokenResult.claims.admin === true) {
-      loadAnalytics()
-    } else {
-      showAccessDenied()
-    }
-  } catch (error) {
-    console.error('[admin] Failed to get ID token:', error)
+    const token = await user.getIdTokenResult()
+    if (token.claims.admin === true) loadDashboard()
+    else showAccessDenied()
+  } catch {
     showAccessDenied()
   }
 }
 
 function showSignInRequired(): void {
-  const container = document.getElementById('admin-container')
-  if (container) {
-    container.innerHTML = `
-      <div class="leaderboard-empty">
-        <span class="leaderboard-empty-icon">🔒</span>
-        <h3>Sign in required</h3>
-        <p>Please sign in to access analytics.</p>
-      </div>
-    `
-  }
+  const c = document.getElementById('admin-container')
+  if (c) c.innerHTML = `
+    <div class="leaderboard-empty">
+      <span class="leaderboard-empty-icon">🔒</span>
+      <h3>Sign in required</h3>
+      <p>Please sign in to access the admin dashboard.</p>
+    </div>`
 }
 
 function showAccessDenied(): void {
-  const container = document.getElementById('admin-container')
-  if (container) {
-    container.innerHTML = `
-      <div class="leaderboard-empty">
-        <span class="leaderboard-empty-icon">🚫</span>
-        <h3>Access denied</h3>
-        <p>This page is restricted to site administrators.</p>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
-          Admin access is granted via Firebase custom claims.<br>
-          Ask an existing admin to run <code>setAdminClaim</code> for your account.
-        </p>
-        <a href="/" class="btn btn-primary" style="margin-top: 1rem;">Back to Home</a>
-      </div>
-    `
-  }
+  const c = document.getElementById('admin-container')
+  if (!c) return
+  c.innerHTML = `
+    <div class="leaderboard-empty">
+      <span class="leaderboard-empty-icon">🚫</span>
+      <h3>Access denied</h3>
+      <p>This page is restricted to site administrators.</p>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;">
+        If you are an authorized admin, click below to activate your access.
+      </p>
+      <button id="admin-bootstrap-btn" class="btn btn-primary" style="margin-top:1rem;">Request Admin Access</button>
+      <p id="admin-bootstrap-status" style="margin-top:0.75rem;font-size:0.85rem;color:var(--text-muted);"></p>
+    </div>`
+
+  document.getElementById('admin-bootstrap-btn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement
+    const status = document.getElementById('admin-bootstrap-status')!
+    btn.disabled = true
+    status.textContent = 'Requesting…'
+    try {
+      await grantAdminAccess(getCurrentUser()?.uid ?? '')
+      status.textContent = '✅ Granted! Sign out & back in to activate.'
+      status.style.color = '#16a34a'
+    } catch (err) {
+      status.textContent = `❌ ${err instanceof Error ? err.message : 'Denied.'}`
+      status.style.color = '#dc2626'
+      btn.disabled = false
+    }
+  })
 }
 
-async function loadAnalytics(): Promise<void> {
-  const entries = await getLeaderboard(100)
+// ── Dashboard ───────────────────────────────────────────────────────────
+
+async function loadDashboard(): Promise<void> {
   const loadingEl = document.getElementById('admin-loading')
   const contentEl = document.getElementById('admin-content')
   if (!loadingEl || !contentEl) return
 
-  const analytics = computeAnalytics(entries)
+  // Fetch ALL users directly from Firestore for full quiz data
+  const snapshot = await getDocs(collection(db, COLLECTIONS.USERS))
+  const users: AdminUser[] = []
+  snapshot.forEach(doc => {
+    const d = doc.data() as UserProfile
+    users.push({
+      uid: doc.id,
+      displayName: d.displayName ?? 'Anonymous',
+      email: d.email ?? '',
+      photoURL: d.photoURL ?? null,
+      quizProgress: d.quizProgress ?? {},
+      quizScore: d.quizScore ?? 0,
+      completedAll: d.completedAll ?? false,
+      xp: d.xp ?? 0,
+      level: d.level ?? 1,
+      streak: d.streak ?? 0,
+      createdAt: d.createdAt,
+    })
+  })
+
+  // Sort by XP descending
+  users.sort((a, b) => b.xp - a.xp)
+
+  // Compute real per-module analytics
+  const moduleStats = computeModuleStats(users)
+  const totalUsers = users.length
+  const certified = users.filter(u => u.completedAll).length
+  const avgModules = totalUsers > 0
+    ? (users.reduce((s, u) => s + Object.values(u.quizProgress).filter(r => r.correct).length, 0) / totalUsers).toFixed(1)
+    : '0'
+  const completionRate = totalUsers > 0 ? Math.round((certified / totalUsers) * 100) : 0
 
   loadingEl.style.display = 'none'
   contentEl.style.display = 'block'
 
   contentEl.innerHTML = `
-    <!-- Stats Cards -->
-    <div class="admin-stats-grid">
-      <div class="admin-stat-card">
-        <span class="admin-stat-icon">👥</span>
-        <span class="admin-stat-value">${analytics.totalUsers}</span>
-        <span class="admin-stat-label">Total Learners</span>
+    <!-- Stat Row -->
+    <div class="ad-stats">
+      <div class="ad-stat">
+        <span class="ad-stat-num">${totalUsers}</span>
+        <span class="ad-stat-lbl">Users</span>
       </div>
-      <div class="admin-stat-card">
-        <span class="admin-stat-icon">🎓</span>
-        <span class="admin-stat-value">${analytics.totalPassed}</span>
-        <span class="admin-stat-label">Certified</span>
+      <div class="ad-stat-divider"></div>
+      <div class="ad-stat">
+        <span class="ad-stat-num">${certified}</span>
+        <span class="ad-stat-lbl">Certified</span>
       </div>
-      <div class="admin-stat-card">
-        <span class="admin-stat-icon">📊</span>
-        <span class="admin-stat-value">${analytics.avgScore.toFixed(1)}</span>
-        <span class="admin-stat-label">Avg Score (/ 3)</span>
+      <div class="ad-stat-divider"></div>
+      <div class="ad-stat">
+        <span class="ad-stat-num">${avgModules}</span>
+        <span class="ad-stat-lbl">Avg Modules</span>
       </div>
-      <div class="admin-stat-card">
-        <span class="admin-stat-icon">🏆</span>
-        <span class="admin-stat-value">${analytics.totalUsers > 0 ? Math.round((analytics.totalPassed / analytics.totalUsers) * 100) : 0}%</span>
-        <span class="admin-stat-label">Completion Rate</span>
+      <div class="ad-stat-divider"></div>
+      <div class="ad-stat">
+        <span class="ad-stat-num">${completionRate}%</span>
+        <span class="ad-stat-lbl">Completion</span>
       </div>
     </div>
 
-    <!-- Module Breakdown -->
-    <div class="admin-section">
-      <h3 class="admin-section-title">Module Performance</h3>
-      <div class="admin-module-grid">
-        ${['workflows', 'skills', 'agents'].map(mod => {
-          const data = analytics.moduleBreakdown[mod] || { passed: 0, attempted: 0 }
-          const rate = data.attempted > 0 ? Math.round((data.passed / data.attempted) * 100) : 0
+    <!-- Module Performance -->
+    <div class="ad-panel">
+      <h2 class="ad-panel-title">Module Performance</h2>
+      <div class="ad-modules">
+        ${ALL_MODULES.map(mod => {
+          const s = moduleStats[mod]
+          const meta = MODULE_META[mod]
+          const rate = s.attempted > 0 ? Math.round((s.passed / s.attempted) * 100) : 0
+          const rateClass = rate >= 70 ? 'good' : rate >= 40 ? 'ok' : 'low'
           return `
-            <div class="admin-module-card">
-              <div class="admin-module-header">
-                <h4>${mod.charAt(0).toUpperCase() + mod.slice(1)}</h4>
-                <span class="admin-module-rate ${rate >= 70 ? 'rate-good' : rate >= 40 ? 'rate-ok' : 'rate-low'}">${rate}%</span>
+            <div class="ad-mod">
+              <div class="ad-mod-top">
+                <span class="ad-mod-icon">${meta.icon}</span>
+                <span class="ad-mod-name">${meta.label}</span>
+                <span class="ad-mod-rate ad-mod-rate--${rateClass}">${rate}%</span>
               </div>
-              <div class="admin-module-stats">
-                <div class="admin-module-stat">
-                  <span class="admin-module-stat-val">${data.passed}</span>
-                  <span class="admin-module-stat-label">Passed</span>
-                </div>
-                <div class="admin-module-stat">
-                  <span class="admin-module-stat-val">${data.attempted}</span>
-                  <span class="admin-module-stat-label">Attempted</span>
-                </div>
-                <div class="admin-module-stat">
-                  <span class="admin-module-stat-val">${data.attempted - data.passed}</span>
-                  <span class="admin-module-stat-label">Failed</span>
-                </div>
+              <div class="ad-mod-bar">
+                <div class="ad-mod-bar-fill" style="width:${rate}%"></div>
               </div>
-              <div class="progress-bar-track" style="margin-top: 1rem;">
-                <div class="progress-bar-fill bar-correct" style="width: ${rate}%"></div>
+              <div class="ad-mod-nums">
+                <span><strong>${s.passed}</strong> passed</span>
+                <span><strong>${s.attempted - s.passed}</strong> failed</span>
+                <span><strong>${totalUsers - s.attempted}</strong> unattempted</span>
               </div>
-            </div>
-          `
+            </div>`
         }).join('')}
       </div>
     </div>
 
-    <!-- Recent Activity -->
-    <div class="admin-section">
-      <h3 class="admin-section-title">Recent Certified Users</h3>
-      ${analytics.recentCompletions.length === 0 
-        ? '<p class="admin-no-data">No certified users yet.</p>'
-        : `
-          <div class="admin-activity-list">
-            ${analytics.recentCompletions.map(entry => `
-              <div class="admin-activity-row">
-                ${entry.photoURL 
-                  ? `<img src="${entry.photoURL}" alt="${entry.displayName}" class="lb-avatar" referrerpolicy="no-referrer" />`
-                  : `<span class="lb-avatar-placeholder">${entry.displayName.charAt(0).toUpperCase()}</span>`
-                }
-                <div class="admin-activity-info">
-                  <strong>${entry.displayName}</strong>
-                  <span>Completed all ${entry.score} modules</span>
-                </div>
-                <span class="lb-badge-complete">🎓 Certified</span>
-              </div>
-            `).join('')}
-          </div>
-        `
-      }
+    <!-- Users Table -->
+    <div class="ad-panel">
+      <div class="ad-panel-header">
+        <h2 class="ad-panel-title">Users</h2>
+        <input type="text" id="ad-user-search" class="ad-search" placeholder="Search users…" />
+      </div>
+      <div class="ad-table-wrap">
+        <table class="ad-table" id="ad-user-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th class="ad-th-sort" data-sort="modules">Modules</th>
+              <th class="ad-th-sort" data-sort="xp">XP</th>
+              <th class="ad-th-sort" data-sort="level">Level</th>
+              <th class="ad-th-sort" data-sort="streak">Streak</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ad-user-tbody">
+            ${users.map(u => renderUserRow(u)).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${users.length === 0 ? '<p class="ad-empty">No users have signed up yet.</p>' : ''}
     </div>
 
-    <!-- Grant Admin Section -->
-    <div class="admin-section">
-      <h3 class="admin-section-title">Admin Management</h3>
-      <div class="admin-grant-section">
-        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-          Grant admin access to another user by entering their Firebase UID.
-          The user must have already signed into the platform.
-        </p>
-        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-          <input
-            type="text"
-            id="admin-grant-uid"
-            placeholder="Enter user UID"
-            class="glossary-search"
-            style="max-width: 320px; flex: 1;"
-          />
-          <button id="admin-grant-btn" class="btn btn-primary">Grant Admin</button>
-        </div>
-        <p id="admin-grant-status" style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);"></p>
-      </div>
-    </div>
+    <!-- Action Feedback -->
+    <div id="ad-toast" class="ad-toast"></div>
   `
 
-  // Bind grant admin button
-  const grantBtn = document.getElementById('admin-grant-btn')
-  const grantInput = document.getElementById('admin-grant-uid') as HTMLInputElement
-  const grantStatus = document.getElementById('admin-grant-status')
+  bindTableInteractions(users)
+}
 
-  grantBtn?.addEventListener('click', async () => {
-    const targetUid = grantInput?.value.trim()
-    if (!targetUid) {
-      if (grantStatus) grantStatus.textContent = '⚠️ Please enter a UID.'
-      return
+// ── User Row Renderer ───────────────────────────────────────────────────
+
+function renderUserRow(u: AdminUser): string {
+  const passed = Object.values(u.quizProgress).filter(r => r.correct).length
+  const moduleIcons = ALL_MODULES.map(mod => {
+    const result = u.quizProgress[mod]
+    if (!result) return `<span class="ad-dot ad-dot--none" title="${MODULE_META[mod].label}: not attempted">○</span>`
+    if (result.correct) return `<span class="ad-dot ad-dot--pass" title="${MODULE_META[mod].label}: passed">●</span>`
+    return `<span class="ad-dot ad-dot--fail" title="${MODULE_META[mod].label}: failed">●</span>`
+  }).join('')
+
+  const avatar = u.photoURL
+    ? `<img src="${u.photoURL}" alt="" class="ad-avatar" referrerpolicy="no-referrer" />`
+    : `<span class="ad-avatar ad-avatar--placeholder">${u.displayName.charAt(0).toUpperCase()}</span>`
+
+  return `
+    <tr class="ad-row" data-uid="${u.uid}" data-name="${u.displayName.toLowerCase()}" data-email="${u.email.toLowerCase()}" data-modules="${passed}" data-xp="${u.xp}" data-level="${u.level}" data-streak="${u.streak}">
+      <td>
+        <div class="ad-user-cell">
+          ${avatar}
+          <div>
+            <div class="ad-user-name">${u.displayName}</div>
+            <div class="ad-user-email">${u.email || u.uid.slice(0, 12) + '…'}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="ad-modules-cell">
+          <strong>${passed}/9</strong>
+          <div class="ad-dot-row">${moduleIcons}</div>
+        </div>
+      </td>
+      <td><span class="ad-xp">${u.xp.toLocaleString()}</span></td>
+      <td>${u.level}</td>
+      <td>${u.streak > 0 ? `🔥 ${u.streak}` : '—'}</td>
+      <td>${u.completedAll
+        ? '<span class="ad-badge ad-badge--cert">🎓 Certified</span>'
+        : `<span class="ad-badge ad-badge--prog">${passed}/9</span>`
+      }</td>
+      <td>
+        <div class="ad-actions">
+          <button class="ad-btn ad-btn--reset" data-uid="${u.uid}" data-name="${u.displayName}" title="Reset progress">🔄</button>
+          <button class="ad-btn ad-btn--admin" data-uid="${u.uid}" data-name="${u.displayName}" title="Grant admin">👑</button>
+        </div>
+      </td>
+    </tr>
+  `
+}
+
+// ── Table Interactions ──────────────────────────────────────────────────
+
+function bindTableInteractions(users: AdminUser[]): void {
+  // Search
+  const searchInput = document.getElementById('ad-user-search') as HTMLInputElement
+  searchInput?.addEventListener('input', () => {
+    const q = searchInput.value.toLowerCase()
+    document.querySelectorAll<HTMLTableRowElement>('#ad-user-tbody .ad-row').forEach(row => {
+      const name = row.dataset.name ?? ''
+      const email = row.dataset.email ?? ''
+      row.style.display = (name.includes(q) || email.includes(q)) ? '' : 'none'
+    })
+  })
+
+  // Sort
+  let sortKey = 'xp'
+  let sortAsc = false
+
+  document.querySelectorAll('.ad-th-sort').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = (th as HTMLElement).dataset.sort!
+      if (sortKey === key) sortAsc = !sortAsc
+      else { sortKey = key; sortAsc = false }
+
+      // Update header arrows
+      document.querySelectorAll('.ad-th-sort').forEach(h => {
+        h.classList.remove('ad-sort-asc', 'ad-sort-desc')
+      })
+      th.classList.add(sortAsc ? 'ad-sort-asc' : 'ad-sort-desc')
+
+      const tbody = document.getElementById('ad-user-tbody')!
+      const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('.ad-row'))
+      rows.sort((a, b) => {
+        const aVal = parseFloat(a.dataset[key] ?? '0')
+        const bVal = parseFloat(b.dataset[key] ?? '0')
+        return sortAsc ? aVal - bVal : bVal - aVal
+      })
+      rows.forEach(r => tbody.appendChild(r))
+    })
+  })
+
+  // Action buttons (delegated)
+  document.getElementById('ad-user-tbody')?.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.ad-btn')
+    if (!btn) return
+
+    const uid = btn.dataset.uid!
+    const name = btn.dataset.name!
+
+    if (btn.classList.contains('ad-btn--reset')) {
+      const ok = confirm(
+        `Reset ALL progress for "${name}"?\n\n` +
+        `• Quiz progress cleared\n• XP → 0, Level → 1, Streak → 0\n\nThis cannot be undone.`
+      )
+      if (!ok) return
+      btn.disabled = true
+      try {
+        await resetUserProgress(uid)
+        showToast(`✅ Progress reset for ${name}`)
+        // Update row visually
+        const row = document.querySelector<HTMLTableRowElement>(`.ad-row[data-uid="${uid}"]`)
+        if (row) {
+          row.dataset.modules = '0'
+          row.dataset.xp = '0'
+          row.dataset.level = '1'
+          row.dataset.streak = '0'
+          const user = users.find(u => u.uid === uid)
+          if (user) {
+            user.quizProgress = {}
+            user.quizScore = 0
+            user.xp = 0
+            user.level = 1
+            user.streak = 0
+            user.completedAll = false
+            row.outerHTML = renderUserRow(user)
+          }
+        }
+      } catch (err) {
+        showToast(`❌ Failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      }
+      btn.disabled = false
     }
 
-    if (grantBtn) (grantBtn as HTMLButtonElement).disabled = true
-    if (grantStatus) grantStatus.textContent = 'Setting admin claim...'
-
-    try {
-      await grantAdminAccess(targetUid)
-
-      if (grantStatus) grantStatus.textContent = `✅ Admin access granted to ${targetUid}`
-      if (grantInput) grantInput.value = ''
-    } catch (error) {
-      console.error('[admin] Grant failed:', error)
-      if (grantStatus) {
-        grantStatus.textContent = `❌ Failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    if (btn.classList.contains('ad-btn--admin')) {
+      const ok = confirm(`Grant admin access to "${name}"?\n\nThey can view analytics and manage users.`)
+      if (!ok) return
+      btn.disabled = true
+      try {
+        await grantAdminAccess(uid)
+        showToast(`✅ Admin granted to ${name} — they need to re-login`)
+      } catch (err) {
+        showToast(`❌ Failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
       }
-    } finally {
-      if (grantBtn) (grantBtn as HTMLButtonElement).disabled = false
+      btn.disabled = false
     }
   })
 }
 
-function computeAnalytics(entries: LeaderboardEntry[]): Analytics {
-  const totalUsers = entries.length
-  const totalPassed = entries.filter(e => e.completedAll).length
-  const avgScore = totalUsers > 0 
-    ? entries.reduce((sum, e) => sum + e.score, 0) / totalUsers 
-    : 0
+// ── Toast ───────────────────────────────────────────────────────────────
 
-  const moduleBreakdown: Record<string, { passed: number; attempted: number }> = {
-    workflows: { passed: 0, attempted: 0 },
-    skills: { passed: 0, attempted: 0 },
-    agents: { passed: 0, attempted: 0 },
-  }
+function showToast(msg: string): void {
+  const el = document.getElementById('ad-toast')
+  if (!el) return
+  el.textContent = msg
+  el.classList.add('ad-toast--visible')
+  setTimeout(() => el.classList.remove('ad-toast--visible'), 4000)
+}
 
-  entries.forEach(e => {
-    const mods = ['workflows', 'skills', 'agents']
-    mods.forEach((mod, i) => {
-      moduleBreakdown[mod].attempted += 1
-      if (e.score > i) {
-        moduleBreakdown[mod].passed += 1
+// ── Analytics ───────────────────────────────────────────────────────────
+
+function computeModuleStats(users: AdminUser[]): Record<string, { passed: number; attempted: number }> {
+  const stats: Record<string, { passed: number; attempted: number }> = {}
+  ALL_MODULES.forEach(mod => { stats[mod] = { passed: 0, attempted: 0 } })
+
+  users.forEach(u => {
+    ALL_MODULES.forEach(mod => {
+      const result = u.quizProgress[mod]
+      if (result) {
+        stats[mod].attempted++
+        if (result.correct) stats[mod].passed++
       }
     })
   })
 
-  const recentCompletions = entries.filter(e => e.completedAll).slice(0, 10)
-
-  return { totalUsers, totalPassed, avgScore, moduleBreakdown, recentCompletions }
+  return stats
 }

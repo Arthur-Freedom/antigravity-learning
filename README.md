@@ -54,9 +54,25 @@ src/
 - **Responsive design** with mobile hamburger menu
 - **Page transitions** and scroll-reveal animations
 
+## Firebase Projects
+
+This project uses **two separate Firebase projects** to keep development safe:
+
+| Environment | Project ID | Console | Used when |
+|-------------|-----------|---------|-----------|
+| **Dev** | `antigravity-learning-dev` | [Firebase Console](https://console.firebase.google.com/project/antigravity-learning-dev) | `npm run dev` (localhost) |
+| **Production** | `antigravity-learning` | [Firebase Console](https://console.firebase.google.com/project/antigravity-learning) | `npm run build` → deploy |
+
+Each project has its own database, users, authentication, and storage. They share nothing.
+
 ## Environment Variables
 
-Create a `.env` file in the project root:
+Vite automatically loads the right config based on the command:
+
+- `npm run dev` → loads `.env.development` (dev project)
+- `npm run build` → loads `.env.production` (production project)
+
+Both files follow this format (see `.env.example`):
 
 ```env
 VITE_FIREBASE_API_KEY=...
@@ -72,14 +88,15 @@ VITE_ADMIN_EMAILS=your-email@gmail.com
 
 | Command | What it does |
 |---------|-------------|
-| `npm run dev` | Start dev server at localhost:5173 |
-| `npm run build` | TypeScript check + Vite production build |
+| `npm run dev` | Start dev server at localhost:5173 (uses dev project) |
+| `npm run build` | TypeScript check + Vite production build (uses production project) |
 | `npx firebase deploy --only hosting` | Deploy to Firebase Hosting |
 | `npx firebase deploy --only firestore:rules` | Deploy Firestore security rules |
 
 ## Workflows
 
-- `/deploy` — Build and deploy to Firebase Hosting (fully automated)
+- `/git-safe-deploy` — **Recommended.** Git commit + build + deploy (fully automated)
+- `/deploy` — Build and deploy only (no Git commit — use `/git-safe-deploy` instead)
 - `/create-page` — Scaffold a new lesson page with route registration
 
 ## Admin Access

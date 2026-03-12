@@ -42,7 +42,7 @@ export async function downloadCertificate(): Promise<void> {
 
   const eligible = await isCertificateEligible(user.uid)
   if (!eligible) {
-    showToast({ message: 'Complete all 3 modules to earn your certificate!', type: 'info' })
+    showToast({ message: 'Complete all 9 modules to earn your certificate!', type: 'info' })
     isGenerating = false
     return
   }

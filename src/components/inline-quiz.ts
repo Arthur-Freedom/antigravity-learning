@@ -3,7 +3,8 @@
 // Each question shows instant feedback and the full quiz tracks a score.
 
 import { getCurrentUser } from '../services/authService';
-import { saveQuizResult, isCertificateEligible } from '../services/userService';
+import { saveQuizResult, isCertificateEligible, getUserProfile } from '../services/userService';
+import { onAuthChange } from '../services/authService';
 import { getAiHintForQuiz } from '../services/functionsService';
 import { showToast } from './toast';
 import { fireConfetti } from './confetti';
@@ -66,6 +67,45 @@ export function initInlineQuiz(
   const container = document.getElementById(quizId);
   if (!container) return;
 
+  // ── Restore previous completion state ────────────────────────────────
+  const restoreQuizState = async (uid: string) => {
+    try {
+      const profile = await getUserProfile(uid);
+      const result = profile?.quizProgress?.[topic];
+      if (result) {
+        const resultEl = document.getElementById(`${quizId}-result`);
+        if (resultEl) {
+          const passed = result.correct;
+          const date = result.answeredAt ? new Date(result.answeredAt).toLocaleDateString() : '';
+          resultEl.innerHTML = `
+            <div class="quiz-result-card ${passed ? 'result-pass' : 'result-fail'}" style="margin-bottom: 1rem;">
+              <span class="quiz-result-emoji">${passed ? '✅' : '🔄'}</span>
+              <strong>${passed ? 'Previously Completed' : 'Previously Attempted'}</strong>
+              <span>You ${passed ? 'passed' : 'did not pass'} this quiz${date ? ` on ${date}` : ''}. ${passed ? 'Feel free to review or retake it below.' : 'Try again below!'}</span>
+            </div>`;
+        }
+      }
+    } catch (err) {
+      console.error('[quiz] Failed to restore quiz state:', err);
+    }
+  };
+
+  // Try restoring immediately if user is already authenticated
+  const user = getCurrentUser();
+  if (user) {
+    restoreQuizState(user.uid);
+  } else {
+    // Wait for auth to resolve, then restore
+    const unsubscribe = onAuthChange((resolvedUser) => {
+      if (resolvedUser) {
+        restoreQuizState(resolvedUser.uid);
+        unsubscribe();
+      }
+    });
+    // Auto-cleanup after 5s to avoid lingering listeners
+    setTimeout(() => unsubscribe(), 5000);
+  }
+
   let answered = 0;
   let correct = 0;
 
@@ -126,17 +166,27 @@ export function initInlineQuiz(
               hintBox.textContent = 'Asking Gemini...';
 
               try {
-                const hint = await getAiHintForQuiz(
+                const { hint, hintsRemaining } = await getAiHintForQuiz(
                   question.question,
                   question.options,
                   question.options[oi] // The user's wrong answer
                 );
                 hintBox.innerHTML = `<strong>🤖 AI Tutor:</strong> ${hint}`;
-              } catch (error) {
+                if (hintsRemaining <= 3) {
+                  hintBox.innerHTML += `<p style="margin-top:8px;font-size:0.82rem;color:var(--text-muted);opacity:0.8;">💡 ${hintsRemaining} hint${hintsRemaining === 1 ? '' : 's'} remaining today</p>`;
+                }
+              } catch (error: unknown) {
                 console.error('[AI Tutor] Failed:', error);
-                hintBox.innerHTML = `<em>Failed to get hint. Is the API key set?</em>`;
-                hintBtn.disabled = false;
-                hintBtn.innerHTML = '✨ Try Again';
+                const errCode = (error as { code?: string })?.code;
+                if (errCode === 'functions/resource-exhausted') {
+                  hintBox.innerHTML = `<em>🛑 You've used all your AI hints for today. Come back tomorrow!</em>`;
+                  hintBtn.disabled = true;
+                  hintBtn.innerHTML = '⏳ Daily limit reached';
+                } else {
+                  hintBox.innerHTML = `<em>Failed to get hint. Please try again later.</em>`;
+                  hintBtn.disabled = false;
+                  hintBtn.innerHTML = '✨ Try Again';
+                }
               }
             });
           }
@@ -181,7 +231,6 @@ export function initInlineQuiz(
         }
 
         // Save to Firestore if logged in
-        // Use a helper that retries with onAuthChange in case auth hasn't resolved yet
         const saveForUser = async (uid: string) => {
           try {
             await saveQuizResult(uid, topic, passed);
@@ -207,22 +256,22 @@ export function initInlineQuiz(
           }
         };
 
-        const user = getCurrentUser();
-        if (user) {
-          await saveForUser(user.uid);
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+          await saveForUser(currentUser.uid);
         } else {
           // Auth may not have resolved yet (e.g., page was refreshed).
           // Wait briefly for the auth state to settle before giving up.
-          const { onAuthChange } = await import('../services/authService');
+          const { onAuthChange: importedOnAuthChange } = await import('../services/authService');
           const saved = await new Promise<boolean>((resolve) => {
             const timeout = setTimeout(() => {
-              unsubscribe();
+              authUnsub();
               resolve(false);
             }, 3000);
-            const unsubscribe = onAuthChange(async (resolvedUser) => {
+            const authUnsub = importedOnAuthChange(async (resolvedUser) => {
               if (resolvedUser) {
                 clearTimeout(timeout);
-                unsubscribe();
+                authUnsub();
                 await saveForUser(resolvedUser.uid);
                 resolve(true);
               }

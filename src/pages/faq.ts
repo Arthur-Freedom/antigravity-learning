@@ -46,7 +46,7 @@ export function render(): string {
               <span class="faq-chevron">▸</span>
             </button>
             <div class="faq-answer">
-              <p>Yes! All 3 modules, quizzes, certificates, leaderboard, and progress tracking are completely free. We believe AI literacy should be accessible to everyone.</p>
+              <p>Yes! All 9 modules, quizzes, certificates, leaderboard, and progress tracking are completely free. We believe AI literacy should be accessible to everyone.</p>
             </div>
           </div>
 
@@ -186,7 +186,7 @@ export function render(): string {
               <span class="faq-chevron">▸</span>
             </button>
             <div class="faq-answer">
-              <p>Complete all 3 modules (Workflows, Skills, and Autonomous Agents) by passing each module's knowledge check quiz with at least 70%. Once all 3 are passed, the certificate download button will appear on your profile page.</p>
+              <p>Complete all 9 modules by passing each module's knowledge check quiz with at least 70%. Once all 9 are passed, the certificate download button will appear on your profile page.</p>
             </div>
           </div>
 

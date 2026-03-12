@@ -17,17 +17,29 @@ export async function grantAdminAccess(targetUid: string): Promise<void> {
 }
 
 /**
+ * Reset a user's quiz progress, XP, level, and streak (admin only).
+ */
+export async function resetUserProgress(targetUid: string): Promise<void> {
+  const fn = httpsCallable(functions, 'resetUserProgress');
+  await fn({ targetUid });
+}
+
+/**
  * Request a Socratic hint from the Gemini AI Tutor.
+ * Returns the hint text and how many hints remain today.
  */
 export async function getAiHintForQuiz(
   question: string,
   options: string[],
   wrongAnswer: string,
-): Promise<string> {
-  const getAiHint = httpsCallable<{ question: string; options: string[]; wrongAnswer: string }, { hint: string }>(
+): Promise<{ hint: string; hintsRemaining: number }> {
+  const getAiHint = httpsCallable<
+    { question: string; options: string[]; wrongAnswer: string },
+    { hint: string; hintsRemaining: number }
+  >(
     functions,
     'getAiHint'
   );
   const result = await getAiHint({ question, options, wrongAnswer });
-  return result.data.hint;
+  return result.data;
 }

@@ -141,6 +141,28 @@ export async function saveQuizResult(
     });
     console.info(`[userService] Saved quiz result for ${topic}:`, correct,
       `(score: ${quizScore}/${quizTotal}, completedAll: ${completedAll}, xp: ${xp})`);
+
+    // ── Read-back verification ──────────────────────────────────────
+    // After a short delay, verify the data wasn't stripped by the
+    // server-side sanitiser (onUserDataWrite). This catches deployment
+    // mismatches where the Cloud Function doesn't recognise the topic.
+    setTimeout(async () => {
+      try {
+        const verifySnap = await getDoc(ref);
+        if (verifySnap.exists()) {
+          const verifyData = verifySnap.data() as UserProfile;
+          if (!verifyData.quizProgress?.[topic]) {
+            console.error(
+              `[userService] ⚠️ READ-BACK FAILED: Quiz result for "${topic}" was saved but then stripped by server!`,
+              `This usually means the Cloud Function's VALID_TOPICS does not include "${topic}".`,
+              `Fix: Add "${topic}" to the config/quizTopics Firestore doc or redeploy functions.`
+            );
+          }
+        }
+      } catch {
+        // Verification is best-effort — don't block on failures
+      }
+    }, 2000);
   } catch (error) {
     console.error('[userService] saveQuizResult failed:', error);
   }

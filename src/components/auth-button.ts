@@ -50,7 +50,7 @@ export function bindAuthUI(btnId: string): void {
 
 function renderAuthButton(btn: HTMLElement, user: AppUser | null, profile: UserProfile | null): void {
   if (user) {
-    const displayName = user.displayName.split(' ')[0];
+    const displayName = user.displayName;
     const photoURL = user.photoURL;
     const streak = profile?.streak ?? 0;
     const streakHtml = streak > 0 

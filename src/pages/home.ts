@@ -4,6 +4,9 @@
 import { getCurrentUser, onAuthChange } from '../services/authService';
 import { getUserProfile, getUserCount } from '../services/userService';
 import { renderActivityFeed, initActivityFeed, destroyActivityFeed } from '../components/activity-feed';
+import type { Unsubscribe } from 'firebase/auth';
+
+let authUnsubscribe: Unsubscribe | null = null;
 
 // ── Quiz Data (kept for backward compat with modal fallback) ────────────
 export interface Quiz {
@@ -417,7 +420,7 @@ export function render(): string {
         </div>
         <div class="testimonial-card reveal-on-scroll">
           <div class="testimonial-quote-mark">"</div>
-          <p class="testimonial-text">The interactive quizzes and progress tracking make learning about agents feel like a game. I finished all 3 modules in one sitting — couldn't stop!</p>
+          <p class="testimonial-text">The interactive quizzes and progress tracking make learning about agents feel like a game. I finished all 9 modules in one sitting — couldn't stop!</p>
           <div class="testimonial-author">
             <div class="testimonial-avatar">S</div>
             <div class="testimonial-author-info">
@@ -477,10 +480,16 @@ export function init(): void {
   // Fetch and display live user count
   loadUserCount();
 
+  // Clean up any previous auth listener (safety net)
+  if (authUnsubscribe) {
+    authUnsubscribe();
+    authUnsubscribe = null;
+  }
+
   // Restore progress reactively when auth state resolves
   // This fixes the race condition where getCurrentUser() returns null
   // at init time because Firebase hasn't resolved auth yet.
-  onAuthChange((user) => {
+  authUnsubscribe = onAuthChange((user) => {
     if (user) {
       restoreProgress();
     }
@@ -645,4 +654,8 @@ async function loadUserCount(): Promise<void> {
 /** Clean up Firestore listeners when navigating away */
 export function destroy(): void {
   destroyActivityFeed()
+  if (authUnsubscribe) {
+    authUnsubscribe();
+    authUnsubscribe = null;
+  }
 }

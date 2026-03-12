@@ -31,9 +31,8 @@ export async function getLeaderboard(topN = 20): Promise<LeaderboardEntry[]> {
     const usersRef = collection(db, COLLECTIONS.USERS);
     const leaderboardQuery = query(
       usersRef,
-      where('quizTotal', '>', 0),
-      orderBy('quizScore', 'desc'),
-      orderBy('quizTotal', 'asc'),
+      where('xp', '>', 0),
+      orderBy('xp', 'desc'),
       limit(topN)
     );
     const snapshot = await getDocs(leaderboardQuery);
@@ -80,17 +79,14 @@ async function getLeaderboardFallback(topN: number): Promise<LeaderboardEntry[]>
           photoURL: data.photoURL ?? null,
           score: correct,
           total: results.length,
-          completedAll: correct >= 3,
+          completedAll: correct >= 9,
           xp: data.xp ?? 0,
           level: data.level ?? 1,
         });
       }
     });
 
-    entries.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return a.total - b.total;
-    });
+    entries.sort((a, b) => b.xp - a.xp);
 
     return entries.slice(0, topN);
   } catch (fallbackError) {
@@ -128,17 +124,14 @@ export function onLeaderboardUpdate(
             photoURL: data.photoURL ?? null,
             score: correct,
             total: results.length,
-            completedAll: correct >= 3,
+            completedAll: correct >= 9,
             xp: data.xp ?? 0,
             level: data.level ?? 1,
           });
         }
       });
 
-      entries.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return a.total - b.total;
-      });
+      entries.sort((a, b) => b.xp - a.xp);
 
       callback(entries.slice(0, topN));
     },

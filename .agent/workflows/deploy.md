@@ -8,10 +8,14 @@ This workflow builds the Vite app and deploys it to Firebase Hosting.
 1. Build the production bundle: `npm run build`
 
 // turbo
-2. Deploy to Firebase Hosting: `npx firebase deploy --only hosting`
+2. Deploy to Firebase Hosting: `npx firebase deploy --only hosting --project antigravity-learning`
 
 // turbo
-3. Deploy Firestore security rules: `npx firebase deploy --only firestore:rules`
+3. Deploy Firestore security rules: `npx firebase deploy --only firestore:rules --project antigravity-learning`
 
-// turbo
-4. Echo the live URL: `echo "🚀 Deployed to https://antigravity-learning.web.app"`
+4. **MANDATORY — Smoke test the live site**:
+   - Open https://antigravity-learning.web.app in the browser
+   - Verify the page loads — no blank screen, no console errors
+   - If you changed a specific page or feature, navigate to it and confirm it works
+   - Check the browser DevTools Console for JavaScript errors
+   - **DO NOT** declare deploy complete until this step passes

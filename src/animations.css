@@ -200,11 +200,6 @@ header.navbar.scrolled {
   opacity: 1;
 }
 
-/* Module-specific card accents */
-#card-workflows { border-left: 4px solid var(--module-1); }
-#card-skills { border-left: 4px solid var(--module-2); }
-#card-agents { border-left: 4px solid var(--module-3); }
-
 /* Card image zoom */
 .card-image img {
   transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1) !important;
@@ -422,12 +417,12 @@ html {
   box-shadow: var(--shadow-lg) !important;
 }
 
-/* ── Admin Cards ───────────────────────────────────────────────────── */
-.admin-stat-card {
+/* ── Admin Module Cards ────────────────────────────────────────────── */
+.ad-mod {
   transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
 }
 
-.admin-stat-card:hover {
-  transform: translateY(-5px) scale(1.02) !important;
-  box-shadow: var(--shadow-lg) !important;
+.ad-mod:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow-sm) !important;
 }

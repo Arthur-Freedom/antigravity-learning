@@ -28,7 +28,7 @@ export function render(): string {
       <div class="lesson-hero-content" style="color: var(--text-primary);">
         <span class="lesson-badge">Competition</span>
         <h1>Leaderboard</h1>
-        <p>See how you rank against other learners. Complete all 3 modules to earn a certificate!</p>
+        <p>See how you rank against other learners. Complete all 9 modules to earn a certificate!</p>
       </div>
     </section>
 
