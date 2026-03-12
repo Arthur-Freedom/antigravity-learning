@@ -6,6 +6,7 @@ import { getCurrentUser } from '../services/authService';
 import { saveQuizResult, isCertificateEligible, getUserProfile } from '../services/userService';
 import { onAuthChange } from '../services/authService';
 import { getAiHintForQuiz } from '../services/functionsService';
+import { getFlag } from '../services/remoteConfigService';
 import { showToast } from './toast';
 import { fireConfetti } from './confetti';
 
@@ -141,10 +142,13 @@ export function initInlineQuiz(
           fb.innerHTML = `✅ Correct! ${question.explanation}`;
           fb.className = 'quiz-q-feedback feedback-correct';
         } else {
-          fb.innerHTML = `
-            <div>❌ Not quite. ${question.explanation}</div>
+          const hintHtml = getFlag('ai_hints_enabled') ? `
             <button class="btn-ai-hint" id="${quizId}-hint-btn-${qi}">✨ Get AI Hint</button>
             <div class="ai-hint-box pfp-hidden" id="${quizId}-hint-box-${qi}"></div>
+          ` : '';
+          fb.innerHTML = `
+            <div>❌ Not quite. ${question.explanation}</div>
+            ${hintHtml}
           `;
           fb.className = 'quiz-q-feedback feedback-wrong';
 

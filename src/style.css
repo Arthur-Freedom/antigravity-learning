@@ -5453,3 +5453,23 @@ header.navbar {
     padding: 2rem 1.5rem;
   }
 }
+
+/* ── Maintenance Banner (Remote Config) ── */
+.maintenance-banner {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  color: #1a1a2e;
+  text-align: center;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+  animation: bannerSlideIn 0.4s ease-out;
+}
+
+@keyframes bannerSlideIn {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}

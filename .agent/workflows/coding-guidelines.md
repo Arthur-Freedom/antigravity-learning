@@ -41,11 +41,21 @@ Rules:
 - For UI changes: open the live URL and actually interact with the feature.
 - Never write a "Deploy Complete ✅" summary until you've confirmed the feature works end-to-end.
 
+## Feature Flags (Remote Config)
+
+- **Before hardcoding a feature toggle**, check if it should be a Remote Config flag instead.
+- Use `getFlag('flag_name')` from `src/services/remoteConfigService.ts` to check boolean flags.
+- Use `getConfigValue('key')` for string config values.
+- Current flags: `ai_hints_enabled`, `leaderboard_enabled`, `presence_enabled`, `maintenance_banner`.
+- To add a new flag: add a default in `remoteConfigService.ts` DEFAULTS object, then add the parameter in the Firebase Console → Remote Config.
+
 ## Git Safety
 
 - **NEVER run `git revert` without first reviewing what it will undo**: `git diff HEAD~1` or `git show <commit>`.
 - Always push to GitHub before deploying, so you have a record of what's live.
 - Use descriptive commit messages that explain what changed and why.
+- **Git path**: On this system, git is at `C:\Program Files\Git\bin\git.exe`. Use `& "C:\Program Files\Git\bin\git.exe"` in PowerShell.
+- **GPG signing**: If `git commit` hangs with no output, it's likely waiting for a GPG passphrase. Use `--no-gpg-sign` or ask the user to commit manually.
 
 ## Verification Standards (CRITICAL)
 

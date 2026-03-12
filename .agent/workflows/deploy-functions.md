@@ -4,11 +4,14 @@ description: How to build, test, and deploy Cloud Functions
 
 This workflow covers deploying Cloud Functions for the Antigravity Learning platform.
 
+// turbo-all
+
 ## Architecture Quick Reference
 
 - **Runtime**: Node 20, Firebase Functions v2
-- **Source**: `functions/src/index.ts` (single file, ~900 lines)
+- **Source**: `functions/src/index.ts` (main entry) — may also have callables in `functions/src/callables/` and triggers in `functions/src/triggers/`
 - **Deployed functions**: onQuizCompletion, getCompletionStatus, setAdminClaim, resetUserProgress, getAiHint, onUserDataWrite, onUserCreated
+- **Cloud Run IAM**: All callable functions MUST have `invoker: "public"` in their `onCall()` options — see Troubleshooting
 - **Dependencies**: Nodemailer (SMTP email), @google/genai (Gemini AI hints)
 - **Secrets**: `SMTP_EMAIL`, `SMTP_PASSWORD`, `ADMIN_EMAILS`, `GEMINI_API_KEY` (all in Secret Manager — NOT in `.env` files)
 - **Rate limits**: `getAiHint` is capped at 10 hints/day/user via `rateLimits/aiHints/users/{uid}`
@@ -35,6 +38,7 @@ This workflow covers deploying Cloud Functions for the Antigravity Learning plat
 
 3. **Check for common issues**:
    - If adding a new function, make sure it's exported (`export const myFunction = ...`)
+   - **All callable functions** MUST include `{ invoker: "public" }` in their `onCall()` options (e.g. `onCall({ invoker: "public" }, async (req) => {...})`). Without this, Cloud Run blocks the request before it reaches the function, causing CORS or "not authenticated" errors.
    - If using new environment variables, add them to `functions/.env`
    - **NEVER** put a secret in both `functions/.env` AND `secrets: [...]` in the function config — Cloud Run will reject the deploy with an overlap error
    - If using new npm packages, install them in the functions directory:
@@ -96,3 +100,25 @@ This workflow covers deploying Cloud Functions for the Antigravity Learning plat
 | Infinite trigger loop | Add a `_sanitizedAt` guard like `onUserDataWrite` does |
 | Deploy succeeds but feature broken | Always smoke-test — deploy success ≠ feature works |
 | Emulator won't start | Check if ports 5001/8080 are already in use: `netstat -ano | findstr :5001` |
+| CORS error or "not authenticated" on callable | The callable is missing `invoker: "public"` — see fix below |
+| `invoker: "public"` not taking effect | This option only works on **creation**, not update. Delete the function first then redeploy — see fix below |
+
+### Fix: Cloud Run "not authenticated" / CORS on callable functions
+
+> **Root cause (2026-03-12)**: Gen 2 Cloud Functions use Cloud Run under the hood. Cloud Run defaults to requiring IAM authentication. The Firebase callable SDK does NOT send Cloud Run-level credentials — it sends Firebase Auth tokens that are validated *inside* the function code. If Cloud Run blocks the request first, the function never runs and the browser sees a CORS or "not authenticated" error.
+
+**Step 1**: Ensure every callable has `invoker: "public"`:
+```typescript
+export const myFunction = onCall(
+  { invoker: "public" },  // ← REQUIRED for Gen 2 callables
+  async (request) => { ... }
+);
+```
+
+**Step 2**: If the function already exists, `invoker: "public"` is **ignored on update**. You must delete and recreate:
+```
+npx firebase-tools functions:delete myFunction --project <project-id> --force
+npx firebase-tools deploy --only functions --project <project-id> --force
+```
+
+> **Security**: `invoker: "public"` only opens the Cloud Run transport layer. Firebase Auth is still fully enforced inside your function code (`request.auth` checks).

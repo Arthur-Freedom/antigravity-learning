@@ -6,6 +6,7 @@ import { onAuthChange } from './services/authService'
 import { registerRoutes, initRouter, navigate, getCurrentPath } from './router'
 import { showToast } from './components/toast'
 import { initPresence, onOnlineCountChange } from './services/presenceService'
+import { initRemoteConfig, getFlag, getConfigValue } from './services/remoteConfigService'
 
 // App Check is disabled until a ReCAPTCHA Enterprise key is configured.
 // Uncomment the import above and the line below once ready:
@@ -99,13 +100,38 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 // ── Auth Binding ────────────────────────────────────────────────────────
 bindAuthUI('google-login-btn')
 
+// ── Remote Config (Feature Flags) ───────────────────────────────────────
+initRemoteConfig().then(() => {
+  // Maintenance banner
+  const bannerText = getConfigValue('maintenance_banner');
+  if (bannerText) {
+    const banner = document.createElement('div');
+    banner.className = 'maintenance-banner';
+    banner.innerHTML = bannerText;
+    document.querySelector('main')?.before(banner);
+  }
+
+  // Conditionally hide leaderboard nav link
+  if (!getFlag('leaderboard_enabled')) {
+    document.querySelectorAll('a[href="/leaderboard"]').forEach(el => {
+      (el as HTMLElement).style.display = 'none';
+    });
+  }
+
+  // Conditionally hide presence indicator
+  if (!getFlag('presence_enabled')) {
+    const indicator = document.getElementById('presence-indicator');
+    if (indicator) indicator.style.display = 'none !important';
+  }
+});
+
 // ── Presence Tracking ───────────────────────────────────────────────────
 initPresence()
 onOnlineCountChange((count) => {
   const indicator = document.getElementById('presence-indicator')
   const countEl = document.getElementById('presence-count')
   if (indicator && countEl) {
-    if (count > 0) {
+    if (count > 0 && getFlag('presence_enabled')) {
       indicator.style.display = 'inline-flex'
       countEl.textContent = count.toString()
     } else {
