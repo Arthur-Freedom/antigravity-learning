@@ -3,6 +3,15 @@
 
 import * as nodemailer from "nodemailer";
 
+export function getBaseUrl(): string {
+  // GCLOUD_PROJECT is set automatically by the GCP/Firebase runtime — no config needed.
+  // It equals the Firebase Project ID of the project the function is deployed to.
+  // See: skills/firebase-environments/SKILL.md → "Dynamic URL Resolution Patterns"
+  return process.env.GCLOUD_PROJECT === "antigravity-learning-dev"
+    ? "https://antigravity-learning-dev.web.app"
+    : "https://antigravity-learning.web.app";
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // Transporter
 // ═══════════════════════════════════════════════════════════════════════
@@ -29,6 +38,7 @@ export function createTransporter() {
 // ═══════════════════════════════════════════════════════════════════════
 
 export function generateCongratulationsHtml(displayName: string): string {
+  const baseUrl = getBaseUrl();
   return `
 <!DOCTYPE html>
 <html>
@@ -77,7 +87,7 @@ export function generateCongratulationsHtml(displayName: string): string {
         <table cellspacing="0" cellpadding="0" style="margin:0 auto;">
           <tr>
             <td style="background:#283A4A; border-radius:6px;">
-              <a href="https://antigravity-learning.web.app/"
+              <a href="${baseUrl}/"
                  style="display:inline-block; padding:14px 32px; color:#fff; text-decoration:none; font-weight:600; font-size:14px; letter-spacing:0.5px;">
                 Download Certificate →
               </a>
@@ -101,6 +111,7 @@ export function generateCongratulationsHtml(displayName: string): string {
 }
 
 export function generateCongratulationsText(displayName: string): string {
+  const baseUrl = getBaseUrl();
   return `🎓 Congratulations, ${displayName}!
 
 You've completed all nine modules in the Antigravity Learning program:
@@ -116,7 +127,7 @@ You've completed all nine modules in the Antigravity Learning program:
   ✅ Real-World Projects
 
 You can now download your completion certificate from the website:
-https://antigravity-learning.web.app/
+${baseUrl}/
 
 Click the 🎓 Certificate button in the navigation bar.
 
@@ -128,6 +139,7 @@ Click the 🎓 Certificate button in the navigation bar.
 // ═══════════════════════════════════════════════════════════════════════
 
 export function generateWelcomeHtml(displayName: string): string {
+  const baseUrl = getBaseUrl();
   return `
 <!DOCTYPE html>
 <html>
@@ -187,7 +199,7 @@ export function generateWelcomeHtml(displayName: string): string {
         <table cellspacing="0" cellpadding="0" style="margin:0 auto;">
           <tr>
             <td style="background:#283A4A; border-radius:6px;">
-              <a href="https://antigravity-learning.web.app/learn/workflows"
+              <a href="${baseUrl}/learn/workflows"
                  style="display:inline-block; padding:14px 32px; color:#fff; text-decoration:none; font-weight:600; font-size:14px; letter-spacing:0.5px;">
                 Start Module 1 →
               </a>
@@ -211,6 +223,7 @@ export function generateWelcomeHtml(displayName: string): string {
 }
 
 export function generateWelcomeText(displayName: string): string {
+  const baseUrl = getBaseUrl();
   return `🚀 Welcome to Antigravity Learning, ${displayName}!
 
 You've just joined a platform designed to teach you how to build and work with AI agents.
@@ -229,7 +242,7 @@ Here's what's waiting for you:
 
 Complete all 9 modules to earn your completion certificate!
 
-Start here: https://antigravity-learning.web.app/learn/workflows
+Start here: ${baseUrl}/learn/workflows
 
 © ${new Date().getFullYear()} Antigravity Learning`;
 }

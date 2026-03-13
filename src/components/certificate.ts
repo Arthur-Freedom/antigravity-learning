@@ -269,7 +269,7 @@ function showShareModal(name: string): void {
   // Prevent duplicates
   if (document.querySelector('.share-modal-overlay')) return
 
-  const siteUrl = 'https://antigravity-learning.web.app'
+  const siteUrl = window.location.origin
   const tweetText = encodeURIComponent(
     `🎓 I just earned my Antigravity Learning certificate! Mastered Workflows, Skills, and Autonomous Agents.\n\n${siteUrl}`
   )

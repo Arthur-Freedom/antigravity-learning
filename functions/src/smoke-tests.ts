@@ -18,7 +18,7 @@ import * as admin from "firebase-admin";
 
 // ── Setup ───────────────────────────────────────────────────────────────
 
-const PROJECT_ID = "antigravity-learning";
+const PROJECT_ID = process.env.GCLOUD_PROJECT || "antigravity-learning-dev";
 const FUNCTIONS_URL = `http://127.0.0.1:5001/${PROJECT_ID}/us-central1`;
 
 // Point Admin SDK at emulator

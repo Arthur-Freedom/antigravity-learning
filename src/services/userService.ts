@@ -17,6 +17,10 @@ import { db } from '../lib/firebase';
 import { COLLECTIONS, MODULES_FOR_CERTIFICATE } from '../constants/collections';
 import type { UserProfile, QuizResult } from '../types/user';
 
+// ── XP Reward Constants ─────────────────────────────────────────────────
+const XP_PER_QUIZ_PASS = 50;
+const XP_PER_DAILY_LOGIN = 10;
+
 // Re-export types for consumers
 export type { UserProfile, QuizResult };
 
@@ -124,7 +128,7 @@ export async function saveQuizResult(
 
     let xp = existing?.xp ?? 0;
     if (correct && !(existing?.quizProgress?.[topic]?.correct)) {
-      xp += 50; // Award 50 XP for passing a quiz module
+      xp += XP_PER_QUIZ_PASS;
     }
     const level = Math.floor(Math.sqrt(xp / 100)) + 1;
 
@@ -210,7 +214,7 @@ export async function applyDailyLoginStreak(uid: string): Promise<void> {
       }
     }
 
-    newXp += 10; // Daily login XP
+    newXp += XP_PER_DAILY_LOGIN;
     const newLevel = Math.floor(Math.sqrt(newXp / 100)) + 1;
 
     await updateDoc(ref, {

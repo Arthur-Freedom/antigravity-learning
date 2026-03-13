@@ -5,6 +5,7 @@ import {
   generateCongratulationsText,
   generateWelcomeHtml,
   generateWelcomeText,
+  getBaseUrl,
 } from "../helpers/mail";
 
 describe("generateCongratulationsHtml", () => {
@@ -22,7 +23,7 @@ describe("generateCongratulationsHtml", () => {
 
   it("includes the certificate CTA link", () => {
     const html = generateCongratulationsHtml("Test");
-    expect(html).toContain("https://antigravity-learning.web.app/");
+    expect(html).toContain(`${getBaseUrl()}/`);
   });
 
   it("is valid HTML (starts with DOCTYPE)", () => {
@@ -52,7 +53,7 @@ describe("generateWelcomeHtml", () => {
 
   it("includes the first-module CTA link", () => {
     const html = generateWelcomeHtml("Test");
-    expect(html).toContain("https://antigravity-learning.web.app/learn/workflows");
+    expect(html).toContain(`${getBaseUrl()}/learn/workflows`);
   });
 
   it("lists all nine modules", () => {

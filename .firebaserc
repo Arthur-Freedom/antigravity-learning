@@ -9,7 +9,7 @@
       "extensionInstances": {
         "delete-user-data": "56a2139f8089468e6eb365f53ae1fccd46e26b6f2c1ced5ef3683d9748c7e95c",
         "firestore-counter": "af77ec5d81d8dadf978c6051340c717bc70d46f8857c3e1a5e6d56cb355a9782",
-        "firestore-send-email": "2308e4bc4adead1595f2a1776fbebe99526b34eadeca42d36a9bf0e64b6705bd",
+        "firestore-send-email": "8ea91d40acded0b881927eed1c989ebb1c8327f13e657ac75d750dfc9c22f735",
         "storage-resize-images": "56a6aabb5881698e2f8de65605a08ffbb1cc76144fdc368757e7b9a12547284f"
       }
     },

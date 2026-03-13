@@ -131,8 +131,11 @@ Each should return a value (not an error).
 
 Vite automatically loads environment files based on the command:
 
-- `npm run dev` → `.env.development` → **dev project**
-- `npm run build` → `.env.production` → **prod project**
+- `npm run dev` → `.env.development` → **dev project** (Vite dev server on localhost)
+- `npm run build:dev` → `.env.development` → **dev project** (built bundle for hosted dev site)
+- `npm run build` → `.env.production` → **prod project** (built bundle for production)
+
+> ⚠️ **CRITICAL:** Always use `npm run build:dev` to build for the hosted dev site. `npm run build` **always** loads `.env.production` and will pollute your dev environment with production config.
 
 No code changes needed. The `src/lib/firebase.ts` reads `import.meta.env.VITE_FIREBASE_*` variables.
 
@@ -146,5 +149,65 @@ No code changes needed. The `src/lib/firebase.ts` reads `import.meta.env.VITE_FI
 | Realtime Database | `firebase/database` | `src/services/presenceService.ts` |
 | App Check | `firebase/app-check` | `src/lib/appcheck.ts` |
 | Functions | `firebase/functions` | `src/services/functionsService.ts` |
+| Analytics | `firebase/analytics` | `src/lib/firebase.ts` — `VITE_FIREBASE_MEASUREMENT_ID` |
 
 **Keep this table updated** when adding new Firebase services!
+
+---
+
+## Firebase Extensions — Per-Environment Configuration
+
+Extension configuration files use a project-specific naming convention. **Do NOT use bare `.env` files** — they act as cross-environment fallbacks and defeat isolation.
+
+**Correct pattern:**
+```
+extensions/<extension-id>.env.<firebase-project-id>
+```
+
+**Current extension files:**
+```
+extensions/
+  delete-user-data.env.antigravity-learning        ← prod bucket
+  delete-user-data.env.antigravity-learning-dev    ← dev bucket
+  storage-resize-images.env.antigravity-learning
+  storage-resize-images.env.antigravity-learning-dev
+  firestore-counter.env.antigravity-learning
+  firestore-counter.env.antigravity-learning-dev
+  firestore-send-email.env.antigravity-learning
+  firestore-send-email.env.antigravity-learning-dev
+```
+
+When you run `firebase deploy --only extensions --project antigravity-learning-dev`, the CLI automatically picks the `-dev` variant.
+
+---
+
+## Dynamic URL Resolution Patterns
+
+### In Cloud Functions — use `GCLOUD_PROJECT`
+The GCP runtime automatically sets `process.env.GCLOUD_PROJECT` to the active project ID. Use it to resolve environment-specific values:
+```typescript
+// In functions/src/helpers/mail.ts
+export function getBaseUrl(): string {
+  // GCLOUD_PROJECT is set automatically by the GCP runtime (no config needed)
+  return process.env.GCLOUD_PROJECT === "antigravity-learning-dev"
+    ? "https://antigravity-learning-dev.web.app"
+    : "https://antigravity-learning.web.app";
+}
+```
+**Never hardcode project URLs in Cloud Function code.**
+
+### In Frontend code — use `window.location.origin`
+For any shareable URL, social share link, or canonical URL:
+```typescript
+const siteUrl = window.location.origin; // Always correct, immune to project renames
+```
+**Never hardcode `https://antigravity-learning.web.app` in frontend source code.**
+
+---
+
+## Remaining Known Gaps
+
+See `skills/firebase-environments/ENVIRONMENT_SEPARATION.md` for a full evaluation.
+
+- **SMTP separation** — Dev and prod currently share the same SMTP credentials. Ideally dev uses a test inbox (Mailtrap or a `+dev` Gmail alias).
+- **Dev email subject prefix** — Emails sent from dev functions should be prefixed `[DEV]` to prevent confusion if they reach a real inbox.
