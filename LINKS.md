@@ -61,3 +61,17 @@ Quick-access links for the Antigravity Learning project.
 | **Cloud Functions** | [firebase.google.com/docs/functions](https://firebase.google.com/docs/functions) |
 | **Firebase Extensions** | [firebase.google.com/docs/extensions](https://firebase.google.com/docs/extensions) |
 | **Vite Docs** | [vitejs.dev](https://vitejs.dev) |
+
+---
+
+## Extension Instances (Console)
+
+| Extension | Dev | Prod |
+|---|---|---|
+| **Trigger Email** (`firestore-send-email`) | [🔗 Dev](https://console.firebase.google.com/u/0/project/antigravity-learning-dev/extensions/instances/firestore-send-email) | [🔗 Prod](https://console.firebase.google.com/u/0/project/antigravity-learning/extensions/instances/firestore-send-email) |
+| **Distributed Counter** (`firestore-counter`) | [🔗 Dev](https://console.firebase.google.com/u/0/project/antigravity-learning-dev/extensions/instances/firestore-counter) | [🔗 Prod](https://console.firebase.google.com/u/0/project/antigravity-learning/extensions/instances/firestore-counter) |
+| **Delete User Data** (`delete-user-data`) | [🔗 Dev](https://console.firebase.google.com/u/0/project/antigravity-learning-dev/extensions/instances/delete-user-data) | [🔗 Prod](https://console.firebase.google.com/u/0/project/antigravity-learning/extensions/instances/delete-user-data) |
+| **Resize Images** (`storage-resize-images`) | [🔗 Dev](https://console.firebase.google.com/u/0/project/antigravity-learning-dev/extensions/instances/storage-resize-images) | [🔗 Prod](https://console.firebase.google.com/u/0/project/antigravity-learning/extensions/instances/storage-resize-images) |
+
+> See [`extensions/README.md`](./extensions/README.md) and [`.agents/workflows/deploy-extensions.md`](./.agents/workflows/deploy-extensions.md) for config and deploy instructions.
+

@@ -5,6 +5,7 @@
 import { getAllUsers } from '../services/userService'
 import { onAuthChange, getCurrentUser, isCurrentUserAdmin } from '../services/authService'
 import { grantAdminAccess, resetUserProgress } from '../services/functionsService'
+import type { Timestamp, FieldValue } from 'firebase/firestore'
 
 // ── Constants ───────────────────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ interface AdminUser {
   xp: number
   level: number
   streak: number
-  createdAt: unknown
+  createdAt: Timestamp | FieldValue | null
 }
 
 // ── Page Shell ──────────────────────────────────────────────────────────
@@ -85,9 +86,14 @@ export function init(): void {
 }
 
 async function checkAdmin(): Promise<void> {
-  const admin = await isCurrentUserAdmin()
-  if (admin) loadDashboard()
-  else showAccessDenied()
+  try {
+    const admin = await isCurrentUserAdmin()
+    if (admin) loadDashboard()
+    else showAccessDenied()
+  } catch (err) {
+    console.error('[admin] Failed to verify admin status:', err)
+    showError('Could not verify admin access. Please try refreshing.')
+  }
 }
 
 function showSignInRequired(): void {
@@ -113,6 +119,15 @@ function showAccessDenied(): void {
       </p>
     </div>`
 }
+function showError(msg: string): void {
+  const c = document.getElementById('admin-container')
+  if (c) c.innerHTML = `
+    <div class="leaderboard-empty">
+      <span class="leaderboard-empty-icon">⚠️</span>
+      <h3>Something went wrong</h3>
+      <p>${msg}</p>
+    </div>`
+}
 
 // ── Dashboard ───────────────────────────────────────────────────────────
 
@@ -121,8 +136,14 @@ async function loadDashboard(): Promise<void> {
   const contentEl = document.getElementById('admin-content')
   if (!loadingEl || !contentEl) return
 
-  // Fetch ALL users through the service layer
-  const allUsers = await getAllUsers()
+  let allUsers: Awaited<ReturnType<typeof getAllUsers>>
+  try {
+    allUsers = await getAllUsers()
+  } catch (err) {
+    console.error('[admin] Failed to load users:', err)
+    showError('Failed to load user data. Check your Firestore connection and try again.')
+    return
+  }
   const users = allUsers.map(u => ({
     uid: u.uid,
     displayName: u.displayName ?? 'Anonymous',

@@ -292,7 +292,14 @@ function bindProfileInteractions(user: { uid: string; displayName: string | null
 
 
 async function loadProfileData(uid: string): Promise<void> {
-  const profile = await getUserProfile(uid)
+  let profile: UserProfile | null
+  try {
+    profile = await getUserProfile(uid)
+  } catch (err) {
+    console.error('[profile] Failed to load profile data:', err)
+    showToast({ message: 'Could not load profile. Please try refreshing.', type: 'error' })
+    return
+  }
   if (!profile) return
 
   // ── Custom Photo (overrides Google avatar) ────────────────────────

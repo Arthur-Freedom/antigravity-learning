@@ -2,6 +2,8 @@
 // Internal user model — decoupled from Firebase Auth.
 // Every part of the app should consume this instead of firebase/auth.User.
 
+import type { Timestamp, FieldValue } from 'firebase/firestore'
+
 export interface AppUser {
   uid: string
   displayName: string
@@ -27,8 +29,8 @@ export interface UserProfile {
   level: number
   streak: number
   lastLoginDate: string
-  createdAt: unknown
-  updatedAt: unknown
+  createdAt: Timestamp | FieldValue | null
+  updatedAt: Timestamp | FieldValue | null
 }
 
 export interface LeaderboardEntry {
