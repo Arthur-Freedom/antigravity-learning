@@ -6,6 +6,7 @@
 import {
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
   serverTimestamp,
@@ -13,7 +14,7 @@ import {
   getCountFromServer,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { COLLECTIONS } from '../constants/collections';
+import { COLLECTIONS, MODULES_FOR_CERTIFICATE } from '../constants/collections';
 import type { UserProfile, QuizResult } from '../types/user';
 
 // Re-export types for consumers
@@ -57,7 +58,7 @@ export async function ensureUserProfile(
       const results = Object.values(progress);
       const quizScore = existingData.quizScore ?? results.filter(r => r.correct).length;
       const quizTotal = existingData.quizTotal ?? results.length;
-      const completedAll = existingData.completedAll ?? (quizScore >= 9);
+      const completedAll = existingData.completedAll ?? (quizScore >= MODULES_FOR_CERTIFICATE);
       const xp = existingData.xp ?? 0;
       const level = existingData.level ?? 1;
       const streak = existingData.streak ?? 0;
@@ -119,7 +120,7 @@ export async function saveQuizResult(
     const results = Object.values(progress);
     const quizScore = results.filter(r => r.correct).length;
     const quizTotal = results.length;
-    const completedAll = quizScore >= 9;
+    const completedAll = quizScore >= MODULES_FOR_CERTIFICATE;
 
     let xp = existing?.xp ?? 0;
     if (correct && !(existing?.quizProgress?.[topic]?.correct)) {
@@ -309,5 +310,25 @@ export async function isCertificateEligible(uid: string): Promise<boolean> {
   const profile = await getUserProfile(uid);
   if (!profile?.quizProgress) return false;
   const correct = Object.values(profile.quizProgress).filter(r => r.correct).length;
-  return correct >= 9;
+  return correct >= MODULES_FOR_CERTIFICATE;
+}
+
+/**
+ * Fetch ALL user profiles from Firestore.
+ * Used by the admin dashboard — returns the full UserProfile for each user.
+ */
+export async function getAllUsers(): Promise<(UserProfile & { uid: string })[]> {
+  try {
+    const usersRef = collection(db, COLLECTIONS.USERS);
+    const snapshot = await getDocs(usersRef);
+    const users: (UserProfile & { uid: string })[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data() as UserProfile;
+      users.push({ uid: docSnap.id, ...data });
+    });
+    return users;
+  } catch (error) {
+    console.error('[userService] getAllUsers failed:', error);
+    return [];
+  }
 }

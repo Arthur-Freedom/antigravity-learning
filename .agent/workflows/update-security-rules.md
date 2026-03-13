@@ -49,7 +49,7 @@ This workflow ensures security rules are updated correctly and deployed safely.
 6b. **Deploy Storage rules to DEV** (if changed): `npx firebase deploy --only storage --project antigravity-learning-dev`
 
 7. **Verify in Firebase Console**:
-   - Go to https://console.firebase.google.com/project/antigravity-learning/firestore/rules
+   - Open the Firestore link from [`LINKS.md`](../../LINKS.md) → Rules tab
    - Confirm the rules are active
    - Use the Rules Playground to test read/write scenarios
 

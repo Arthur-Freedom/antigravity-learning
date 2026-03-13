@@ -1,12 +1,13 @@
 // ── Online Presence Tracking ────────────────────────────────────────────
 // Uses Firebase Realtime Database to track online users.
 
-import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp as rtdbTimestamp } from 'firebase/database';
+import { getDatabase, ref, set, onValue, off, onDisconnect, serverTimestamp as rtdbTimestamp } from 'firebase/database';
 import { app } from '../lib/firebase';
 import { onAuthChange } from './authService';
 
 let onlineCount = 0;
 let countCallback: ((count: number) => void) | null = null;
+let connectedListenerRef: ReturnType<typeof ref> | null = null;
 
 /**
  * Initialize presence tracking.
@@ -17,9 +18,8 @@ let countCallback: ((count: number) => void) | null = null;
  *    to `online: true` and configures an `onDisconnect` hook to remove the status.
  * 3. The generic `/status` listener handles counting total online users.
  * 
- * Note: These listeners remain active for the duration of the current auth session
- * as they represent the physical websocket connection. Firebase SDK automatically 
- * cleans up these listeners if the client disconnects or the user signs out.
+ * Guard: If the user signs in/out repeatedly, the previous `.info/connected`
+ * listener is cleaned up before attaching a new one to prevent stacking.
  */
 export function initPresence(): void {
   try {
@@ -34,9 +34,16 @@ export function initPresence(): void {
     });
 
     onAuthChange((user) => {
+      // Clean up previous connection listener to prevent stacking
+      if (connectedListenerRef) {
+        off(connectedListenerRef);
+        connectedListenerRef = null;
+      }
+
       if (user) {
         const userStatusRef = ref(rtdb, `status/${user.uid}`);
         const connectedRef = ref(rtdb, '.info/connected');
+        connectedListenerRef = connectedRef;
 
         onValue(connectedRef, (snap) => {
           if (snap.val() === true) {

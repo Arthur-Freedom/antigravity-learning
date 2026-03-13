@@ -57,6 +57,22 @@ Rules:
 - **Git path**: On this system, git is at `C:\Program Files\Git\bin\git.exe`. Use `& "C:\Program Files\Git\bin\git.exe"` in PowerShell.
 - **GPG signing**: If `git commit` hangs with no output, it's likely waiting for a GPG passphrase. Use `--no-gpg-sign` or ask the user to commit manually.
 
+## Links Maintenance
+
+- All important project links (Firebase Console, GCP Console, documentation, etc.) live in [`LINKS.md`](../../LINKS.md).
+- **When you introduce a new external link** (e.g. a new Firebase service, GCP page, third-party dashboard), **add it to `LINKS.md`**.
+- Use the Dev | Prod side-by-side column format for any link that differs by environment.
+- Mark unused services with ⚠️ _not yet active_ in the Note column.
+
+## Cloud Functions
+
+- **Never add functions to `index.ts` directly.** It's a barrel file — re-exports only.
+- **Triggers** go in `functions/src/triggers/`. **Callables** go in `functions/src/callables/`.
+- **Constants** go in `functions/src/config.ts`. Never hardcode magic numbers in function files.
+- **Helpers** (email templates, sanitisation) go in `functions/src/helpers/`.
+- **Tests** go in `functions/src/__tests__/`. Run with `npm --prefix functions test`.
+- New functions must be exported from their module AND re-exported from `index.ts`.
+
 ## Verification Standards (CRITICAL)
 
 **RULE: "CLI success" ≠ "it works."** Never declare any setup, deploy, or infrastructure task complete based only on CLI output.

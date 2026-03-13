@@ -2,5 +2,24 @@
   "projects": {
     "default": "antigravity-learning",
     "dev": "antigravity-learning-dev"
+  },
+  "targets": {},
+  "etags": {
+    "antigravity-learning": {
+      "extensionInstances": {
+        "delete-user-data": "56a2139f8089468e6eb365f53ae1fccd46e26b6f2c1ced5ef3683d9748c7e95c",
+        "firestore-counter": "af77ec5d81d8dadf978c6051340c717bc70d46f8857c3e1a5e6d56cb355a9782",
+        "firestore-send-email": "2308e4bc4adead1595f2a1776fbebe99526b34eadeca42d36a9bf0e64b6705bd",
+        "storage-resize-images": "56a6aabb5881698e2f8de65605a08ffbb1cc76144fdc368757e7b9a12547284f"
+      }
+    },
+    "antigravity-learning-dev": {
+      "extensionInstances": {
+        "delete-user-data": "fe495259af4bd401483667e774490b4a8d08d7c1b4cb9c21f505190cf4adbd0c",
+        "firestore-counter": "cec23442b4c2cd01a0210636bc6056a58ef4dd6a3477ecc60929d70c9a1778d0",
+        "firestore-send-email": "a5de8e589e1be6dbee64ab623b15c9ca49e2b297f47722cca469740ffc2561c8",
+        "storage-resize-images": "40b14d90af8c291e24416505df1244024be834bfc08e2415d770f5c2bfb600ab"
+      }
+    }
   }
 }

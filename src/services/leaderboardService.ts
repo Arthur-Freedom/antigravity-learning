@@ -13,7 +13,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { COLLECTIONS } from '../constants/collections';
+import { COLLECTIONS, MODULES_FOR_CERTIFICATE } from '../constants/collections';
 import type {
   UserProfile,
   LeaderboardEntry,
@@ -79,7 +79,7 @@ async function getLeaderboardFallback(topN: number): Promise<LeaderboardEntry[]>
           photoURL: data.photoURL ?? null,
           score: correct,
           total: results.length,
-          completedAll: correct >= 9,
+          completedAll: correct >= MODULES_FOR_CERTIFICATE,
           xp: data.xp ?? 0,
           level: data.level ?? 1,
         });
@@ -124,7 +124,7 @@ export function onLeaderboardUpdate(
             photoURL: data.photoURL ?? null,
             score: correct,
             total: results.length,
-            completedAll: correct >= 9,
+            completedAll: correct >= MODULES_FOR_CERTIFICATE,
             xp: data.xp ?? 0,
             level: data.level ?? 1,
           });

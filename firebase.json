@@ -48,5 +48,11 @@
       "port": 4000
     },
     "singleProjectMode": true
+  },
+  "extensions": {
+    "delete-user-data": "firebase/delete-user-data@0.1.27",
+    "storage-resize-images": "firebase/storage-resize-images@0.3.2",
+    "firestore-send-email": "firebase/firestore-send-email@0.2.6",
+    "firestore-counter": "firebase/firestore-counter@0.2.14"
   }
 }

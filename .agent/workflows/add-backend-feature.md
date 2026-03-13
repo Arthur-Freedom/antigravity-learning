@@ -10,6 +10,12 @@ This workflow describes how to add a new backend feature to the Antigravity Lear
 - **All Firestore operations** go through `src/services/userService.ts` — never import Firestore directly in pages
 - **Auth state** is accessed via `getCurrentUser()` (sync) or `onAuthChange()` (async listener) from `src/services/authService.ts`
 - **Environment variables** use the `VITE_` prefix (Vite requirement) and are accessed via `import.meta.env`
+- **Cloud Functions** use a modular structure:
+  - Triggers → `functions/src/triggers/`
+  - Callables → `functions/src/callables/`
+  - Constants → `functions/src/config.ts`
+  - Helpers → `functions/src/helpers/`
+  - New functions must be re-exported from `functions/src/index.ts`
 
 ## Steps
 

@@ -59,14 +59,33 @@ export function onAuthChange(callback: (user: AppUser | null) => void): Unsubscr
   });
 }
 
+/** Result of a login attempt */
+export type LoginResult =
+  | { status: 'success'; user: AppUser }
+  | { status: 'cancelled' }
+  | { status: 'disabled' }
+  | { status: 'error'; message: string };
+
 /** Trigger the Google sign-in popup */
-export async function loginWithGoogle(): Promise<AppUser | null> {
+export async function loginWithGoogle(): Promise<LoginResult> {
   try {
     const result = await signInWithPopup(auth, provider);
-    return toAppUser(result.user);
-  } catch (error) {
+    return { status: 'success', user: toAppUser(result.user) };
+  } catch (error: unknown) {
+    const code = (error as { code?: string })?.code;
+
+    if (code === 'auth/user-disabled') {
+      console.warn('[auth] Account is disabled.');
+      return { status: 'disabled' };
+    }
+
+    // User closed the popup — not an error
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+      return { status: 'cancelled' };
+    }
+
     console.error('[auth] Google sign-in failed:', error);
-    return null;
+    return { status: 'error', message: (error as Error).message ?? 'Sign-in failed' };
   }
 }
 
@@ -92,3 +111,22 @@ export async function logout(): Promise<void> {
     console.error('[auth] Sign-out failed:', error);
   }
 }
+
+/**
+ * Check whether the currently signed-in user has the `admin` custom claim.
+ * Reads from the ID token JWT — no Firestore round-trip required.
+ */
+export async function isCurrentUserAdmin(): Promise<boolean> {
+  const user = auth.currentUser;
+  if (!user) return false;
+  try {
+    const token = await user.getIdTokenResult();
+    return token.claims.admin === true;
+  } catch {
+    return false;
+  }
+}
+
+// Re-export Unsubscribe type so consumers import from this service,
+// never directly from 'firebase/auth'.
+export type { Unsubscribe };

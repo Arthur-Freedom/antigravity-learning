@@ -24,7 +24,21 @@ export function bindAuthUI(btnId: string): void {
       e.preventDefault();
       return;
     }
-    await loginWithGoogle();
+    const result = await loginWithGoogle();
+
+    if (result.status === 'disabled') {
+      showAuthToast(
+        'Account Disabled',
+        'Your account has been disabled. Please contact support if you believe this is a mistake.',
+        'error'
+      );
+    } else if (result.status === 'error') {
+      showAuthToast(
+        'Sign-in Failed',
+        'Something went wrong. Please try again.',
+        'error'
+      );
+    }
   });
 
   // React to auth state changes
@@ -98,4 +112,116 @@ function renderAuthButton(btn: HTMLElement, user: AppUser | null, profile: UserP
     btn.classList.add('auth-btn--logged-out');
     btn.classList.remove('auth-btn--logged-in');
   }
+}
+
+// ── Toast Notification ──────────────────────────────────────────────────
+
+let toastStyleInjected = false;
+
+function injectToastStyles(): void {
+  if (toastStyleInjected) return;
+  toastStyleInjected = true;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .auth-toast {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 10000;
+      min-width: 320px;
+      max-width: 420px;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+      transform: translateX(120%);
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.35s ease;
+      opacity: 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .auth-toast--visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    .auth-toast--error {
+      background: linear-gradient(135deg, #1a0a0a 0%, #2d1111 100%);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+    .auth-toast--info {
+      background: linear-gradient(135deg, #0a0a1a 0%, #111128 100%);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      color: #bfdbfe;
+    }
+    .auth-toast__icon {
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .auth-toast__content {
+      flex: 1;
+    }
+    .auth-toast__title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+    .auth-toast--error .auth-toast__title { color: #f87171; }
+    .auth-toast--info .auth-toast__title { color: #60a5fa; }
+    .auth-toast__message {
+      opacity: 0.85;
+      font-size: 0.85rem;
+    }
+    .auth-toast__close {
+      background: none;
+      border: none;
+      color: inherit;
+      opacity: 0.5;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0;
+      margin-top: -0.1rem;
+      transition: opacity 0.2s;
+    }
+    .auth-toast__close:hover { opacity: 1; }
+  `;
+  document.head.appendChild(style);
+}
+
+function showAuthToast(title: string, message: string, type: 'error' | 'info' = 'info'): void {
+  injectToastStyles();
+
+  const icon = type === 'error' ? '⚠️' : 'ℹ️';
+  const toast = document.createElement('div');
+  toast.className = `auth-toast auth-toast--${type}`;
+  toast.innerHTML = `
+    <span class="auth-toast__icon">${icon}</span>
+    <div class="auth-toast__content">
+      <div class="auth-toast__title">${title}</div>
+      <div class="auth-toast__message">${message}</div>
+    </div>
+    <button class="auth-toast__close" aria-label="Dismiss">&times;</button>
+  `;
+
+  document.body.appendChild(toast);
+
+  // Trigger animation on next frame
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => toast.classList.add('auth-toast--visible'));
+  });
+
+  const dismiss = () => {
+    toast.classList.remove('auth-toast--visible');
+    setTimeout(() => toast.remove(), 400);
+  };
+
+  toast.querySelector('.auth-toast__close')?.addEventListener('click', dismiss);
+  setTimeout(dismiss, 6000);
 }

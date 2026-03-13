@@ -16,7 +16,7 @@ describe("generateCongratulationsHtml", () => {
   it("includes all nine module names", () => {
     const html = generateCongratulationsHtml("Test");
     expect(html).toContain("Workflows");
-    expect(html).toContain("Safety &amp; Guardrails");
+    expect(html).toContain("Safety & Guardrails");
     expect(html).toContain("Real-World Projects");
   });
 

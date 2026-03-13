@@ -64,6 +64,6 @@ npm run build && npx firebase deploy --project antigravity-learning
 ## Rollback Strategy
 
 If something breaks after deploy:
-1. **Check the Firebase Console** for function errors or rule issues
-2. **Revert hosting** via Firebase Console: Hosting → Release history → Rollback
+1. **Check the Firebase Console** (see [`LINKS.md`](../../LINKS.md)) for function errors or rule issues
+2. **Revert hosting** via Firebase Console → Hosting → Release history → Rollback
 3. **Revert code**: `git revert HEAD` → rebuild → redeploy

@@ -1,12 +1,9 @@
 // ── Admin Analytics Dashboard ───────────────────────────────────────────
 // Protected page: Firebase Auth custom claims (token.admin === true).
-// Queries Firestore directly for real per-module quiz data.
+// All data access goes through the service layer — zero direct Firebase imports.
 
-import { collection, getDocs } from 'firebase/firestore'
-import { db } from '../lib/firebase'
-import { COLLECTIONS } from '../constants/collections'
-import type { UserProfile } from '../types/user'
-import { onAuthChange, getRawFirebaseUser } from '../services/authService'
+import { getAllUsers } from '../services/userService'
+import { onAuthChange, getCurrentUser, isCurrentUserAdmin } from '../services/authService'
 import { grantAdminAccess, resetUserProgress } from '../services/functionsService'
 
 // ── Constants ───────────────────────────────────────────────────────────
@@ -70,36 +67,27 @@ export function render(): string {
 // ── Init & Auth Gate ────────────────────────────────────────────────────
 
 export function init(): void {
-  const rawUser = getRawFirebaseUser()
-  if (rawUser) { checkAdminClaim(rawUser); return }
+  const user = getCurrentUser()
+  if (user) { checkAdmin(); return }
 
   const unsubscribe = onAuthChange((appUser) => {
     unsubscribe()
-    if (appUser) {
-      const raw = getRawFirebaseUser()
-      if (raw) checkAdminClaim(raw)
-      else showAccessDenied()
-    } else {
-      showSignInRequired()
-    }
+    if (appUser) checkAdmin()
+    else showSignInRequired()
   })
 
   setTimeout(() => {
     const loading = document.getElementById('admin-loading')
-    if (loading && loading.style.display !== 'none' && !getRawFirebaseUser()) {
+    if (loading && loading.style.display !== 'none' && !getCurrentUser()) {
       showSignInRequired()
     }
   }, 3000)
 }
 
-async function checkAdminClaim(user: import('firebase/auth').User): Promise<void> {
-  try {
-    const token = await user.getIdTokenResult()
-    if (token.claims.admin === true) loadDashboard()
-    else showAccessDenied()
-  } catch {
-    showAccessDenied()
-  }
+async function checkAdmin(): Promise<void> {
+  const admin = await isCurrentUserAdmin()
+  if (admin) loadDashboard()
+  else showAccessDenied()
 }
 
 function showSignInRequired(): void {
@@ -133,25 +121,21 @@ async function loadDashboard(): Promise<void> {
   const contentEl = document.getElementById('admin-content')
   if (!loadingEl || !contentEl) return
 
-  // Fetch ALL users directly from Firestore for full quiz data
-  const snapshot = await getDocs(collection(db, COLLECTIONS.USERS))
-  const users: AdminUser[] = []
-  snapshot.forEach(doc => {
-    const d = doc.data() as UserProfile
-    users.push({
-      uid: doc.id,
-      displayName: d.displayName ?? 'Anonymous',
-      email: d.email ?? '',
-      photoURL: d.photoURL ?? null,
-      quizProgress: d.quizProgress ?? {},
-      quizScore: d.quizScore ?? 0,
-      completedAll: d.completedAll ?? false,
-      xp: d.xp ?? 0,
-      level: d.level ?? 1,
-      streak: d.streak ?? 0,
-      createdAt: d.createdAt,
-    })
-  })
+  // Fetch ALL users through the service layer
+  const allUsers = await getAllUsers()
+  const users = allUsers.map(u => ({
+    uid: u.uid,
+    displayName: u.displayName ?? 'Anonymous',
+    email: u.email ?? '',
+    photoURL: u.photoURL ?? null,
+    quizProgress: u.quizProgress ?? {},
+    quizScore: u.quizScore ?? 0,
+    completedAll: u.completedAll ?? false,
+    xp: u.xp ?? 0,
+    level: u.level ?? 1,
+    streak: u.streak ?? 0,
+    createdAt: u.createdAt,
+  }))
 
   // Sort by XP descending
   users.sort((a, b) => b.xp - a.xp)

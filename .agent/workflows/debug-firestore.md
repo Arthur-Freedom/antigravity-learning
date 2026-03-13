@@ -32,7 +32,7 @@ Before changing code, identify the symptom:
    - For `mail/` and `audit/`: client access is fully denied (Admin SDK only)
 
 4. **Inspect the Firestore document** in the Firebase Console:
-   - Go to https://console.firebase.google.com/project/antigravity-learning/firestore
+   - Open the Firestore link from [`LINKS.md`](../../LINKS.md) (Dev or Prod as appropriate)
    - Navigate to `users/{uid}`
    - Verify all expected fields are present
 

@@ -27,6 +27,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── Extension mail (Trigger Email extension) ────────────────────────
+    // Docs written here by Admin SDK → extension sends the email.
+    match /ext_mail/{mailId} {
+      allow read, write: if false;
+    }
+
     // ── Rate limits (Cloud Functions only) ───────────────────────────────
     // AI hint rate-limiting counters. Managed exclusively by Cloud Functions.
     match /rateLimits/{document=**} {

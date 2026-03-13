@@ -4,20 +4,30 @@ description: How to build, test, and deploy Cloud Functions
 
 This workflow covers deploying Cloud Functions for the Antigravity Learning platform.
 
+> **IMPORTANT**: Always deploy to **dev first** (`--project antigravity-learning-dev`), smoke test, then production (`--project antigravity-learning`). This applies to ALL Firebase deployments.
+
 // turbo-all
 
 ## Architecture Quick Reference
 
 - **Runtime**: Node 20, Firebase Functions v2
-- **Source**: `functions/src/index.ts` (main entry) — may also have callables in `functions/src/callables/` and triggers in `functions/src/triggers/`
+- **Source structure**:
+  - `functions/src/index.ts` — barrel file (re-exports only)
+  - `functions/src/config.ts` — all tuneable constants + `getValidTopics()`
+  - `functions/src/helpers/` — `mail.ts` (transporter + email templates), `sanitize.ts`
+  - `functions/src/triggers/` — `on-quiz-completion.ts`, `on-user-created.ts`, `on-user-data-write.ts`
+  - `functions/src/callables/` — `get-completion-status.ts`, `set-admin-claim.ts`, `reset-user-progress.ts`, `get-ai-hint.ts`
+  - `functions/src/__tests__/` — Jest unit tests (35 tests across 4 suites)
 - **Deployed functions**: onQuizCompletion, getCompletionStatus, setAdminClaim, resetUserProgress, getAiHint, onUserDataWrite, onUserCreated
 - **Cloud Run IAM**: All callable functions MUST have `invoker: "public"` in their `onCall()` options — see Troubleshooting
 - **Dependencies**: Nodemailer (SMTP email), @google/genai (Gemini AI hints)
 - **Secrets**: `SMTP_EMAIL`, `SMTP_PASSWORD`, `ADMIN_EMAILS`, `GEMINI_API_KEY` (all in Secret Manager — NOT in `.env` files)
-- **Rate limits**: `getAiHint` is capped at 10 hints/day/user via `rateLimits/aiHints/users/{uid}`
-- **Smoke tests**: `functions/src/smoke-tests.ts` — runs against emulator to catch runtime errors
+- **Rate limits**: `getAiHint` is capped at `AI_HINT_DAILY_LIMIT` (default 10) hints/day/user via `rateLimits/aiHints/users/{uid}`
+- **Tests**: `npm test` (Jest unit tests), `npm run test:smoke` (emulator smoke tests)
 
 ## Environments
+
+> All console links are in [`LINKS.md`](../../LINKS.md).
 
 | Environment | Project ID | Deploy flag | Use case |
 |-------------|-----------|-------------|----------|
@@ -28,7 +38,7 @@ This workflow covers deploying Cloud Functions for the Antigravity Learning plat
 
 ## Steps
 
-1. **Make your changes** in `functions/src/index.ts`
+1. **Make your changes** in the relevant module under `functions/src/` (triggers, callables, helpers, or config). New functions must be re-exported from `functions/src/index.ts`.
 
 // turbo
 2. **Build the functions** to check for TypeScript errors:
@@ -47,16 +57,21 @@ This workflow covers deploying Cloud Functions for the Antigravity Learning plat
      ```
    - Firestore triggers: make sure the document path matches your collection structure
 
-4. **Run smoke tests against the emulator** (MANDATORY before deploying):
+4. **Run unit tests** (MANDATORY — fast, no emulator needed):
+   ```
+   npm --prefix functions test
+   ```
+   If any test fails, **STOP** — fix the issue before deploying.
+
+5. **Run smoke tests against the emulator** (recommended before prod deploy):
    - Terminal 1 — start emulators:
      ```
      npx firebase emulators:start --only functions,firestore
      ```
-   - Terminal 2 — run the tests:
+   - Terminal 2 — run the smoke tests:
      ```
-     npm --prefix functions run test
+     npm --prefix functions run test:smoke
      ```
-   - If any test fails, **STOP** — fix the issue before deploying.
    - The smoke tests verify: auth rejection, argument validation, Firestore paths, rate limit storage.
 
 // turbo

@@ -12,11 +12,15 @@
 //   │   ├── on-quiz-completion.ts   (Firestore onUpdated)
 //   │   ├── on-user-created.ts      (Firestore onCreated)
 //   │   └── on-user-data-write.ts   (Firestore onWritten)
-//   └── callables/
-//       ├── get-completion-status.ts (HTTPS Callable)
-//       ├── set-admin-claim.ts       (HTTPS Callable)
-//       ├── reset-user-progress.ts   (HTTPS Callable)
-//       └── get-ai-hint.ts           (HTTPS Callable)
+//   ├── callables/
+//   │   ├── get-completion-status.ts (HTTPS Callable)
+//   │   ├── set-admin-claim.ts       (HTTPS Callable)
+//   │   ├── reset-user-progress.ts   (HTTPS Callable)
+//   │   └── get-ai-hint.ts           (HTTPS Callable)
+//   └── scheduled/
+//       ├── daily-streak-reset.ts    (Cron: midnight UTC)
+//       ├── daily-rate-limit-cleanup.ts (Cron: 1 AM UTC)
+//       └── weekly-stats-snapshot.ts  (Cron: Mon 2 AM UTC)
 //
 // SMTP Setup:
 //   firebase functions:secrets:set SMTP_EMAIL
@@ -40,3 +44,8 @@ export { getCompletionStatus } from "./callables/get-completion-status";
 export { setAdminClaim } from "./callables/set-admin-claim";
 export { resetUserProgress } from "./callables/reset-user-progress";
 export { getAiHint } from "./callables/get-ai-hint";
+
+// ── Scheduled (Cron) ────────────────────────────────────────────────────
+export { dailyStreakReset } from "./scheduled/daily-streak-reset";
+export { dailyRateLimitCleanup } from "./scheduled/daily-rate-limit-cleanup";
+export { weeklyStatsSnapshot } from "./scheduled/weekly-stats-snapshot";

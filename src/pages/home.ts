@@ -1,10 +1,9 @@
 // ── Home Page ───────────────────────────────────────────────────────────
 // The landing page with hero, stats, how-it-works, module cards, and progress.
 
-import { getCurrentUser, onAuthChange } from '../services/authService';
+import { getCurrentUser, onAuthChange, type Unsubscribe } from '../services/authService';
 import { getUserProfile, getUserCount } from '../services/userService';
 import { renderActivityFeed, initActivityFeed, destroyActivityFeed } from '../components/activity-feed';
-import type { Unsubscribe } from 'firebase/auth';
 
 let authUnsubscribe: Unsubscribe | null = null;
 
