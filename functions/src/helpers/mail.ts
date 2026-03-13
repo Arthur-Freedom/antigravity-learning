@@ -12,6 +12,12 @@ export function getBaseUrl(): string {
     : "https://antigravity-learning.web.app";
 }
 
+export function getEnvironmentPrefix(): string {
+  return process.env.GCLOUD_PROJECT === "antigravity-learning-dev"
+    ? "[DEV] "
+    : "";
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // Transporter
 // ═══════════════════════════════════════════════════════════════════════

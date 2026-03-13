@@ -9,6 +9,7 @@ import {
   createTransporter,
   generateWelcomeHtml,
   generateWelcomeText,
+  getEnvironmentPrefix,
 } from "../helpers/mail";
 
 export const onUserCreated = onDocumentCreated(
@@ -33,7 +34,7 @@ export const onUserCreated = onDocumentCreated(
     logger.info("👋 New user signed up!", { userId, displayName, email });
 
     const db = getFirestore();
-    const subject = "🚀 Welcome to Antigravity Learning!";
+    const subject = `${getEnvironmentPrefix()}🚀 Welcome to Antigravity Learning!`;
     const html = generateWelcomeHtml(displayName);
     const text = generateWelcomeText(displayName);
 

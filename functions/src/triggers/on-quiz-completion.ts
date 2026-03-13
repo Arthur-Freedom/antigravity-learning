@@ -9,6 +9,7 @@ import {
   createTransporter,
   generateCongratulationsHtml,
   generateCongratulationsText,
+  getEnvironmentPrefix,
 } from "../helpers/mail";
 
 export const onQuizCompletion = onDocumentUpdated(
@@ -51,7 +52,7 @@ export const onQuizCompletion = onDocumentUpdated(
     });
 
     const db = getFirestore();
-    const subject = "🎓 Congratulations! You completed Antigravity Learning!";
+    const subject = `${getEnvironmentPrefix()}🎓 Congratulations! You completed Antigravity Learning!`;
     const html = generateCongratulationsHtml(displayName);
     const text = generateCongratulationsText(displayName);
 

@@ -4,6 +4,11 @@ description: coding guidelines all agents must follow when working on this proje
 
 # Coding Guidelines
 
+> **Full standards:** Read `.agents/CODE_HEALTH.md` before making any code changes.
+> It contains the 7 Golden Rules, architecture overview, health check commands,
+> and an anti-pattern table. This is the source of truth for code quality.
+
+
 ## Project Links
 
 - **Always check `LINKS.md`** in the project root before providing any Firebase console, Google Cloud, or project-related links to the user. That file is the source of truth for all project URLs.
