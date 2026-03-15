@@ -15,6 +15,12 @@ functions/lib
 .env
 .env.*
 
+# Firebase extension env files contain secrets (SMTP credentials, etc.)
+# These are project-specific and should not be in git
+extensions/*.env
+extensions/*.env.*
+
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -34,23 +34,30 @@ All extensions are registered in `firebase.json` under the `"extensions"` key.
 
 ## Step-by-Step: Deploy Extensions
 
-### 1. Verify the region in env files
+### How Per-Project Env Files Work
 
-Before deploying, check that region params match the **target project**:
+Firebase CLI automatically selects the right env file based on the project you're deploying to:
 
-```bash
-# Check which region values are set
-grep -r "REGION\|LOCATION" extensions/
+```
+extensions/firestore-send-email.env.antigravity-learning-dev  ← used when --project=antigravity-learning-dev
+extensions/firestore-send-email.env.antigravity-learning       ← used when --project=antigravity-learning
 ```
 
-Update `DATABASE_REGION` in `extensions/firestore-send-email.env`:
-- **Dev:** `DATABASE_REGION=nam5`
-- **Prod:** `DATABASE_REGION=asia-southeast1`
+This means **you never need to manually switch region values** — each file has the correct `DATABASE_REGION` for its project already set.
+
+### 1. Verify env files are correct before deploying
+
+```bash
+# Check dev env - should have DATABASE_REGION=nam5
+cat extensions/firestore-send-email.env.antigravity-learning-dev
+
+# Check prod env - should have DATABASE_REGION=asia-southeast1
+cat extensions/firestore-send-email.env.antigravity-learning
+```
 
 ### 2. Deploy to dev first
 
 ```bash
-# Deploy all extensions to dev
 // turbo
 npx firebase-tools deploy --only extensions --project antigravity-learning-dev
 ```
@@ -61,12 +68,9 @@ npx firebase-tools deploy --only extensions --project antigravity-learning-dev
 - All extensions should show ✅ Installed
 - Test email: create a doc in `ext_mail` collection (see Testing section below)
 
-### 4. Switch region and deploy to prod
+### 4. Deploy to prod
 
 ```bash
-# IMPORTANT: Update DATABASE_REGION in firestore-send-email.env to asia-southeast1
-
-# Deploy all extensions to prod
 npx firebase-tools deploy --only extensions --project antigravity-learning
 ```
 
@@ -74,10 +78,9 @@ npx firebase-tools deploy --only extensions --project antigravity-learning
 
 - Check Firebase Console: https://console.firebase.google.com/u/0/project/antigravity-learning/extensions
 - All extensions should show ✅ Installed
+- Test email on prod too (see Testing section below)
 
-### 6. Restore dev region
 
-After deploying to prod, **restore** `DATABASE_REGION=nam5` in the env file so dev deploys work next time.
 
 ---
 

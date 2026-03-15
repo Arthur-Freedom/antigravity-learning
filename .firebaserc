@@ -15,10 +15,10 @@
     },
     "antigravity-learning-dev": {
       "extensionInstances": {
-        "delete-user-data": "fe495259af4bd401483667e774490b4a8d08d7c1b4cb9c21f505190cf4adbd0c",
+        "delete-user-data": "37a4354aa0c5684ab38f53b8ea77b2f9091903c060d66ea44319cced7af4fa9f",
         "firestore-counter": "cec23442b4c2cd01a0210636bc6056a58ef4dd6a3477ecc60929d70c9a1778d0",
         "firestore-send-email": "a5de8e589e1be6dbee64ab623b15c9ca49e2b297f47722cca469740ffc2561c8",
-        "storage-resize-images": "40b14d90af8c291e24416505df1244024be834bfc08e2415d770f5c2bfb600ab"
+        "storage-resize-images": "95b46827f09250321a0cfd6a8a49a467e5e8e929150a79acdb39d775a046a314"
       }
     }
   }

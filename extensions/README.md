@@ -13,6 +13,10 @@ This directory contains the configuration (`.env`) files for all Firebase Extens
 
 All extensions are registered in [`firebase.json`](../firebase.json) under the `"extensions"` key.
 
+> **Note:** The `.env.*` files in this directory are **gitignored** because they contain credentials (SMTP passwords, etc.). They exist locally but are not committed to the repository. Use `firestore-send-email.env.example` as a reference when setting up a new environment.
+
+
+
 ---
 
 ## ⚠️ Critical: Region Differences Between Environments
