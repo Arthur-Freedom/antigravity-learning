@@ -34,14 +34,38 @@ export const quizQuestions: QuizQuestion[] = [
   {
     question: 'How can you run multiple agents in parallel?',
     options: [
-      'Use the /parallel slash command',
       'Open separate chat instances — each one is an independent agent',
+      'Use the /parallel slash command',
       'Agents automatically parallelize themselves',
       'You need a special enterprise license',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'Each chat instance is a separate agent. You can open multiple chats and give each one a different task — they work independently at the same time.',
+  },
+  {
+    question: 'You ask an agent to refactor a large file, but it makes changes that break unrelated functions. What should you have done differently?',
+    options: [
+      'Used a faster language model',
+      'Given the agent access to more tools',
+      'Told the agent to only refactor specific functions, not the entire file',
+      'Asked the agent to work on a separate branch and review changes before merging',
+    ],
+    correctIndex: 3,
+    explanation:
+      'Working on a separate git branch lets you review the agent\'s changes before they affect your main codebase. This is a key safety practice when agents make large-scale edits.',
+  },
+  {
+    question: 'An agent runs "npm install" but the command hangs because it is waiting for user approval. What does this tell you about the agent\'s safety configuration?',
+    options: [
+      'The agent has a bug — npm install should always auto-run',
+      'The command was classified as potentially unsafe (it modifies node_modules), so SafeToAutoRun was not set',
+      'The agent does not support npm commands',
+      'The IDE needs to be restarted',
+    ],
+    correctIndex: 1,
+    explanation:
+      'Commands that modify state (like installing packages) are considered unsafe by default. The agent waits for user approval unless the command is explicitly marked SafeToAutoRun.',
   },
 ];
 

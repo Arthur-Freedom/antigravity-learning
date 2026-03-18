@@ -11,23 +11,23 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'What is a "context window" in the context of AI agents?',
     options: [
       'A GUI window that shows the agent\'s activity',
-      'The maximum amount of text (tokens) the model can process at once',
       'A pop-up that asks for user confirmation',
       'A browser window opened by the agent',
+      'The maximum amount of text (tokens) the model can process at once',
     ],
-    correctIndex: 1,
+    correctIndex: 3,
     explanation:
       'The context window is the maximum number of tokens (words/characters) the AI model can hold in memory during a single conversation. Everything — your prompt, conversation history, and the response — must fit within this limit.',
   },
   {
     question: 'What is the most effective way to share a large codebase with an agent?',
     options: [
-      'Paste all your files into the chat at once',
       'Let the agent use tools (view_file, grep_search) to explore only what it needs',
+      'Paste all your files into the chat at once',
       'Compress all code into a zip file and upload it',
       'Summarize the entire codebase in one paragraph',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'Letting the agent use file tools is far more efficient. It reads only the relevant files on demand, keeping the context window focused and avoiding wasted tokens on irrelevant code.',
   },
@@ -42,6 +42,30 @@ export const quizQuestions: QuizQuestion[] = [
     correctIndex: 2,
     explanation:
       'Starting fresh prevents old, unrelated context from confusing the agent. A focused conversation with relevant context produces much better results than a long thread mixing multiple topics.',
+  },
+  {
+    question: 'An agent starts producing repetitive or nonsensical output halfway through a long conversation. What is the most likely cause?',
+    options: [
+      'The language model has a bug',
+      'The context window is full — older conversation history is being dropped, causing the agent to lose track of the task',
+      'The IDE is running out of memory',
+      'The agent ran out of API quota',
+    ],
+    correctIndex: 1,
+    explanation:
+      'When the conversation exceeds the context window limit, older messages are truncated. The agent loses critical context about what it was doing, leading to repetition or confusion. Starting a new conversation with a focused prompt resolves this.',
+  },
+  {
+    question: 'You need an agent to refactor a 200-file project. What is the best context management strategy?',
+    options: [
+      'Paste all 200 files into the chat and ask the agent to refactor',
+      'Give a high-level overview and let the agent use tools to explore the relevant files incrementally',
+      'Summarise all files into one document and attach it',
+      'Ask the agent to guess the file structure',
+    ],
+    correctIndex: 1,
+    explanation:
+      'Providing an overview of the project architecture and letting the agent use tools (view_file, grep_search) to pull in only the relevant code keeps context focused and avoids overwhelming the context window.',
   },
 ];
 

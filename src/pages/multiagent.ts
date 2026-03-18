@@ -11,23 +11,23 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'What is the primary benefit of using multiple agents instead of a single agent?',
     options: [
       'It uses less memory',
-      'Each agent can specialise on a focused task, reducing errors and context overload',
       'Multiple agents always run faster than one',
+      'Each agent can specialise on a focused task, reducing errors and context overload',
       'It eliminates the need for human oversight',
     ],
-    correctIndex: 1,
+    correctIndex: 2,
     explanation:
       'Specialised agents handle focused tasks with less context, leading to better results than one overloaded agent trying to do everything.',
   },
   {
     question: 'What is the "orchestrator" pattern in multi-agent systems?',
     options: [
-      'All agents run simultaneously without coordination',
       'A central agent routes tasks to specialised sub-agents and aggregates results',
+      'All agents run simultaneously without coordination',
       'Agents take turns processing the same prompt',
       'A human manually assigns tasks to each agent',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'The orchestrator pattern uses a lead agent to decompose work, delegate to specialists, and synthesise their outputs into a single coherent result.',
   },
@@ -35,11 +35,11 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'How should you handle shared state between cooperating agents?',
     options: [
       'Let each agent maintain its own copy and hope they stay in sync',
-      'Use a shared file, database, or message queue that all agents read/write to',
       'Agents never need to share state',
       'Copy-paste outputs between agents manually',
+      'Use a shared file, database, or message queue that all agents read/write to',
     ],
-    correctIndex: 1,
+    correctIndex: 3,
     explanation:
       'A shared data layer (filesystem, database, or message bus) ensures agents can coordinate without duplication or conflicts.',
   },

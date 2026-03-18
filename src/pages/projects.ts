@@ -11,11 +11,11 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'What is the recommended first step when starting a new project with an agent?',
     options: [
       'Ask the agent to write all the code at once',
-      'Describe the project structure and tech stack, then build incrementally',
       'Let the agent choose the tech stack for you',
       'Start coding immediately without any planning',
+      'Describe the project structure and tech stack, then build incrementally',
     ],
-    correctIndex: 1,
+    correctIndex: 3,
     explanation:
       'Starting with a clear description of your tech stack and building incrementally gives the agent the context it needs and lets you verify each step before moving on.',
   },
@@ -34,14 +34,38 @@ export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What makes a good end-to-end project prompt?',
     options: [
-      'A one-line description like "build me an app"',
       'A detailed spec with tech stack, features, UI requirements, and examples of similar apps',
+      'A one-line description like "build me an app"',
       'Just the app name and a logo',
       'A list of every function the app should have',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'A good project prompt includes the tech stack, key features, UI/UX requirements, and examples. This gives the agent enough context to make architectural decisions that align with your vision.',
+  },
+  {
+    question: 'An agent builds a login page, but it uses a completely different CSS framework than the rest of your project. What went wrong?',
+    options: [
+      'The agent does not support CSS frameworks',
+      'The language model was too small',
+      'The prompt did not specify the project\'s existing tech stack and conventions, so the agent made its own choice',
+      'Login pages always use a different framework',
+    ],
+    correctIndex: 2,
+    explanation:
+      'Without explicit context about your existing tech stack, the agent defaults to its own preferences. Always specify the framework, design system, and coding conventions in your prompt to maintain consistency.',
+  },
+  {
+    question: 'You are building a full-stack app with an agent. After the agent creates the frontend, you notice the API endpoint URLs are hardcoded. What should you have done in your prompt?',
+    options: [
+      'Asked the agent to use shorter URLs',
+      'Given the agent access to more tools',
+      'Built the frontend and backend in the same file',
+      'Specified that environment variables should be used for API URLs, following the project\'s configuration pattern',
+    ],
+    correctIndex: 3,
+    explanation:
+      'Hardcoded URLs are a common agent mistake when the prompt does not specify configuration patterns. Explicitly mentioning patterns like environment variables, config files, or constants files prevents this.',
   },
 ];
 

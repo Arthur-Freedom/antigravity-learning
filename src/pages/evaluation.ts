@@ -11,11 +11,11 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'What is "LLM-as-a-Judge" evaluation?',
     options: [
       'Using a language model to generate test data',
-      'Using a second language model to score or rank the output of the first model',
-      'Having a judge decide if an LLM is legal',
       'A benchmark leaderboard for LLMs',
+      'Having a judge decide if an LLM is legal',
+      'Using a second language model to score or rank the output of the first model',
     ],
-    correctIndex: 1,
+    correctIndex: 3,
     explanation:
       'LLM-as-a-Judge uses a separate (often stronger) model to evaluate the quality, accuracy, or safety of another model\'s responses, enabling automated evaluation at scale.',
   },
@@ -34,12 +34,12 @@ export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the purpose of a regression test suite for AI agent outputs?',
     options: [
-      'To ensure the agent runs faster over time',
       'To detect when a code or model change breaks previously-working behaviour',
+      'To ensure the agent runs faster over time',
       'To measure how many lines of code the agent writes',
       'To train the model on test data',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'Regression tests capture known-good outputs. When you update a prompt, model, or tool, re-running the suite quickly reveals if something that used to work is now broken.',
   },
@@ -59,11 +59,11 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'What is a "Golden Dataset" in the context of agent evaluation?',
     options: [
       'A dataset that costs a lot of money to acquire',
-      'A curated set of input prompts mapped to human-verified, perfect responses used as the baseline standard',
       'A dataset used exclusively to train the agent to write code in Go',
+      'A curated set of input prompts mapped to human-verified, perfect responses used as the baseline standard',
       'A user interface theme for the evaluation dashboard',
     ],
-    correctIndex: 1,
+    correctIndex: 2,
     explanation:
       'A Golden Dataset is the ground-truth standard: a set of curated inputs paired with known-correct outputs to rigorously measure regression and improvement.',
   },

@@ -10,12 +10,12 @@ export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the SafeToAutoRun flag used for?',
     options: [
-      'It makes the agent run faster',
       'It tells the agent that a command is read-only and safe to run without user approval',
+      'It makes the agent run faster',
       'It enables parallel execution',
       'It disables error checking',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'SafeToAutoRun signals that a command has no destructive side effects (e.g., reading a file or listing a directory). The agent only sets this for commands it is confident are safe.',
   },
@@ -42,6 +42,30 @@ export const quizQuestions: QuizQuestion[] = [
     correctIndex: 1,
     explanation:
       'Least privilege means the agent should only have access to what it needs. If it only needs to read files and run tests, it shouldn\'t have permissions to deploy to production.',
+  },
+  {
+    question: 'An agent accidentally deletes an important configuration file. Which safety practice would have prevented this?',
+    options: [
+      'Using a faster language model that makes fewer mistakes',
+      'Disabling all file-related tools',
+      'The command should not have been marked as safe — the user would have seen the delete and rejected it',
+      'Having the agent commit to git before making destructive changes, so you can revert',
+    ],
+    correctIndex: 3,
+    explanation:
+      'Committing to version control before destructive operations is the most reliable safety net. Even if a mistake slips through approval, you can always revert. This combines two safety layers: approval flow + git rollback.',
+  },
+  {
+    question: 'A production deployment pipeline uses an agent. The agent has access to both the dev and prod databases. What is the biggest risk, and how should it be mitigated?',
+    options: [
+      'The agent might write test data to production — restrict its database access to dev only during development',
+      'The agent might use too many API tokens',
+      'The agent might take longer to respond',
+      'There is no risk — agents always know which environment they are in',
+    ],
+    correctIndex: 0,
+    explanation:
+      'An agent with access to both environments can accidentally write, delete, or modify production data. Applying least privilege — only granting access to the environment the agent is currently working in — prevents cross-environment contamination.',
   },
 ];
 

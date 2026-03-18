@@ -11,23 +11,23 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'What happens when an agent calls a tool marked as unsafe?',
     options: [
       'The tool runs immediately without any checks',
-      'The agent asks the user for explicit approval before running it',
       'The tool is automatically blocked',
       'The agent skips it and moves on',
+      'The agent asks the user for explicit approval before running it',
     ],
-    correctIndex: 1,
+    correctIndex: 3,
     explanation:
       'Unsafe tools (those that can modify state, delete files, etc.) always require explicit user approval before execution. Only tools marked SafeToAutoRun can run without approval.',
   },
   {
     question: 'What is "function calling" in the context of AI?',
     options: [
-      'Writing JavaScript functions in your code',
       'The model generating structured JSON to invoke an external tool',
+      'Writing JavaScript functions in your code',
       'Importing modules from npm',
       'Calling an API from the browser',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'Function calling is when the AI model outputs structured data (typically JSON) that specifies which tool to invoke and what arguments to pass, rather than generating plain text.',
   },
@@ -42,6 +42,30 @@ export const quizQuestions: QuizQuestion[] = [
     correctIndex: 1,
     explanation:
       'When tool calls have no dependencies on each other (e.g., reading two unrelated files), the agent can invoke them simultaneously to save time.',
+  },
+  {
+    question: 'An agent needs to create a file and then read it to verify the contents. Should these two tool calls be parallel or sequential?',
+    options: [
+      'Parallel — it is always faster',
+      'It does not matter — the agent handles ordering automatically',
+      'Sequential — the read depends on the file existing, which requires the write to finish first',
+      'Neither — the agent should do both in a single tool call',
+    ],
+    correctIndex: 2,
+    explanation:
+      'These calls have a dependency: the read cannot happen until the write completes. Parallel execution would fail because the file would not exist yet when the read runs.',
+  },
+  {
+    question: 'You notice an agent is making 15 sequential tool calls to read 15 independent files. How could this be optimised?',
+    options: [
+      'Read all 15 files in a single parallel batch — since they are independent, no ordering is needed',
+      'Combine all 15 files into one file first',
+      'Use a faster language model',
+      'There is no way to optimise this',
+    ],
+    correctIndex: 0,
+    explanation:
+      'Since the file reads are independent (no dependencies between them), the agent can invoke all 15 view_file calls in parallel, dramatically reducing total wait time.',
   },
 ];
 

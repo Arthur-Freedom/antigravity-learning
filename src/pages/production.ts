@@ -11,11 +11,11 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'What is the most critical step before deploying an agent-built application to production?',
     options: [
       'Adding more features',
-      'Running a comprehensive test suite and verifying all endpoints and edge cases',
       'Choosing a cooler domain name',
       'Removing all comments from the code',
+      'Running a comprehensive test suite and verifying all endpoints and edge cases',
     ],
-    correctIndex: 1,
+    correctIndex: 3,
     explanation:
       'Before production deployment, you must verify correctness through tests, smoke tests, and edge-case validation. Features and cosmetic changes come after stability.',
   },
@@ -34,12 +34,12 @@ export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What should you monitor after deploying an AI agent application?',
     options: [
-      'Only the CPU usage',
       'Error logs, response times, cost per request, and user feedback',
+      'Only the CPU usage',
       'Nothing — once deployed it should just work',
       'Only the number of users',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'Production monitoring should cover error rates, latency, costs (token usage), and user satisfaction. AI applications can degrade in ways that traditional monitoring misses.',
   },
@@ -47,11 +47,11 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'When an agent relies on third-party APIs in production, what is the best practice for handling temporary external API outages?',
     options: [
       'Ignore the error and let the agent crash, hoping the user tries again later',
-      'Implement robust exponential backoff retries and fallback mechanisms so the agent can recover gracefully',
       'Switch to a completely different LLM immediately',
+      'Implement robust exponential backoff retries and fallback mechanisms so the agent can recover gracefully',
       'Show the raw API error JSON to the user so they know it is not your fault',
     ],
-    correctIndex: 1,
+    correctIndex: 2,
     explanation:
       'External tool calls will inevitably fail in production. Agents must be equipped to handle timeouts and 5xx errors gracefully using retries with backoff, or failing predictably.',
   },

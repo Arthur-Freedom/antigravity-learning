@@ -34,14 +34,38 @@ export const quizQuestions: QuizQuestion[] = [
   {
     question: 'Which of these is an OPTIONAL directory inside a skill folder?',
     options: [
-      'SKILL.md',
       'scripts/',
+      'SKILL.md',
       'node_modules/',
       'dist/',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'scripts/, examples/, and resources/ are all optional directories that can extend a skill. SKILL.md is required, not optional.',
+  },
+  {
+    question: 'You created a skill with a SKILL.md and a scripts/ folder, but the agent says "no skills found." What is the most likely cause?',
+    options: [
+      'The scripts/ folder is empty',
+      'SKILL.md has a syntax error in its YAML frontmatter',
+      'You need to restart the IDE for skills to be detected',
+      'The skill folder is not placed in the correct skills/ directory at the project root',
+    ],
+    correctIndex: 3,
+    explanation:
+      'The agent scans for SKILL.md files in the skills/ directory. If the folder is placed elsewhere (e.g., inside src/ or .agent/), the agent will not find it.',
+  },
+  {
+    question: 'A teammate wants to add deployment instructions that the agent should follow every time it deploys. Should this be a workflow or a skill?',
+    options: [
+      'A skill — because it contains step-by-step deployment instructions',
+      'Either one — workflows and skills are interchangeable',
+      'A workflow — because it is a repeatable sequence of steps triggered by a command',
+      'Neither — deployment instructions should be in README.md',
+    ],
+    correctIndex: 2,
+    explanation:
+      'Workflows are for repeatable, ordered sequences of steps (like deploy pipelines). Skills are for domain knowledge and capabilities the agent can reference when needed. A deploy process is a classic workflow.',
   },
 ];
 

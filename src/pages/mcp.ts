@@ -23,25 +23,49 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'What is the difference between MCP "tools" and "resources"?',
     options: [
       'Tools are free, resources cost money',
-      'Tools perform actions (like API calls), resources provide read-only data',
       'Tools are built-in, resources are third-party',
       'There is no difference — they are the same thing',
+      'Tools perform actions (like API calls), resources provide read-only data',
     ],
-    correctIndex: 1,
+    correctIndex: 3,
     explanation:
       'MCP tools perform actions (create, update, delete) while resources provide read-only content the agent can access without side effects.',
   },
   {
     question: 'How does an agent discover available MCP servers?',
     options: [
-      'It searches the internet automatically',
       'MCP servers are defined in the project configuration',
+      'It searches the internet automatically',
       'The agent installs them from npm',
       'MCP servers must be registered with Google',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'MCP servers are configured in the project settings (e.g., in a configuration file). The agent reads this configuration to know which servers are available.',
+  },
+  {
+    question: 'You add a Firebase MCP server to your project config, but the agent says it cannot find any Firebase tools. What should you check first?',
+    options: [
+      'Whether Firebase is installed globally on the machine',
+      'Whether the agent is using the latest AI model',
+      'Whether the MCP server is correctly defined in the configuration and running',
+      'Whether you have a firebase.json file in your project',
+    ],
+    correctIndex: 2,
+    explanation:
+      'MCP servers must be properly configured and running for the agent to discover their tools. If the server definition is wrong or the server is not started, the agent will not find any tools from it.',
+  },
+  {
+    question: 'An MCP server exposes both a "get_document" resource and a "delete_document" tool. Why is this separation important for safety?',
+    options: [
+      'It is only a naming convention with no practical difference',
+      'Resources (read-only) can be accessed without user approval, while tools (with side effects) require explicit confirmation',
+      'Tools run faster than resources',
+      'Resources are only available in production environments',
+    ],
+    correctIndex: 1,
+    explanation:
+      'The tool/resource distinction maps directly to safety: resources are read-only and safe to auto-read, while tools can modify state and should require user approval for destructive actions.',
   },
 ];
 

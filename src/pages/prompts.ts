@@ -35,13 +35,37 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'Why is providing context about your project important when prompting an agent?',
     options: [
       'It makes the response longer',
-      'It helps the agent make decisions that fit your specific codebase and conventions',
       'It is required by the API',
       'It reduces the number of tokens used',
+      'It helps the agent make decisions that fit your specific codebase and conventions',
     ],
-    correctIndex: 1,
+    correctIndex: 3,
     explanation:
       'Context lets the agent tailor its output to your tech stack, coding style, and project requirements — producing more accurate and useful results.',
+  },
+  {
+    question: 'You ask an agent "fix the bug" and it makes the wrong changes. Which improved prompt most likely produces better results?',
+    options: [
+      '"Fix the TypeError in src/utils/parse.ts line 42 — the function expects a string but receives undefined when the API returns null"',
+      '"Fix the bug, it is in the utils folder somewhere"',
+      '"Look at all the files and find any bugs"',
+      '"The code is broken, please debug it"',
+    ],
+    correctIndex: 0,
+    explanation:
+      'Specific prompts with the exact file, line number, error type, and reproduction scenario dramatically improve agent accuracy. Vague prompts lead to the agent guessing or making broad, unrelated changes.',
+  },
+  {
+    question: 'A developer uses chain-of-thought prompting but the agent still produces incorrect code. What additional technique would most help?',
+    options: [
+      'Using a longer system prompt',
+      'Removing all context to simplify the request',
+      'Adding few-shot examples showing similar correct implementations',
+      'Asking the agent to respond faster',
+    ],
+    correctIndex: 2,
+    explanation:
+      'Combining chain-of-thought with few-shot examples is one of the most powerful prompting strategies. The examples teach the pattern, and CoT encourages the agent to reason through it step by step.',
   },
 ];
 
