@@ -75,25 +75,27 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <h4>Learn</h4>
           <a href="/" class="scroll-to-modules">Course Overview</a>
           <a href="/learn/workflows">Getting Started</a>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
           <a href="/leaderboard">Leaderboard</a>
+          <a href="/faq">FAQ</a>
+          <a href="/profile" id="footer-profile-link" style="display:none;">Profile</a>
         </div>
         <div class="footer-col">
           <h4>Resources</h4>
           <a href="/resources">Resource Hub</a>
           <a href="/glossary">Glossary</a>
-          <a href="/faq">FAQ</a>
-        </div>
-        <div class="footer-col">
-          <h4>Platform</h4>
-          <a href="/">Home</a>
-          <a href="/profile" id="footer-profile-link" style="display:none;">Profile</a>
-          <a href="/privacy">Privacy Policy</a>
-          <a href="/terms">Terms of Service</a>
         </div>
       </div>
     </div>
     <div class="footer-bottom">
       <p>&copy; ${new Date().getFullYear()} Antigravity Learning. Built with ❤️ by AI agents.</p>
+      <div class="footer-legal">
+        <a href="/privacy">Privacy Policy</a>
+        <span class="footer-dot">·</span>
+        <a href="/terms">Terms of Service</a>
+      </div>
     </div>
   </footer>
 `

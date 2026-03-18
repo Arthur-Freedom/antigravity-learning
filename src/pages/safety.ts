@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'safety';
 
+export const SECTION_IDS = ['sf-why', 'sf-approval', 'sf-privilege', 'sf-sandbox', 'sf-rollback', 'sf-practice', 'sf-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the SafeToAutoRun flag used for?',

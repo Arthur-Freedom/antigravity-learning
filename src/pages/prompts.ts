@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'prompts';
 
+export const SECTION_IDS = ['pe-what', 'pe-structure', 'pe-fewshot', 'pe-cot', 'pe-pitfalls', 'pe-practice', 'pe-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is "few-shot prompting"?',

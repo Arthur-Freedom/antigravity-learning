@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'context';
 
+export const SECTION_IDS = ['ctx-what', 'ctx-tokens', 'ctx-strategies', 'ctx-files', 'ctx-conversation', 'ctx-practice', 'ctx-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is a "context window" in the context of AI agents?',

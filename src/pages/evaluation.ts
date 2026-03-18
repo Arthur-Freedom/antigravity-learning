@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'evaluation';
 
+export const SECTION_IDS = ['ev-why', 'ev-metrics', 'ev-methods', 'ev-testing', 'ev-regression', 'ev-continuous', 'ev-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is "LLM-as-a-Judge" evaluation?',

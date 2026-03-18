@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'multiagent';
 
+export const SECTION_IDS = ['ma-why', 'ma-patterns', 'ma-delegation', 'ma-communication', 'ma-pitfalls', 'ma-practice', 'ma-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the primary benefit of using multiple agents instead of a single agent?',

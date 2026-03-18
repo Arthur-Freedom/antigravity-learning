@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'production';
 
+export const SECTION_IDS = ['pd-environments', 'pd-cicd', 'pd-monitoring', 'pd-cost', 'pd-scaling', 'pd-checklist', 'pd-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the most critical step before deploying an agent-built application to production?',

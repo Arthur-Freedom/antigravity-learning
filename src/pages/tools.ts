@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'tools';
 
+export const SECTION_IDS = ['tl-what', 'tl-anatomy', 'tl-types', 'tl-parallel', 'tl-errors', 'tl-practice', 'tl-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What happens when an agent calls a tool marked as unsafe?',

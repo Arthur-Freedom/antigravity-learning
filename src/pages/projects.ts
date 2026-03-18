@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'projects';
 
+export const SECTION_IDS = ['rw-plan', 'rw-scaffold', 'rw-iterate', 'rw-multi', 'rw-examples', 'rw-practice', 'rw-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the recommended first step when starting a new project with an agent?',

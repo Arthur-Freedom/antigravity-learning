@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'skills';
 
+export const SECTION_IDS = ['sk-what', 'sk-structure', 'sk-skillmd', 'sk-discovery', 'sk-build', 'sk-practice', 'sk-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the one required file every skill must have?',

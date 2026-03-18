@@ -1713,6 +1713,30 @@ header.navbar {
   opacity: 0.5;
 }
 
+.footer-legal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.footer-legal a {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.footer-legal a:hover {
+  color: var(--accent-color);
+}
+
+.footer-dot {
+  color: rgba(255,255,255,0.25);
+  font-size: 0.8rem;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    NOT FOUND
    ═══════════════════════════════════════════════════════════════════════ */

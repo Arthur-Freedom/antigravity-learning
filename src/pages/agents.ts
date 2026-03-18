@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'agents';
 
+export const SECTION_IDS = ['ag-vs', 'ag-tools', 'ag-how', 'ag-parallel', 'ag-context', 'ag-practice', 'ag-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the primary difference between a chatbot and an autonomous agent?',

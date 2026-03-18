@@ -4,6 +4,8 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'mcp';
 
+export const SECTION_IDS = ['mcp-what', 'mcp-arch', 'mcp-tools', 'mcp-connect', 'mcp-build', 'mcp-practice', 'mcp-quiz'] as const;
+
 export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What does MCP stand for?',
