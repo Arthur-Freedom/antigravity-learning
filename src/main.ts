@@ -23,6 +23,9 @@ import * as mcpPage from './pages/mcp'
 import * as toolsPage from './pages/tools'
 import * as safetyPage from './pages/safety'
 import * as projectsPage from './pages/projects'
+import * as multiagentPage from './pages/multiagent'
+import * as evaluationPage from './pages/evaluation'
+import * as productionPage from './pages/production'
 import * as leaderboardPage from './pages/leaderboard'
 import * as adminPage from './pages/admin'
 import * as resourcesPage from './pages/resources'
@@ -77,6 +80,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <a href="/learn/tools">Tool Use</a>
           <a href="/learn/safety">Safety & Guardrails</a>
           <a href="/learn/projects">Real-World Projects</a>
+          <a href="/learn/multiagent">Multi-Agent Systems</a>
+          <a href="/learn/evaluation">Evaluation & Testing</a>
+          <a href="/learn/production">Production & Scaling</a>
           <a href="/resources">Resources</a>
         </div>
         <div class="footer-col">
@@ -142,22 +148,25 @@ onOnlineCountChange((count) => {
 
 // ── Route Registration ──────────────────────────────────────────────────
 registerRoutes({
-  '/': { render: homePage.render, init: homePage.init, destroy: homePage.destroy },
-  '/learn/workflows': { render: workflowsPage.render, init: workflowsPage.init },
-  '/learn/skills': { render: skillsPage.render, init: skillsPage.init },
-  '/learn/agents': { render: agentsPage.render, init: agentsPage.init },
-  '/learn/prompts': { render: promptsPage.render, init: promptsPage.init },
-  '/learn/context': { render: contextPage.render, init: contextPage.init },
-  '/learn/mcp': { render: mcpPage.render, init: mcpPage.init },
-  '/learn/tools': { render: toolsPage.render, init: toolsPage.init },
-  '/learn/safety': { render: safetyPage.render, init: safetyPage.init },
-  '/learn/projects': { render: projectsPage.render, init: projectsPage.init },
-  '/leaderboard': { render: leaderboardPage.render, init: leaderboardPage.init, destroy: leaderboardPage.destroy },
-  '/resources': { render: resourcesPage.render, init: resourcesPage.init },
-  '/admin': { render: adminPage.render, init: adminPage.init },
-  '/profile': { render: profilePage.render, init: profilePage.init, destroy: profilePage.destroy },
-  '/faq': { render: faqPage.render, init: faqPage.init },
-  '/glossary': { render: glossaryPage.render, init: glossaryPage.init },
+  '/': { render: homePage.render, init: homePage.init, destroy: homePage.destroy, title: 'Home', description: 'Master AI agent development through premium, hands-on tutorials and open-source intelligence workflows.' },
+  '/learn/workflows': { render: workflowsPage.render, init: workflowsPage.init, title: 'AI Agent Workflows', description: 'Learn how to construct robust, reliable workflows and pipelines for AI agents.' },
+  '/learn/skills': { render: skillsPage.render, init: skillsPage.init, title: 'Agent Skills & Tools', description: 'Give your AI agents specialized skills to interact with APIs, databases, and the real world.' },
+  '/learn/agents': { render: agentsPage.render, init: agentsPage.init, title: 'Building Autonomous Agents', description: 'Step-by-step tutorial on building self-directed, autonomous AI agents from scratch.' },
+  '/learn/prompts': { render: promptsPage.render, init: promptsPage.init, title: 'Advanced Prompt Engineering', description: 'Master the art of prompting for complex agentic reasoning and tool use.' },
+  '/learn/context': { render: contextPage.render, init: contextPage.init, title: 'Managing Context Windows', description: 'Strategies for managing massive context windows and infinite memory systems in LLMs.' },
+  '/learn/mcp': { render: mcpPage.render, init: mcpPage.init, title: 'Model Context Protocol (MCP)', description: 'Connect AI agents to external tools and data sources seamlessly using MCP.' },
+  '/learn/tools': { render: toolsPage.render, init: toolsPage.init, title: 'Tool Use & Function Calling', description: 'Learn how to teach LLMs to reliably call functions and format JSON output.' },
+  '/learn/safety': { render: safetyPage.render, init: safetyPage.init, title: 'AI Safety & Guardrails', description: 'Implement robust safety guardrails to prevent your autonomous agents from causing harm.' },
+  '/learn/projects': { render: projectsPage.render, init: projectsPage.init, title: 'Real-World AI Projects', description: 'Apply your knowledge by building portfolio-ready, real-world AI agent projects.' },
+  '/learn/multiagent': { render: multiagentPage.render, init: multiagentPage.init, title: 'Multi-Agent Systems', description: 'Design complex architectures where multiple specialized AI agents collaborate.' },
+  '/learn/evaluation': { render: evaluationPage.render, init: evaluationPage.init, title: 'LLM Evaluation & Testing', description: 'Build automated evaluation pipelines to reliably test and improve your AI models.' },
+  '/learn/production': { render: productionPage.render, init: productionPage.init, title: 'Deploying Agents to Production', description: 'Best practices for scaling, deploying, and maintaining AI agents in production environments.' },
+  '/leaderboard': { render: leaderboardPage.render, init: leaderboardPage.init, destroy: leaderboardPage.destroy, title: 'Leaderboard', description: 'Climb the ranks and compete with other AI developers on the Antigravity leaderboard.' },
+  '/resources': { render: resourcesPage.render, init: resourcesPage.init, title: 'Resources', description: 'Curated resources, libraries, and tools for advanced AI agent development.' },
+  '/admin': { render: adminPage.render, init: adminPage.init, title: 'Admin Dashboard', description: 'Administration dashboard for the Antigravity Learning platform.' },
+  '/profile': { render: profilePage.render, init: profilePage.init, destroy: profilePage.destroy, title: 'User Profile', description: 'View your learning progress and manage your Antigravity account.' },
+  '/faq': { render: faqPage.render, init: faqPage.init, title: 'Frequently Asked Questions', description: 'Answers to common questions about Antigravity Learning and AI agent development.' },
+  '/glossary': { render: glossaryPage.render, init: glossaryPage.init, title: 'AI Glossary', description: 'A comprehensive dictionary of artificial intelligence and agent-related terminology.' },
 })
 
 // Start the router (renders the initial page)

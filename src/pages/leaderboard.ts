@@ -12,6 +12,7 @@ import {
   type RecentAction,
 } from '../services/leaderboardService'
 import { getCurrentUser } from '../services/authService'
+import { TOTAL_MODULES } from '../constants/modules'
 
 /** Active listener unsubscribe handle — cleaned up on route change */
 let unsubscribe: (() => void) | null = null
@@ -28,7 +29,7 @@ export function render(): string {
       <div class="lesson-hero-content" style="color: var(--text-primary);">
         <span class="lesson-badge">Competition</span>
         <h1>Leaderboard</h1>
-        <p>See how you rank against other learners. Complete all 9 modules to earn a certificate!</p>
+        <p>See how you rank against other learners. Complete all ${TOTAL_MODULES} modules to earn a certificate!</p>
       </div>
     </section>
 
@@ -155,7 +156,7 @@ function handleLeaderboardUpdate(entries: LeaderboardEntry[]): void {
       <div class="leaderboard-your-rank">
         <span class="your-rank-label">Your Rank</span>
         <span class="your-rank-number">#${currentUserRank}</span>
-        <span class="your-rank-score">${entries[currentUserRank - 1].score}/3 modules passed</span>
+        <span class="your-rank-score">${entries[currentUserRank - 1].score}/${TOTAL_MODULES} modules passed</span>
       </div>
     ` : ''}
 

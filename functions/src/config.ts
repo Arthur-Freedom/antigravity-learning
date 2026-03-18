@@ -15,7 +15,7 @@ export const MAX_DISPLAY_NAME_LENGTH = 50;
 export const AI_HINT_DAILY_LIMIT = 10;
 
 /** Number of quiz modules required for "completedAll" */
-export const MODULES_REQUIRED_FOR_COMPLETION = 9;
+export const MODULES_REQUIRED_FOR_COMPLETION = 12;
 
 /** Days of inactivity before daily cron resets a user's streak to 0 */
 export const STREAK_EXPIRY_DAYS = 1;
@@ -37,6 +37,9 @@ export const FALLBACK_TOPICS: readonly string[] = [
   "tools",
   "safety",
   "projects",
+  "multiagent",
+  "evaluation",
+  "production",
 ] as const;
 
 // ── Runtime Config (Firestore-Backed) ───────────────────────────────────

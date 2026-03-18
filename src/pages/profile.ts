@@ -12,6 +12,7 @@ import { getUserProfile, updateDisplayName, type UserProfile } from '../services
 import { openProfilePictureModal } from '../components/profile-picture'
 import { showToast } from '../components/toast'
 import { downloadCertificate } from '../components/certificate'
+import { MODULE_META, MODULE_KEYS, TOTAL_MODULES } from '../constants/modules'
 
 /** Auth listener unsubscribe — cleaned up if the route changes */
 let unsubAuth: (() => void) | null = null
@@ -352,7 +353,7 @@ async function loadProfileData(uid: string): Promise<void> {
     if (profile.level) badges.push(`<span class="profile-badge profile-badge-level">⭐ Level ${profile.level}</span>`)
     if (profile.streak && profile.streak > 0) badges.push(`<span class="profile-badge profile-badge-streak" title="Daily streak">🔥 ${profile.streak}</span>`)
     if (profile.completedAll) badges.push('<span class="profile-badge profile-badge-certified">🎓 Certified</span>')
-    if (profile.quizScore > 0) badges.push(`<span class="profile-badge profile-badge-score">🏆 Score: ${profile.quizScore}/3</span>`)
+    if (profile.quizScore > 0) badges.push(`<span class="profile-badge profile-badge-score">🏆 Score: ${profile.quizScore}/${TOTAL_MODULES}</span>`)
     if (!profile.completedAll && profile.quizTotal > 0) badges.push('<span class="profile-badge profile-badge-progress">🔄 In Progress</span>')
     if (profile.quizTotal === 0) badges.push('<span class="profile-badge profile-badge-new">✨ New Learner</span>')
     badgesEl.innerHTML = badges.join('')
@@ -382,17 +383,13 @@ function renderQuizProgress(profile: UserProfile): void {
   const container = document.getElementById('profile-progress')
   if (!container) return
 
-  const quizzes = [
-    { key: 'workflows', label: 'Workflows', icon: '🔄', href: '/learn/workflows' },
-    { key: 'skills', label: 'Skills', icon: '🛠️', href: '/learn/skills' },
-    { key: 'agents', label: 'Autonomous Agents', icon: '🤖', href: '/learn/agents' },
-  ]
+  const quizzes = MODULE_KEYS.map(key => ({ key, ...MODULE_META[key] }))
 
   const progress = profile.quizProgress ?? {}
 
   const totalCorrect = Object.values(progress).filter(r => r.correct).length
   const totalAttempts = Object.keys(progress).length
-  const pct = totalAttempts > 0 ? Math.round((totalCorrect / 3) * 100) : 0
+  const pct = totalAttempts > 0 ? Math.round((totalCorrect / TOTAL_MODULES) * 100) : 0
 
   container.innerHTML = `
     <!-- Overall Progress -->
@@ -422,7 +419,7 @@ function renderQuizProgress(profile: UserProfile): void {
           <span class="profile-stat-label">Attempted</span>
         </div>
         <div class="profile-stat">
-          <span class="profile-stat-number">${3 - totalCorrect}</span>
+          <span class="profile-stat-number">${TOTAL_MODULES - totalCorrect}</span>
           <span class="profile-stat-label">Remaining</span>
         </div>
       </div>
@@ -465,7 +462,7 @@ function renderQuizProgress(profile: UserProfile): void {
            </div>
          </div>`
       : `<div class="profile-completion-cta">
-           <p>Complete all 9 modules to earn your certificate!</p>
+           <p>Complete all ${TOTAL_MODULES} modules to earn your certificate!</p>
            <a href="/" class="btn profile-outline-btn">Continue Learning →</a>
          </div>`
     }

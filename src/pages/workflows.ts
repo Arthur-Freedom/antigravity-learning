@@ -61,6 +61,19 @@ export function render(): string {
       </div>
     </section>
 
+    <section class="lesson-prereqs reveal-on-scroll" style="max-width: 52rem; margin: 0 auto; padding: 1.5rem 1.5rem 0;">
+      <div class="callout callout-note" style="border-left-color: var(--accent-primary);">
+        <span class="callout-icon">🛠️</span>
+        <div>
+          <strong>What You'll Need</strong>
+          <p style="margin-bottom: 0.5rem;">To follow along with examples, install these two things:</p>
+          <p style="margin: 0.25rem 0;"><b style="font-weight: 700;">1.</b> <a href="https://antigravity.google/" target="_blank" rel="noopener" style="color: var(--accent-primary); text-decoration: underline; font-weight: 600;">Google Antigravity</a> — AI-powered coding environment (free tier available)</p>
+          <p style="margin: 0.25rem 0;"><b style="font-weight: 700;">2.</b> <a href="https://nodejs.org/" target="_blank" rel="noopener" style="color: var(--accent-primary); text-decoration: underline; font-weight: 600;">Node.js</a> (v18+) — for running code examples</p>
+          <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.7;">The concepts apply to any AI coding agent, but examples use Antigravity-specific tools.</p>
+        </div>
+      </div>
+    </section>
+
     <article class="lesson-body">
       <aside class="lesson-toc reveal-on-scroll">
         <h4>In This Lesson</h4>

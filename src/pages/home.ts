@@ -3,6 +3,7 @@
 
 import { getCurrentUser, onAuthChange, type Unsubscribe } from '../services/authService';
 import { getUserProfile, getUserCount } from '../services/userService';
+import { TOTAL_MODULES } from '../constants/modules';
 import { renderActivityFeed, initActivityFeed, destroyActivityFeed } from '../components/activity-feed';
 
 let authUnsubscribe: Unsubscribe | null = null;
@@ -115,6 +116,39 @@ export const quizzes: Record<string, Quiz> = {
     ],
     correctIndex: 1,
   },
+  multiagent: {
+    title: 'Multi-Agent Systems Quiz',
+    question: 'What is the primary benefit of using multiple agents instead of a single agent?',
+    options: [
+      'It uses less memory',
+      'Each agent can specialise on a focused task, reducing errors and context overload',
+      'Multiple agents always run faster than one',
+      'It eliminates the need for human oversight',
+    ],
+    correctIndex: 1,
+  },
+  evaluation: {
+    title: 'Evaluation & Testing Quiz',
+    question: 'What is "LLM-as-a-Judge" evaluation?',
+    options: [
+      'Using a language model to generate test data',
+      'Using a second language model to score or rank the output of the first model',
+      'Having a judge decide if an LLM is legal',
+      'A benchmark leaderboard for LLMs',
+    ],
+    correctIndex: 1,
+  },
+  production: {
+    title: 'Production & Scaling Quiz',
+    question: 'What is the most critical step before deploying an agent-built application to production?',
+    options: [
+      'Adding more features',
+      'Running a comprehensive test suite and verifying all endpoints and edge cases',
+      'Choosing a cooler domain name',
+      'Removing all comments from the code',
+    ],
+    correctIndex: 1,
+  },
 };
 
 export function render(): string {
@@ -149,12 +183,12 @@ export function render(): string {
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number" data-target="27">0</span>
+          <span class="stat-number" data-target="36">0</span>
           <span class="stat-label">Quiz Questions</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number" data-target="54">0</span>
+          <span class="stat-number" data-target="72">0</span>
           <span class="stat-label">Teaching Sections</span>
         </div>
         <div class="stat-divider"></div>
@@ -203,10 +237,92 @@ export function render(): string {
       </div>
     </section>
 
+    <!-- Learning Roadmap -->
+    <section id="roadmap" class="section roadmap-section reveal-on-scroll">
+      <h2 class="section-title">Your Learning Journey</h2>
+      <p class="section-subtitle">4 tiers to take you from a curious beginner to a capable AI engineer</p>
+      
+      <div class="roadmap-container">
+        <!-- Tier 1: Beginner -->
+        <div class="roadmap-tier">
+          <div class="roadmap-tier-header">
+            <div class="tier-icon">🌱</div>
+            <div class="tier-title-wrap">
+              <span class="tier-number">Tier 1</span>
+              <h3>Beginner</h3>
+            </div>
+            <p>Master the fundamentals of AI agent workflows and extending capabilities via custom knowledge.</p>
+          </div>
+          <div class="roadmap-tier-modules">
+            <span class="roadmap-tag">1. Workflows</span>
+            <span class="roadmap-tag">2. Skills</span>
+            <span class="roadmap-tag">3. Autonomous Agents</span>
+          </div>
+        </div>
+
+        <div class="roadmap-connector"></div>
+
+        <!-- Tier 2: Intermediate -->
+        <div class="roadmap-tier">
+          <div class="roadmap-tier-header">
+            <div class="tier-icon">🧠</div>
+            <div class="tier-title-wrap">
+              <span class="tier-number">Tier 2</span>
+              <h3>Intermediate</h3>
+            </div>
+            <p>Understand how LLMs think, connect agents to external services, and empower them to use tools dynamically.</p>
+          </div>
+          <div class="roadmap-tier-modules">
+            <span class="roadmap-tag">4. Prompt Engineering</span>
+            <span class="roadmap-tag">5. Context Windows</span>
+            <span class="roadmap-tag">6. Model Context Protocol</span>
+          </div>
+        </div>
+
+        <div class="roadmap-connector"></div>
+
+        <!-- Tier 3: Applied -->
+        <div class="roadmap-tier">
+          <div class="roadmap-tier-header">
+            <div class="tier-icon">🔨</div>
+            <div class="tier-title-wrap">
+              <span class="tier-number">Tier 3</span>
+              <h3>Applied</h3>
+            </div>
+            <p>Learn dynamic function calling, guardrails, and build a complete real-world AI agent from scratch.</p>
+          </div>
+          <div class="roadmap-tier-modules">
+            <span class="roadmap-tag">7. Tool Use</span>
+            <span class="roadmap-tag">8. Safety & Guardrails</span>
+            <span class="roadmap-tag">9. Real-World Projects</span>
+          </div>
+        </div>
+
+        <div class="roadmap-connector"></div>
+
+        <!-- Tier 4: Advanced -->
+        <div class="roadmap-tier">
+          <div class="roadmap-tier-header">
+            <div class="tier-icon">🚀</div>
+            <div class="tier-title-wrap">
+              <span class="tier-number">Tier 4</span>
+              <h3>Advanced</h3>
+            </div>
+            <p>Orchestrate multiple agents, evaluate responses rigorously, and deploy your robust systems to production.</p>
+          </div>
+          <div class="roadmap-tier-modules">
+            <span class="roadmap-tag">10. Multi-Agent Systems</span>
+            <span class="roadmap-tag">11. Evaluation</span>
+            <span class="roadmap-tag">12. Production & Scaling</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Core Modules -->
     <section id="modules" class="section">
-      <h2 class="section-title">Your Learning Path</h2>
-      <p class="section-subtitle">Nine comprehensive modules to go from zero to AI agent expert</p>
+      <h2 class="section-title">All Course Modules</h2>
+      <p class="section-subtitle">${TOTAL_MODULES} comprehensive modules to go from zero to AI agent expert</p>
       <div class="grid">
 
         <div class="card reveal-on-scroll" id="card-workflows">
@@ -398,6 +514,69 @@ export function render(): string {
           </div>
         </div>
 
+        <div class="card reveal-on-scroll" id="card-multiagent">
+          <div class="card-image">
+            <img src="/images/multiagent.png" alt="Multi-Agent Systems" />
+          </div>
+          <div class="card-content">
+            <div class="card-badge">Module 10</div>
+            <h3>Multi-Agent Systems</h3>
+            <p>Orchestrate multiple agents working together — delegation, coordination, and composition patterns.</p>
+            <div class="card-tags">
+              <span class="tag">Orchestration</span>
+              <span class="tag">Delegation</span>
+              <span class="tag">Coordination</span>
+              <span class="tag tag-time">⏱️ ~15 min</span>
+            </div>
+            <div class="card-footer">
+              <span class="card-status" id="status-multiagent">Not started</span>
+              <a href="/learn/multiagent" class="btn">Start Learning</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card reveal-on-scroll" id="card-evaluation">
+          <div class="card-image">
+            <img src="/images/evaluation.png" alt="Evaluation & Testing" />
+          </div>
+          <div class="card-content">
+            <div class="card-badge">Module 11</div>
+            <h3>Evaluation & Testing</h3>
+            <p>Measure, benchmark, and continuously test AI agent outputs with automated evaluation pipelines.</p>
+            <div class="card-tags">
+              <span class="tag">Metrics</span>
+              <span class="tag">LLM-as-Judge</span>
+              <span class="tag">Regression</span>
+              <span class="tag tag-time">⏱️ ~14 min</span>
+            </div>
+            <div class="card-footer">
+              <span class="card-status" id="status-evaluation">Not started</span>
+              <a href="/learn/evaluation" class="btn">Start Learning</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card reveal-on-scroll" id="card-production">
+          <div class="card-image">
+            <img src="/images/production.png" alt="Production & Scaling" />
+          </div>
+          <div class="card-content">
+            <div class="card-badge">Module 12</div>
+            <h3>Production & Scaling</h3>
+            <p>Ship with confidence — deployment pipelines, monitoring, cost management, and scaling strategies.</p>
+            <div class="card-tags">
+              <span class="tag">CI/CD</span>
+              <span class="tag">Monitoring</span>
+              <span class="tag">Scaling</span>
+              <span class="tag tag-time">⏱️ ~15 min</span>
+            </div>
+            <div class="card-footer">
+              <span class="card-status" id="status-production">Not started</span>
+              <a href="/learn/production" class="btn">Start Learning</a>
+            </div>
+          </div>
+        </div>
+
     </section>
 
     <!-- Testimonials -->
@@ -419,7 +598,7 @@ export function render(): string {
         </div>
         <div class="testimonial-card reveal-on-scroll">
           <div class="testimonial-quote-mark">"</div>
-          <p class="testimonial-text">The interactive quizzes and progress tracking make learning about agents feel like a game. I finished all 9 modules in one sitting — couldn't stop!</p>
+          <p class="testimonial-text">The interactive quizzes and progress tracking make learning about agents feel like a game. I finished all ${TOTAL_MODULES} modules in one sitting — couldn't stop!</p>
           <div class="testimonial-author">
             <div class="testimonial-avatar">S</div>
             <div class="testimonial-author-info">

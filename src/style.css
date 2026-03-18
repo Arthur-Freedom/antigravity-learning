@@ -362,6 +362,130 @@ header.navbar {
 .card-status.status-failed { color: var(--error); }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   ROADMAP SECTION
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.roadmap-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.roadmap-tier {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(0,0,0,0.06);
+  transition: var(--transition);
+}
+
+.roadmap-tier:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(46, 200, 102, 0.4);
+}
+
+.roadmap-connector {
+  width: 4px;
+  height: 48px;
+  background: var(--accent-gradient);
+  margin: 0 auto;
+  opacity: 0.6;
+  border-radius: 4px;
+}
+
+.roadmap-tier-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.tier-icon {
+  font-size: 3.5rem;
+  background: var(--bg-secondary);
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.tier-title-wrap {
+  flex-shrink: 0;
+  width: 160px;
+}
+
+.tier-number {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent-color);
+  display: inline-block;
+  margin-bottom: 0.25rem;
+}
+
+.tier-title-wrap h3 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.roadmap-tier p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: 0;
+  flex: 1;
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(0,0,0,0.08);
+}
+
+.roadmap-tier-modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.roadmap-tag {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: var(--transition);
+}
+
+.roadmap-tier:hover .roadmap-tag {
+  background: #ffffff;
+  border-color: var(--accent-color);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(46, 200, 102, 0.15);
+}
+
+@media (max-width: 768px) {
+  .roadmap-tier-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .roadmap-tier p {
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    padding-top: 1rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    BUTTONS
    ═══════════════════════════════════════════════════════════════════════ */
 

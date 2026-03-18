@@ -9,6 +9,7 @@ import { getAiHintForQuiz } from '../services/functionsService';
 import { getFlag } from '../services/remoteConfigService';
 import { showToast } from './toast';
 import { fireConfetti } from './confetti';
+import { trackQuizStarted, trackQuizCompleted, trackAiHintUsed, trackCertificateEarned } from '../services/analyticsService';
 
 export interface QuizQuestion {
   question: string;
@@ -123,6 +124,11 @@ export function initInlineQuiz(
       if (block?.classList.contains('answered')) return;
       block?.classList.add('answered');
 
+      // Track first interaction as quiz_started
+      if (answered === 0) {
+        trackQuizStarted(topic);
+      }
+
       const isCorrect = oi === question.correctIndex;
       if (isCorrect) correct++;
       answered++;
@@ -175,6 +181,7 @@ export function initInlineQuiz(
                   question.options,
                   question.options[oi] // The user's wrong answer
                 );
+                trackAiHintUsed(topic);
                 hintBox.innerHTML = `<strong>🤖 AI Tutor:</strong> ${hint}`;
                 hintBtn.innerHTML = '✨ Hint received';
                 hintBtn.disabled = true;
@@ -237,6 +244,8 @@ export function initInlineQuiz(
         }
 
         // Save to Firestore if logged in
+        // Track quiz completion in GA4
+        trackQuizCompleted(topic, correct, questions.length, passed);
         const saveForUser = async (uid: string) => {
           try {
             await saveQuizResult(uid, topic, passed);
@@ -244,6 +253,7 @@ export function initInlineQuiz(
             if (passed) {
               const eligible = await isCertificateEligible(uid);
               if (eligible) {
+                trackCertificateEarned();
                 fireConfetti();
                 showToast({
                   message: '🎓 You earned your certificate! Download it from your profile.',

@@ -1,5 +1,7 @@
 // ── Auth Service ────────────────────────────────────────────────────────
 // Pure authentication logic — ZERO DOM manipulation.
+
+import { trackSignUp, trackLogin, identifyUser } from './analyticsService';
 // UI components import from here; this file never touches the DOM.
 
 import {
@@ -70,7 +72,18 @@ export type LoginResult =
 export async function loginWithGoogle(): Promise<LoginResult> {
   try {
     const result = await signInWithPopup(auth, provider);
-    return { status: 'success', user: toAppUser(result.user) };
+    const appUser = toAppUser(result.user);
+
+    // Track in GA4: new signup vs returning login
+    identifyUser(appUser.uid);
+    const isNewUser = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+    if (isNewUser) {
+      trackSignUp('google');
+    } else {
+      trackLogin('google');
+    }
+
+    return { status: 'success', user: appUser };
   } catch (error: unknown) {
     const code = (error as { code?: string })?.code;
 

@@ -3,10 +3,14 @@
 // Each route provides a render() function for HTML and an optional init()
 // function to bind event listeners after the content is inserted.
 
+import { trackPageView } from './services/analyticsService';
+
 export interface RouteHandler {
   render: () => string;
   init?: () => void;
   destroy?: () => void;
+  title?: string;
+  description?: string;
 }
 
 type RouteMap = Record<string, RouteHandler>;
@@ -114,6 +118,25 @@ function renderCurrentRoute(): void {
     contentEl!.classList.remove('page-exit');
     contentEl!.classList.add('page-enter');
 
+    // Update Meta Tags for SEO (and prerendering)
+    document.title = handler.title 
+      ? `${handler.title} | Antigravity` 
+      : 'Antigravity Learning — Master AI Agent Development';
+
+    const defaultDesc = 'Master AI agent development through premium, hands-on tutorials and open-source intelligence workflows.';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', handler.description || defaultDesc);
+    }
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) {
+      ogTitle.setAttribute('content', document.title);
+    }
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) {
+      ogDesc.setAttribute('content', handler.description || defaultDesc);
+    }
+
     if (handler.init) handler.init();
 
     // Scroll to top
@@ -124,6 +147,9 @@ function renderCurrentRoute(): void {
 
     // Dispatch a custom event so other parts of the app can react
     window.dispatchEvent(new CustomEvent('routechange', { detail: { path } }));
+
+    // Track page view in GA4
+    trackPageView(path);
 
     setTimeout(() => contentEl!.classList.remove('page-enter'), 400);
   }, 200);

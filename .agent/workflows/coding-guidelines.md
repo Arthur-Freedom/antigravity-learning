@@ -19,11 +19,13 @@ description: coding guidelines all agents must follow when working on this proje
 - Be fast. Make the edit, confirm no build errors, done.
 - Don't over-verify. One screenshot max if truly needed, not multiple.
 
-## Environment Separation (CRITICAL)
+## The 3-Environment Strategy (CRITICAL)
 
-This project uses **two separate Firebase projects**:
-- **Dev** (`antigravity-learning-dev`): Used by `npm run dev` (localhost). Has its own database, users, and storage.
-- **Production** (`antigravity-learning`): Used by `npm run build` (live site). Has real users and data.
+This project strictly follows a FAANG-style 3-environment pipeline:
+
+1. **Localhost (The Workshop)**: `npm run dev`. Rapid development with hot-reload. Points to the Dev Firebase project so local testing doesn't break production data.
+2. **Dev (The Rehearsal Stage)**: `antigravity-learning-dev.web.app`. Deployed via `npm run build:dev` & `firebase deploy`. Used to smoke-test the built, minified code before it touches production. Uses the Dev Firebase project.
+3. **Production (Live)**: `antigravity-learning.web.app`. Deployed via `/git-safe-deploy`. Has real users and live data. Uses the Production Firebase project.
 
 Rules:
 - **NEVER** point localhost at the production Firebase project.

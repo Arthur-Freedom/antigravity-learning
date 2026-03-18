@@ -1,6 +1,8 @@
 // ── FAQ Page ────────────────────────────────────────────────────────────
 // Frequently asked questions about AI agents, the platform, and getting started.
 
+import { TOTAL_MODULES } from '../constants/modules'
+
 export function render(): string {
   return `
     <section class="lesson-hero" style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 40%, #C7D2FE 100%);">
@@ -46,7 +48,22 @@ export function render(): string {
               <span class="faq-chevron">▸</span>
             </button>
             <div class="faq-answer">
-              <p>Yes! All 9 modules, quizzes, certificates, leaderboard, and progress tracking are completely free. We believe AI literacy should be accessible to everyone.</p>
+              <p>Yes! All ${TOTAL_MODULES} modules, quizzes, certificates, leaderboard, and progress tracking are completely free. We believe AI literacy should be accessible to everyone.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span>What do I need to install to follow along?</span>
+              <span class="faq-chevron">▸</span>
+            </button>
+            <div class="faq-answer">
+              <p>Just two things:</p>
+              <ol>
+                <li><strong><a href="https://antigravity.google/" target="_blank" rel="noopener">Google Antigravity</a></strong> — AI-powered coding environment (free tier available)</li>
+                <li><strong><a href="https://nodejs.org/" target="_blank" rel="noopener">Node.js</a></strong> (v18 or later) — needed for running code examples</li>
+              </ol>
+              <p>The concepts you'll learn apply to any AI coding agent, but our examples and tool names are Antigravity-specific.</p>
             </div>
           </div>
 
@@ -186,7 +203,7 @@ export function render(): string {
               <span class="faq-chevron">▸</span>
             </button>
             <div class="faq-answer">
-              <p>Complete all 9 modules by passing each module's knowledge check quiz with at least 70%. Once all 9 are passed, the certificate download button will appear on your profile page.</p>
+              <p>Complete all ${TOTAL_MODULES} modules by passing each module's knowledge check quiz with at least 70%. Once all ${TOTAL_MODULES} are passed, the certificate download button will appear on your profile page.</p>
             </div>
           </div>
 

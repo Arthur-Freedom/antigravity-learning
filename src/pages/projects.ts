@@ -305,9 +305,9 @@ Agent 3: DevOps
             <span class="nav-label">← Previous</span>
             <span class="nav-page">Safety & Guardrails</span>
           </a>
-          <a href="/" class="lesson-nav-btn nav-next">
-            <span class="nav-label">Finish →</span>
-            <span class="nav-page">Back to Home</span>
+          <a href="/learn/multiagent" class="lesson-nav-btn nav-next">
+            <span class="nav-label">Next →</span>
+            <span class="nav-page">Multi-Agent Systems</span>
           </a>
         </nav>
       </div>
