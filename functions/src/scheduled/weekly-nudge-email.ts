@@ -21,7 +21,6 @@ export const weeklyNudgeEmail = onSchedule(
     schedule: "0 10 * * 0", // 10:00 AM UTC every Sunday
     timeZone: "UTC",
     retryCount: 1,
-    secrets: ["SMTP_EMAIL", "SMTP_PASSWORD"],
   },
   async () => {
     const db = getFirestore();

@@ -10,12 +10,12 @@ export const quizQuestions: QuizQuestion[] = [
   {
     question: 'Where should workflow files be stored in your project?',
     options: [
-      'In the src/ directory',
       'In the .agent/workflows/ directory',
+      'In the src/ directory',
       'In the root of the project',
       'In the node_modules/ directory',
     ],
-    correctIndex: 1,
+    correctIndex: 0,
     explanation:
       'Workflow files live in .agent/workflows/ (or .agents/workflows/). The agent automatically discovers them there.',
   },
@@ -42,6 +42,30 @@ export const quizQuestions: QuizQuestion[] = [
     correctIndex: 1,
     explanation:
       'Workflows become slash commands based on their filename. deploy.md → /deploy.',
+  },
+  {
+    question: 'Your team adds a new step to the deploy workflow that installs dependencies, but now the workflow hangs waiting for approval on every run. What is the most likely fix?',
+    options: [
+      'Remove the step entirely — agents cannot install dependencies',
+      'Move the step to a separate workflow file',
+      'Restart the IDE to clear the workflow cache',
+      'Add a "// turbo" annotation above the step so it auto-runs',
+    ],
+    correctIndex: 3,
+    explanation:
+      'The workflow hangs because the new step is not marked as safe to auto-run. Adding "// turbo" above it tells the agent to execute it without waiting for user approval.',
+  },
+  {
+    question: 'You have workflows for /deploy, /test, and /save. A junior developer wants a single command that runs all three in sequence. What is the best approach?',
+    options: [
+      'Create a new workflow file (e.g., ship.md) that lists all three steps in order',
+      'Rename all three files to have the same name',
+      'Ask the agent to memorise the sequence — it will remember next time',
+      'Combine all three into the deploy.md file permanently',
+    ],
+    correctIndex: 0,
+    explanation:
+      'The best practice is to create a new composite workflow that references the individual steps. This keeps each workflow focused and reusable while giving you a single slash command (/ship) for the full sequence.',
   },
 ];
 
