@@ -26,7 +26,9 @@ const routes = [
   '/admin',
   '/profile',
   '/faq',
-  '/glossary'
+  '/glossary',
+  '/privacy',
+  '/terms'
 ];
 
 async function prerender() {

@@ -32,7 +32,7 @@ describe("Config constants", () => {
     expect(FALLBACK_TOPICS).toContain("workflows");
     expect(FALLBACK_TOPICS).toContain("agents");
     expect(FALLBACK_TOPICS).toContain("safety");
-    expect(FALLBACK_TOPICS.length).toBe(9);
+    expect(FALLBACK_TOPICS.length).toBe(MODULES_REQUIRED_FOR_COMPLETION);
   });
 
   it("FALLBACK_TOPICS has no duplicates", () => {

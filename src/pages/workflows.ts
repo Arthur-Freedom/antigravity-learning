@@ -4,7 +4,7 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'workflows';
 
-const quizQuestions: QuizQuestion[] = [
+export const quizQuestions: QuizQuestion[] = [
   {
     question: 'Where should workflow files be stored in your project?',
     options: [

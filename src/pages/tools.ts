@@ -4,7 +4,7 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'tools';
 
-const quizQuestions: QuizQuestion[] = [
+export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What happens when an agent calls a tool marked as unsafe?',
     options: [

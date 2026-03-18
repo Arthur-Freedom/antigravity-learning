@@ -3,8 +3,9 @@
 
 import { getCurrentUser, onAuthChange, type Unsubscribe } from '../services/authService';
 import { getUserProfile, getUserCount } from '../services/userService';
-import { TOTAL_MODULES } from '../constants/modules';
+import { TOTAL_MODULES, TOTAL_QUIZ_QUESTIONS, TOTAL_SECTIONS } from '../constants/modules';
 import { renderActivityFeed, initActivityFeed, destroyActivityFeed } from '../components/activity-feed';
+import { renderStreakWidget, type StreakData } from '../components/learning-streak';
 
 let authUnsubscribe: Unsubscribe | null = null;
 
@@ -161,7 +162,7 @@ export function render(): string {
         <div class="hero-shape shape-3"></div>
       </div>
       <div class="hero-content" style="position: relative; z-index: 1;">
-        <span class="hero-badge">🚀 Free interactive course</span>
+        <span class="hero-badge">🧪 Early Access Beta — Free forever</span>
         <h1>Learn by<br><span class="gradient-text">Building</span></h1>
         <p>Master AI agents, workflows, and skills through hands-on lessons, interactive quizzes, and real-world examples. Fun, free, and made for students.</p>
         <div class="hero-cta-group">
@@ -183,12 +184,12 @@ export function render(): string {
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number" data-target="36">0</span>
+          <span class="stat-number" data-target="${TOTAL_QUIZ_QUESTIONS}">0</span>
           <span class="stat-label">Quiz Questions</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number" data-target="72">0</span>
+          <span class="stat-number" data-target="${TOTAL_SECTIONS}">0</span>
           <span class="stat-label">Teaching Sections</span>
         </div>
         <div class="stat-divider"></div>
@@ -237,157 +238,100 @@ export function render(): string {
       </div>
     </section>
 
-    <!-- Learning Roadmap -->
-    <section id="roadmap" class="section roadmap-section reveal-on-scroll">
+    <!-- Learning Journey / Core Modules -->
+    <section id="modules" class="section modules-section">
       <h2 class="section-title">Your Learning Journey</h2>
       <p class="section-subtitle">4 tiers to take you from a curious beginner to a capable AI engineer</p>
       
-      <div class="roadmap-container">
-        <!-- Tier 1: Beginner -->
-        <div class="roadmap-tier">
-          <div class="roadmap-tier-header">
-            <div class="tier-icon">🌱</div>
-            <div class="tier-title-wrap">
-              <span class="tier-number">Tier 1</span>
-              <h3>Beginner</h3>
+      <div class="learning-tiers">
+        
+        <!-- Tier 1 -->
+        <div class="tier-group tier-1 reveal-on-scroll">
+          <div class="tier-group-header">
+            <span class="tier-badge">Tier 1</span>
+            <div class="tier-title-lockup">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tier-icon-svg tier-icon-1"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>
+              <h3 class="tier-title">Beginner Fundamentals</h3>
             </div>
-            <p>Master the fundamentals of AI agent workflows and extending capabilities via custom knowledge.</p>
+            <p class="tier-desc">Master the basics of AI agent workflows and extending capabilities via custom knowledge.</p>
           </div>
-          <div class="roadmap-tier-modules">
-            <span class="roadmap-tag">1. Workflows</span>
-            <span class="roadmap-tag">2. Skills</span>
-            <span class="roadmap-tag">3. Autonomous Agents</span>
-          </div>
-        </div>
-
-        <div class="roadmap-connector"></div>
-
-        <!-- Tier 2: Intermediate -->
-        <div class="roadmap-tier">
-          <div class="roadmap-tier-header">
-            <div class="tier-icon">🧠</div>
-            <div class="tier-title-wrap">
-              <span class="tier-number">Tier 2</span>
-              <h3>Intermediate</h3>
+          <div class="grid">
+            <div class="card" id="card-workflows">
+              <div class="card-image">
+                <img src="/images/workflows.png" alt="Workflows" />
+              </div>
+              <div class="card-content">
+                <div class="card-badge">Module 1</div>
+                <h3>Workflows</h3>
+                <p>Automate repetitive tasks with explicitly defined steps and shell commands.</p>
+                <div class="card-tags">
+                  <span class="tag">Automation</span>
+                  <span class="tag">Shell</span>
+                  <span class="tag">Turbo Mode</span>
+                  <span class="tag tag-time">⏱️ ~8 min</span>
+                </div>
+                <div class="card-footer">
+                  <span class="card-status" id="status-workflows">Not started</span>
+                  <a href="/learn/workflows" class="btn">Start Learning</a>
+                </div>
+              </div>
             </div>
-            <p>Understand how LLMs think, connect agents to external services, and empower them to use tools dynamically.</p>
-          </div>
-          <div class="roadmap-tier-modules">
-            <span class="roadmap-tag">4. Prompt Engineering</span>
-            <span class="roadmap-tag">5. Context Windows</span>
-            <span class="roadmap-tag">6. Model Context Protocol</span>
-          </div>
-        </div>
 
-        <div class="roadmap-connector"></div>
-
-        <!-- Tier 3: Applied -->
-        <div class="roadmap-tier">
-          <div class="roadmap-tier-header">
-            <div class="tier-icon">🔨</div>
-            <div class="tier-title-wrap">
-              <span class="tier-number">Tier 3</span>
-              <h3>Applied</h3>
+            <div class="card" id="card-skills">
+              <div class="card-image">
+                <img src="/images/skills.png" alt="Skills" />
+              </div>
+              <div class="card-content">
+                <div class="card-badge">Module 2</div>
+                <h3>Skills</h3>
+                <p>Extend the agent's permanent knowledge base with custom paradigms and libraries.</p>
+                <div class="card-tags">
+                  <span class="tag">Knowledge</span>
+                  <span class="tag">SKILL.md</span>
+                  <span class="tag">Reusable</span>
+                  <span class="tag tag-time">⏱️ ~10 min</span>
+                </div>
+                <div class="card-footer">
+                  <span class="card-status" id="status-skills">Not started</span>
+                  <a href="/learn/skills" class="btn">Start Learning</a>
+                </div>
+              </div>
             </div>
-            <p>Learn dynamic function calling, guardrails, and build a complete real-world AI agent from scratch.</p>
-          </div>
-          <div class="roadmap-tier-modules">
-            <span class="roadmap-tag">7. Tool Use</span>
-            <span class="roadmap-tag">8. Safety & Guardrails</span>
-            <span class="roadmap-tag">9. Real-World Projects</span>
-          </div>
-        </div>
 
-        <div class="roadmap-connector"></div>
-
-        <!-- Tier 4: Advanced -->
-        <div class="roadmap-tier">
-          <div class="roadmap-tier-header">
-            <div class="tier-icon">🚀</div>
-            <div class="tier-title-wrap">
-              <span class="tier-number">Tier 4</span>
-              <h3>Advanced</h3>
-            </div>
-            <p>Orchestrate multiple agents, evaluate responses rigorously, and deploy your robust systems to production.</p>
-          </div>
-          <div class="roadmap-tier-modules">
-            <span class="roadmap-tag">10. Multi-Agent Systems</span>
-            <span class="roadmap-tag">11. Evaluation</span>
-            <span class="roadmap-tag">12. Production & Scaling</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Core Modules -->
-    <section id="modules" class="section">
-      <h2 class="section-title">All Course Modules</h2>
-      <p class="section-subtitle">${TOTAL_MODULES} comprehensive modules to go from zero to AI agent expert</p>
-      <div class="grid">
-
-        <div class="card reveal-on-scroll" id="card-workflows">
-          <div class="card-image">
-            <img src="/images/workflows.png" alt="Workflows" />
-          </div>
-          <div class="card-content">
-            <div class="card-badge">Module 1</div>
-            <h3>Workflows</h3>
-            <p>Automate repetitive tasks with explicitly defined steps and shell commands.</p>
-            <div class="card-tags">
-              <span class="tag">Automation</span>
-              <span class="tag">Shell</span>
-              <span class="tag">Turbo Mode</span>
-              <span class="tag tag-time">⏱️ ~8 min</span>
-            </div>
-            <div class="card-footer">
-              <span class="card-status" id="status-workflows">Not started</span>
-              <a href="/learn/workflows" class="btn">Start Learning</a>
+            <div class="card" id="card-agents">
+              <div class="card-image">
+                <img src="/images/agents.png" alt="Agents" />
+              </div>
+              <div class="card-content">
+                <div class="card-badge">Module 3</div>
+                <h3>Autonomous Agents</h3>
+                <p>Learn how an agent executes tasks directly on your computer.</p>
+                <div class="card-tags">
+                  <span class="tag">Tools</span>
+                  <span class="tag">Parallel</span>
+                  <span class="tag">Execution</span>
+                  <span class="tag tag-time">⏱️ ~12 min</span>
+                </div>
+                <div class="card-footer">
+                  <span class="card-status" id="status-agents">Not started</span>
+                  <a href="/learn/agents" class="btn">Start Learning</a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="card reveal-on-scroll" id="card-skills">
-          <div class="card-image">
-            <img src="/images/skills.png" alt="Skills" />
-          </div>
-          <div class="card-content">
-            <div class="card-badge">Module 2</div>
-            <h3>Skills</h3>
-            <p>Extend the agent's permanent knowledge base with custom paradigms and libraries.</p>
-            <div class="card-tags">
-              <span class="tag">Knowledge</span>
-              <span class="tag">SKILL.md</span>
-              <span class="tag">Reusable</span>
-              <span class="tag tag-time">⏱️ ~10 min</span>
+        <!-- Tier 2 -->
+        <div class="tier-group tier-2 reveal-on-scroll">
+          <div class="tier-group-header">
+            <span class="tier-badge">Tier 2</span>
+            <div class="tier-title-lockup">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tier-icon-svg tier-icon-2"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/></svg>
+              <h3 class="tier-title">Intermediate Concepts</h3>
             </div>
-            <div class="card-footer">
-              <span class="card-status" id="status-skills">Not started</span>
-              <a href="/learn/skills" class="btn">Start Learning</a>
-            </div>
+            <p class="tier-desc">Understand how LLMs think, connect agents to external services, and empower them to use tools.</p>
           </div>
-        </div>
-
-        <div class="card reveal-on-scroll" id="card-agents">
-          <div class="card-image">
-            <img src="/images/agents.png" alt="Agents" />
-          </div>
-          <div class="card-content">
-            <div class="card-badge">Module 3</div>
-            <h3>Autonomous Agents</h3>
-            <p>Learn how an agent executes tasks directly on your computer.</p>
-            <div class="card-tags">
-              <span class="tag">Tools</span>
-              <span class="tag">Parallel</span>
-              <span class="tag">Execution</span>
-              <span class="tag tag-time">⏱️ ~12 min</span>
-            </div>
-            <div class="card-footer">
-              <span class="card-status" id="status-agents">Not started</span>
-              <a href="/learn/agents" class="btn">Start Learning</a>
-            </div>
-          </div>
-        </div>
-
+          <div class="grid">
         <div class="card reveal-on-scroll" id="card-prompts">
           <div class="card-image">
             <img src="/images/prompts.png" alt="Prompt Engineering" />
@@ -450,7 +394,20 @@ export function render(): string {
             </div>
           </div>
         </div>
+          </div>
+        </div>
 
+        <!-- Tier 3 -->
+        <div class="tier-group tier-3 reveal-on-scroll">
+          <div class="tier-group-header">
+            <span class="tier-badge">Tier 3</span>
+            <div class="tier-title-lockup">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tier-icon-svg tier-icon-3"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              <h3 class="tier-title">Applied Skills</h3>
+            </div>
+            <p class="tier-desc">Learn dynamic function calling, guardrails, and build a complete real-world AI agent.</p>
+          </div>
+          <div class="grid">
         <div class="card reveal-on-scroll" id="card-tools">
           <div class="card-image">
             <img src="/images/tools.png" alt="Tool Use & Function Calling" />
@@ -513,7 +470,20 @@ export function render(): string {
             </div>
           </div>
         </div>
+          </div>
+        </div>
 
+        <!-- Tier 4 -->
+        <div class="tier-group tier-4 reveal-on-scroll">
+          <div class="tier-group-header">
+            <span class="tier-badge">Tier 4</span>
+            <div class="tier-title-lockup">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tier-icon-svg tier-icon-4"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+              <h3 class="tier-title">Advanced Workflows</h3>
+            </div>
+            <p class="tier-desc">Orchestrate multiple agents, evaluate responses, and deploy your robust systems to production.</p>
+          </div>
+          <div class="grid">
         <div class="card reveal-on-scroll" id="card-multiagent">
           <div class="card-image">
             <img src="/images/multiagent.png" alt="Multi-Agent Systems" />
@@ -576,49 +546,55 @@ export function render(): string {
             </div>
           </div>
         </div>
+          </div>
+        </div>
 
+      </div>
     </section>
 
-    <!-- Testimonials -->
-    <section class="testimonials-section">
-      <h2 class="section-title">What Learners Say</h2>
-      <p class="section-subtitle">Join students worldwide who are mastering AI agent development</p>
-      <div class="testimonials-grid">
-        <div class="testimonial-card reveal-on-scroll">
-          <div class="testimonial-quote-mark">"</div>
-          <p class="testimonial-text">This platform completely changed how I think about AI development. The workflow module alone saved me hours of repetitive tasks. Highly recommended.</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">A</div>
-            <div class="testimonial-author-info">
-              <span class="testimonial-name">Alex Chen</span>
-              <span class="testimonial-role">Full-Stack Developer</span>
-            </div>
-            <span class="testimonial-stars">★★★★★</span>
+    <!-- Credibility Section -->
+    <section class="credibility-section">
+      <!-- Built With strip -->
+      <div class="built-with-strip reveal-on-scroll">
+        <span class="built-with-label">Built with</span>
+        <div class="built-with-logos">
+          <div class="built-with-logo" title="Firebase">
+            <svg viewBox="0 0 256 351" width="28" height="28"><path d="M0 282L.5 282 42 35c.4-3.2 4.8-4 6.2-1.1l45.3 84.8L0 282z" fill="#FFA000"/><path d="M135 148L95 82 .5 282 135 148z" fill="#F57C00"/><path d="M196 108l24 130-88 52-132-8 196-174z" fill="#FFCA28"/><path d="M196 108l-61 40L93 55c-1.4-2.8-5.4-2.5-6.3.5L.5 282 132 338l88-52 24-130-48-48z" fill="#FFA000"/><path d="M132 338l88-52 24-130-48-48-61 40.5L93.2 55.2c-1.3-2.8-5.4-2.6-6.3.4L.5 282 132 338z" fill="#F57C00"/><path d="M132 338l88-52-24-178L93 55c-1.4-2.8-5.4-2.5-6.3.5L.5 282 132 338z" fill="#FFCA28"/></svg>
+            <span>Firebase</span>
+          </div>
+          <div class="built-with-logo" title="TypeScript">
+            <svg viewBox="0 0 256 256" width="28" height="28"><rect width="256" height="256" rx="12" fill="#3178C6"/><path d="M150 220.8V245c5 2.6 11.3 4.5 17.5 5.7 6.2 1.2 13 1.8 20 1.5 6.8-.2 13.2-1.3 19-3.3s10.8-5 15-9c4.2-3.8 7.5-8.6 9.8-14.4 2.3-5.8 3.5-12.5 3.5-20.2 0-5.6-.7-10.5-2.2-14.8s-3.6-8.2-6.4-11.6-6.2-6.5-10.2-9.2c-4-2.7-8.5-5.2-13.5-7.5-3.7-1.7-7-3.3-9.7-5-2.7-1.7-5-3.4-6.8-5.2-1.8-1.8-3.2-3.7-4.1-5.7s-1.4-4.3-1.4-6.8c0-2.3.4-4.4 1.3-6.3.8-1.8 2.1-3.4 3.8-4.8 1.7-1.3 3.8-2.4 6.3-3.1 2.5-.7 5.4-1.1 8.7-1.1 2.3 0 4.7.2 7.2.5 2.5.4 5 .9 7.5 1.7 2.5.8 4.9 1.7 7.1 2.9 2.2 1.2 4.2 2.5 6 4V109c-4.5-2-9.5-3.5-14.8-4.4-5.3-1-11.3-1.4-18-1.2-6.8.2-13.2 1.3-19 3.2-5.8 2-10.8 4.8-15 8.4-4.2 3.6-7.4 8-9.7 13.2-2.3 5.2-3.4 11-3.4 17.5 0 9.4 2.8 17.3 8.5 23.5 5.7 6.2 14 11.5 25 15.7 3.7 1.5 7.2 3 10.3 4.5 3.1 1.6 5.7 3.2 8 5 2.2 1.8 4 3.8 5.2 5.9 1.2 2.2 1.9 4.7 1.9 7.7 0 2.2-.4 4.3-1.2 6.2-.8 1.8-2 3.4-3.7 4.7-1.7 1.3-3.8 2.3-6.4 3-2.5.7-5.6 1-9 .8-6-.4-11.8-2-17.3-4.7-5.5-2.7-10.5-6.5-15-11.4zM106 119h42v-19H47v19h42v132h17V119z" fill="#fff"/></svg>
+            <span>TypeScript</span>
+          </div>
+          <div class="built-with-logo" title="Vite">
+            <svg viewBox="0 0 410 404" width="28" height="28"><path d="M400 26L216 398c-4 7-14 7-18 0L8 26c-4-8 2-17 11-15l186 32c2 0 3 0 5 0l179-32c9-2 15 7 11 15z" fill="#41D1FF"/><path d="M293 2L159 28c-3 1-5 3-5 6l-9 176c0 4 3 7 7 6l39-8c4-1 8 3 7 7l-12 55c-1 4 3 8 7 7l24-6c4-1 8 3 7 7l-18 87c-1 6 7 9 10 4l2-3L377 91c2-4-2-8-6-7l-41 8c-4 1-7-3-7-7l18-75c1-4-3-8-7-7z" fill="#FFD62E"/></svg>
+            <span>Vite</span>
+          </div>
+          <div class="built-with-logo" title="Google Cloud">
+            <svg viewBox="0 0 256 206" width="28" height="28"><path d="M170 62l18-18 1-8A103 103 0 0 0 27 97l10-2 54-9 4-4a57 57 0 0 1 75-20z" fill="#EA4335"/><path d="M224 97a103 103 0 0 0-35-57l-39 38a57 57 0 0 1 21 45v7a28 28 0 1 1 0 57h-57l-7 8v34l7 7h57a83 83 0 0 0 53-139z" fill="#4285F4"/><path d="M57 236h57v-49H57a28 28 0 0 1-12-3l-8 2-16 16-2 8a83 83 0 0 0 38 26z" fill="#34A853"/><path d="M57 53a83 83 0 0 0-38 157l26-26a28 28 0 1 1 38-39l26-26A83 83 0 0 0 57 53z" fill="#FBBC05"/></svg>
+            <span>Google Cloud</span>
           </div>
         </div>
-        <div class="testimonial-card reveal-on-scroll">
-          <div class="testimonial-quote-mark">"</div>
-          <p class="testimonial-text">The interactive quizzes and progress tracking make learning about agents feel like a game. I finished all ${TOTAL_MODULES} modules in one sitting — couldn't stop!</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">S</div>
-            <div class="testimonial-author-info">
-              <span class="testimonial-name">Sarah Kim</span>
-              <span class="testimonial-role">ML Engineer</span>
-            </div>
-            <span class="testimonial-stars">★★★★★</span>
-          </div>
+      </div>
+
+      <!-- Why Antigravity? -->
+      <h2 class="section-title">Why Antigravity?</h2>
+      <p class="section-subtitle">Honest reasons to start learning here</p>
+      <div class="value-cards-grid">
+        <div class="value-card reveal-on-scroll">
+          <div class="value-card-icon">🎯</div>
+          <h3>Hands-On Learning</h3>
+          <p>Every module ends with a real quiz. No fluff, no passive watching — just practical skills you can use immediately.</p>
         </div>
-        <div class="testimonial-card reveal-on-scroll">
-          <div class="testimonial-quote-mark">"</div>
-          <p class="testimonial-text">Finally, a resource that explains skills and workflows in plain language. The code examples are practical and the best practices section is gold.</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">M</div>
-            <div class="testimonial-author-info">
-              <span class="testimonial-name">Marcus Rivera</span>
-              <span class="testimonial-role">DevOps Engineer</span>
-            </div>
-            <span class="testimonial-stars">★★★★★</span>
-          </div>
+        <div class="value-card reveal-on-scroll">
+          <div class="value-card-icon">🔓</div>
+          <h3>100% Free, No Strings</h3>
+          <p>No credit card, no paywall, no premium tier. All ${TOTAL_MODULES} modules and ${Object.keys(quizzes).length * 3} quiz questions are free — forever.</p>
+        </div>
+        <div class="value-card reveal-on-scroll">
+          <div class="value-card-icon">⚡</div>
+          <h3>Built by Builders</h3>
+          <p>Created by a developer who uses AI agents daily. Every lesson is grounded in real workflows, not abstract theory.</p>
         </div>
       </div>
     </section>
@@ -738,6 +714,13 @@ async function restoreProgress(): Promise<void> {
 
   container.innerHTML = `
     <div class="dashboard">
+      <!-- Streak Widget -->
+      ${renderStreakWidget({
+        streak: profile.streak ?? 0,
+        lastLoginDate: profile.lastLoginDate ?? null,
+        quizProgress: profile.quizProgress ?? null,
+      } as StreakData)}
+
       <!-- Overview Card -->
       <div class="dashboard-overview">
         <div class="progress-ring-wrap">

@@ -4,7 +4,7 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'projects';
 
-const quizQuestions: QuizQuestion[] = [
+export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the recommended first step when starting a new project with an agent?',
     options: [

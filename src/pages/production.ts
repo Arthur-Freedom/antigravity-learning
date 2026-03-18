@@ -4,7 +4,7 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'production';
 
-const quizQuestions: QuizQuestion[] = [
+export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the most critical step before deploying an agent-built application to production?',
     options: [
@@ -40,6 +40,30 @@ const quizQuestions: QuizQuestion[] = [
     correctIndex: 1,
     explanation:
       'Production monitoring should cover error rates, latency, costs (token usage), and user satisfaction. AI applications can degrade in ways that traditional monitoring misses.',
+  },
+  {
+    question: 'When an agent relies on third-party APIs in production, what is the best practice for handling temporary external API outages?',
+    options: [
+      'Ignore the error and let the agent crash, hoping the user tries again later',
+      'Implement robust exponential backoff retries and fallback mechanisms so the agent can recover gracefully',
+      'Switch to a completely different LLM immediately',
+      'Show the raw API error JSON to the user so they know it is not your fault',
+    ],
+    correctIndex: 1,
+    explanation:
+      'External tool calls will inevitably fail in production. Agents must be equipped to handle timeouts and 5xx errors gracefully using retries with backoff, or failing predictably.',
+  },
+  {
+    question: 'What is the most effective approach for managing prompt injection attacks in a production AI agent?',
+    options: [
+      'Simply telling the LLM "do not follow malicious instructions" in the system prompt',
+      'Treat all user input as untrusted, validate inputs against strict schemas, and use an isolation layer before the prompt reaches execution',
+      'Hiding the fact that the application uses AI',
+      'Only allowing internal employees to use the agent',
+    ],
+    correctIndex: 1,
+    explanation:
+      'System prompt instructions alone are easily bypassed. True defense-in-depth requires strict input/output validation, least-privilege tool access, and isolating the reasoning engine from untrusted data.',
   },
 ];
 

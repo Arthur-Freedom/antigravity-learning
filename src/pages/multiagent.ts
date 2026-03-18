@@ -4,7 +4,7 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'multiagent';
 
-const quizQuestions: QuizQuestion[] = [
+export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is the primary benefit of using multiple agents instead of a single agent?',
     options: [
@@ -40,6 +40,30 @@ const quizQuestions: QuizQuestion[] = [
     correctIndex: 1,
     explanation:
       'A shared data layer (filesystem, database, or message bus) ensures agents can coordinate without duplication or conflicts.',
+  },
+  {
+    question: 'In a multi-agent system, what is the primary danger of circular dependencies between agents?',
+    options: [
+      'They use up all available network bandwidth instantly',
+      'They can lead to infinite loops if agents continuously hand tasks back and forth without a termination condition',
+      'They prevent human oversight from functioning',
+      'They make the context window too small for the models',
+    ],
+    correctIndex: 1,
+    explanation:
+      'If Agent A delegates to Agent B, which delegates back to Agent A without proper exit conditions, the system can get stuck in a costly infinite loop.',
+  },
+  {
+    question: 'What is the "Swarm" or "Network" pattern in multi-agent orchestration?',
+    options: [
+      'A centralized pattern where one master agent controls all other sub-agents',
+      'A decentralized pattern where any agent can route tasks directly to any other agent based on handoff rules',
+      'A pattern where all agents process the exact same prompt simultaneously',
+      'A completely random assignment of tasks to available models',
+    ],
+    correctIndex: 1,
+    explanation:
+      'The Swarm/Network pattern allows for flexible, decentralized workflows where specialized agents hand off control directly to each other as needed, rather than routing everything through a single rigid orchestrator.',
   },
 ];
 

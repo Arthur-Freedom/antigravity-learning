@@ -32,6 +32,8 @@ import * as resourcesPage from './pages/resources'
 import * as profilePage from './pages/profile'
 import * as faqPage from './pages/faq'
 import * as glossaryPage from './pages/glossary'
+import * as privacyPage from './pages/privacy'
+import * as termsPage from './pages/terms'
 
 // ── Render App Shell ────────────────────────────────────────────────────
 // The navbar and footer persist; only #page-content is swapped by router.
@@ -70,30 +72,23 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       </div>
       <div class="footer-links">
         <div class="footer-col">
-          <h4>Modules</h4>
-          <a href="/learn/workflows">Workflows</a>
-          <a href="/learn/skills">Skills</a>
-          <a href="/learn/agents">Autonomous Agents</a>
-          <a href="/learn/prompts">Prompt Engineering</a>
-          <a href="/learn/context">Context Windows</a>
-          <a href="/learn/mcp">MCP</a>
-          <a href="/learn/tools">Tool Use</a>
-          <a href="/learn/safety">Safety & Guardrails</a>
-          <a href="/learn/projects">Real-World Projects</a>
-          <a href="/learn/multiagent">Multi-Agent Systems</a>
-          <a href="/learn/evaluation">Evaluation & Testing</a>
-          <a href="/learn/production">Production & Scaling</a>
-          <a href="/resources">Resources</a>
+          <h4>Learn</h4>
+          <a href="/" class="scroll-to-modules">Course Overview</a>
+          <a href="/learn/workflows">Getting Started</a>
+          <a href="/leaderboard">Leaderboard</a>
         </div>
         <div class="footer-col">
           <h4>Resources</h4>
-          <a href="/">Home</a>
-          <a href="/" class="scroll-to-modules">All Modules</a>
-          <a href="/leaderboard">Leaderboard</a>
-          <a href="/profile">Profile</a>
-          <a href="/faq">FAQ</a>
+          <a href="/resources">Resource Hub</a>
           <a href="/glossary">Glossary</a>
-          <a href="/admin">Analytics</a>
+          <a href="/faq">FAQ</a>
+        </div>
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <a href="/">Home</a>
+          <a href="/profile" id="footer-profile-link" style="display:none;">Profile</a>
+          <a href="/privacy">Privacy Policy</a>
+          <a href="/terms">Terms of Service</a>
         </div>
       </div>
     </div>
@@ -167,6 +162,8 @@ registerRoutes({
   '/profile': { render: profilePage.render, init: profilePage.init, destroy: profilePage.destroy, title: 'User Profile', description: 'View your learning progress and manage your Antigravity account.' },
   '/faq': { render: faqPage.render, init: faqPage.init, title: 'Frequently Asked Questions', description: 'Answers to common questions about Antigravity Learning and AI agent development.' },
   '/glossary': { render: glossaryPage.render, init: glossaryPage.init, title: 'AI Glossary', description: 'A comprehensive dictionary of artificial intelligence and agent-related terminology.' },
+  '/privacy': { render: privacyPage.render, init: privacyPage.init, title: 'Privacy Policy', description: 'How Antigravity Learning collects, uses, and protects your information.' },
+  '/terms': { render: termsPage.render, init: termsPage.init, title: 'Terms of Service', description: 'Terms and conditions for using the Antigravity Learning platform.' },
 })
 
 // Start the router (renders the initial page)
@@ -247,6 +244,9 @@ onAuthChange(async (user) => {
   // Show/hide profile link based on auth state
   const profileLink = document.getElementById('nav-profile-link')
   if (profileLink) profileLink.style.display = user ? '' : 'none'
+  
+  const footerProfileLink = document.getElementById('footer-profile-link')
+  if (footerProfileLink) footerProfileLink.style.display = user ? '' : 'none'
 
   if (user) {
     // Show welcome toast (but not on initial page load)

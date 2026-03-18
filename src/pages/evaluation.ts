@@ -4,7 +4,7 @@ import { renderInlineQuiz, initInlineQuiz, type QuizQuestion } from '../componen
 
 const TOPIC = 'evaluation';
 
-const quizQuestions: QuizQuestion[] = [
+export const quizQuestions: QuizQuestion[] = [
   {
     question: 'What is "LLM-as-a-Judge" evaluation?',
     options: [
@@ -40,6 +40,30 @@ const quizQuestions: QuizQuestion[] = [
     correctIndex: 1,
     explanation:
       'Regression tests capture known-good outputs. When you update a prompt, model, or tool, re-running the suite quickly reveals if something that used to work is now broken.',
+  },
+  {
+    question: 'Why is absolute scoring (e.g., "Score this answer 1 out of 10") generally less reliable than pairwise comparison when using an LLM-as-a-Judge?',
+    options: [
+      'LLM judges suffer from calibration issues and variance, making relative comparison much more consistent',
+      'Language models cannot output numbers',
+      'Absolute scoring takes too many tokens to compute',
+      'Human reviewers prefer reading text rather than numbers',
+    ],
+    correctIndex: 0,
+    explanation:
+      'LLM judges often struggle to consistently apply an absolute 1-10 scale (calibration), but they are highly reliable when asked to determine "which of these two answers is better" (pairwise comparison).',
+  },
+  {
+    question: 'What is a "Golden Dataset" in the context of agent evaluation?',
+    options: [
+      'A dataset that costs a lot of money to acquire',
+      'A curated set of input prompts mapped to human-verified, perfect responses used as the baseline standard',
+      'A dataset used exclusively to train the agent to write code in Go',
+      'A user interface theme for the evaluation dashboard',
+    ],
+    correctIndex: 1,
+    explanation:
+      'A Golden Dataset is the ground-truth standard: a set of curated inputs paired with known-correct outputs to rigorously measure regression and improvement.',
   },
 ];
 

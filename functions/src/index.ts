@@ -49,3 +49,4 @@ export { getAiHint } from "./callables/get-ai-hint";
 export { dailyStreakReset } from "./scheduled/daily-streak-reset";
 export { dailyRateLimitCleanup } from "./scheduled/daily-rate-limit-cleanup";
 export { weeklyStatsSnapshot } from "./scheduled/weekly-stats-snapshot";
+export { weeklyNudgeEmail } from "./scheduled/weekly-nudge-email";

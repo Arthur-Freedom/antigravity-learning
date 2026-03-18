@@ -5,7 +5,10 @@ import {
   generateCongratulationsText,
   generateWelcomeHtml,
   generateWelcomeText,
+  generateNudgeHtml,
+  generateNudgeText,
   getBaseUrl,
+  ALL_MODULES,
 } from "../helpers/mail";
 
 describe("generateCongratulationsHtml", () => {
@@ -14,11 +17,11 @@ describe("generateCongratulationsHtml", () => {
     expect(html).toContain("Alice");
   });
 
-  it("includes all nine module names", () => {
+  it("includes all twelve module names", () => {
     const html = generateCongratulationsHtml("Test");
     expect(html).toContain("Workflows");
     expect(html).toContain("Safety & Guardrails");
-    expect(html).toContain("Real-World Projects");
+    expect(html).toContain("Production & Scaling");
   });
 
   it("includes the certificate CTA link", () => {
@@ -38,10 +41,10 @@ describe("generateCongratulationsText", () => {
     expect(text).toContain("Bob");
   });
 
-  it("includes all nine module checkmarks", () => {
+  it("includes all twelve module checkmarks", () => {
     const text = generateCongratulationsText("Test");
     const checkmarks = (text.match(/✅/g) || []).length;
-    expect(checkmarks).toBe(9);
+    expect(checkmarks).toBe(ALL_MODULES.length);
   });
 });
 
@@ -56,10 +59,10 @@ describe("generateWelcomeHtml", () => {
     expect(html).toContain(`${getBaseUrl()}/learn/workflows`);
   });
 
-  it("lists all nine modules", () => {
+  it("lists all twelve modules", () => {
     const html = generateWelcomeHtml("Test");
     expect(html).toContain("Workflows");
-    expect(html).toContain("Real-World Projects");
+    expect(html).toContain("Production & Scaling");
   });
 });
 
@@ -69,9 +72,51 @@ describe("generateWelcomeText", () => {
     expect(text).toContain("Diana");
   });
 
-  it("includes all nine module descriptions", () => {
+  it("includes all twelve module descriptions", () => {
     const text = generateWelcomeText("Test");
     expect(text).toContain("Module 1");
-    expect(text).toContain("Module 9");
+    expect(text).toContain("Module 12");
   });
 });
+
+describe("generateNudgeHtml", () => {
+  it("includes the user's display name", () => {
+    const html = generateNudgeHtml("Eve", 3, "prompts", "Prompt Engineering");
+    expect(html).toContain("Eve");
+  });
+
+  it("shows progress count and percentage", () => {
+    const html = generateNudgeHtml("Test", 6, "tools", "Tool Use & Function Calling");
+    expect(html).toContain("6 of 12");
+    expect(html).toContain("50%");
+  });
+
+  it("includes the next module CTA link", () => {
+    const html = generateNudgeHtml("Test", 2, "agents", "Autonomous Agents");
+    expect(html).toContain(`${getBaseUrl()}/learn/agents`);
+    expect(html).toContain("Autonomous Agents");
+  });
+
+  it("is valid HTML (starts with DOCTYPE)", () => {
+    const html = generateNudgeHtml("Test", 0, "workflows", "Workflows");
+    expect(html.trim()).toMatch(/^<!DOCTYPE html>/i);
+  });
+});
+
+describe("generateNudgeText", () => {
+  it("includes the user's display name", () => {
+    const text = generateNudgeText("Frank", 4, "context", "Context Windows");
+    expect(text).toContain("Frank");
+  });
+
+  it("shows progress count", () => {
+    const text = generateNudgeText("Test", 9, "multiagent", "Multi-Agent Systems");
+    expect(text).toContain("9 of 12");
+  });
+
+  it("includes the next module link", () => {
+    const text = generateNudgeText("Test", 1, "skills", "Skills");
+    expect(text).toContain(`${getBaseUrl()}/learn/skills`);
+  });
+});
+
