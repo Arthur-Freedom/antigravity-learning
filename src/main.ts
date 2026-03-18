@@ -73,19 +73,19 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="footer-links">
         <div class="footer-col">
           <h4>Learn</h4>
-          <a href="/" class="scroll-to-modules">Course Overview</a>
           <a href="/learn/workflows">Getting Started</a>
+          <a href="/" class="scroll-to-modules">Course Overview</a>
         </div>
         <div class="footer-col">
           <h4>Community</h4>
-          <a href="/leaderboard">Leaderboard</a>
           <a href="/faq">FAQ</a>
           <a href="/profile" id="footer-profile-link" style="display:none;">Profile</a>
+          <a href="/leaderboard">Leaderboard</a>
         </div>
         <div class="footer-col">
           <h4>Resources</h4>
-          <a href="/resources">Resource Hub</a>
           <a href="/glossary">Glossary</a>
+          <a href="/resources">Resource Hub</a>
         </div>
       </div>
     </div>
